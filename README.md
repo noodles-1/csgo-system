@@ -17,9 +17,9 @@
 <p> Validation Sample Set </p>
 <table>
     <tr>
-        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8n/val_batch0_pred.jpg" />
-        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8n/val_batch1_pred.jpg" />
-        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8n/val_batch2_pred.jpg" />
+        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8n/val_batch0_pred.jpg" /> </th>
+        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8n/val_batch1_pred.jpg" /> </th>
+        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8n/val_batch2_pred.jpg" /> </th>
     </tr>
 </table>
 <br />
@@ -33,9 +33,9 @@
 <p> Validation Sample Set </p>
 <table>
     <tr>
-        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8s/val_batch0_pred.jpg" />
-        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8s/val_batch1_pred.jpg" />
-        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8s/val_batch2_pred.jpg" />
+        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8s/val_batch0_pred.jpg" /> </th>
+        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8s/val_batch1_pred.jpg" /> </th>
+        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8s/val_batch2_pred.jpg" /> </th>
     </tr>
 </table>
 <br />
@@ -49,8 +49,8 @@
 <p> Validation Sample Set </p>
 <table>
     <tr>
-        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8m/val_batch0_pred.jpg" />
-        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8m/val_batch1_pred.jpg" />
-        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8m/val_batch2_pred.jpg" />
+        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8m/val_batch0_pred.jpg" /> </th>
+        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8m/val_batch1_pred.jpg" /> </th>
+        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8m/val_batch2_pred.jpg" /> </th>
     </tr>
 </table>
