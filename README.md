@@ -14,6 +14,14 @@
 <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8n/F1_curve.png" />
 <p> Results </p>
 <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8n/results.png" />
+<p> Validation Sample Set </p>
+<table>
+    <tr>
+        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8n/val_batch0_pred.jpg" />
+        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8n/val_batch1_pred.jpg" />
+        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8n/val_batch2_pred.jpg" />
+    </tr>
+</table>
 <br />
 <h3> YOLOv8s </h3>
 <p> Confusion Matrix (normalized) </p>
@@ -22,6 +30,14 @@
 <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8s/F1_curve.png" />
 <p> Results </p>
 <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8s/results.png" />
+<p> Validation Sample Set </p>
+<table>
+    <tr>
+        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8s/val_batch0_pred.jpg" />
+        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8s/val_batch1_pred.jpg" />
+        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8s/val_batch2_pred.jpg" />
+    </tr>
+</table>
 <br />
 <h3> YOLOv8m </h3>
 <p> Confusion Matrix (normalized) </p>
@@ -30,3 +46,11 @@
 <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8m/F1_curve.png" />
 <p> Results </p>
 <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8m/results.png" />
+<p> Validation Sample Set </p>
+<table>
+    <tr>
+        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8m/val_batch0_pred.jpg" />
+        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8m/val_batch1_pred.jpg" />
+        <th> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8m/val_batch2_pred.jpg" />
+    </tr>
+</table>
