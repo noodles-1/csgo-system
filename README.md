@@ -22,3 +22,11 @@
 <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8s/F1_curve.png" />
 <p> Results </p>
 <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8s/results.png" />
+<br />
+<h3> YOLOv8m </h3>
+<p> Confusion Matrix (normalized) </p>
+<img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8m/confusion_matrix_normalized.png" />
+<p> F1 Curve </p>
+<img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8m/F1_curve.png" />
+<p> Results </p>
+<img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/vehicle+detection+metrics/yolov8m/results.png" />
