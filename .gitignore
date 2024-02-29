@@ -1,2 +1,5 @@
 runs
+test
 *.pt
+
+**/main.py
