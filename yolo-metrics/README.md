@@ -1,5 +1,4 @@
-<h1> Vehicle Detection and License Plate Recognition Systems </h1>
-<h2> Vehicle Detection Metrics </h2>
+<h1> Vehicle Detection Metrics </h1>
 <p> Each <a href="https://github.com/ultralytics/ultralytics"> YOLOv8 models </a> were trained over 5 epochs. </p>
 <p> Dataset: 
     <a href="https://universe.roboflow.com/yolodeepsortmotorcyclelane/motorcycle-jeepneys-cars-and-other-vehicles-along-the-commonwealth-avenue">
