@@ -1,5 +1,6 @@
 runs
 test
-*.pt
+.pt
 
-**/main.py
+**/test.py
+**/tempCodeRunnerFile.py
