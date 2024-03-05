@@ -1,4 +1,3 @@
-from collections import Counter
 import pytesseract
 import cv2
 

@@ -1,9 +1,10 @@
+import cv2
 import tkinter as tk
+
 from tkinter import font
 from CTkTable import *
 from customtkinter import *
 from PIL import Image, ImageTk
-import cv2
 
 tableDefaultValues = [["License Plate", "Vehicle Type", "Camera ID", "Time", "Date", "Price"]]
 quitButtonImage = Image.open("icons/icon_close_darkmode.png")

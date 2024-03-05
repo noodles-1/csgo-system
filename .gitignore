@@ -1,6 +1,7 @@
 runs
-test
+test_images
 .pt
 
 **/test.py
 **/tempCodeRunnerFile.py
+**/__pycache__
