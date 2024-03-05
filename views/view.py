@@ -7,7 +7,7 @@ from customtkinter import *
 from PIL import Image, ImageTk
 
 tableDefaultValues = [["License Plate", "Vehicle Type", "Camera ID", "Time", "Date", "Price"]]
-quitButtonImage = Image.open("icons/icon_close_darkmode.png")
+quitButtonImage = Image.open("views/icons/icon_close_darkmode.png")
 
 """Montserrat is already installed on my computer.
 But I downloaded a ttf file so that it can use Montserrat font without having the font to be installed on the computer.
