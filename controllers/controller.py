@@ -4,7 +4,7 @@ from ultralytics import YOLO
 
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 vehicle_detection_model = YOLO('trained_models/vehicle_detection/trained_yolov8n.pt')
-lp_detection_model = YOLO('trained_models/lp_detection/trained_yolov8n.pt')
+lp_detection_model = YOLO('trained_models/lp_detection/trained_yolov8n_2.pt')
 
 def detect_vehicle(frame):
     return vehicle_detection_model.predict(source=frame)

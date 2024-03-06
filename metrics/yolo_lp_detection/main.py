@@ -1,5 +1,6 @@
-from ultralytics import YOLO
 import cv2
 
-model = YOLO('trained_models/lp_detection/trained_yolov8n.pt')
-model.predict(source=cv2.imread('test_images/3.jpg'), save=True)
+from ultralytics import YOLO
+
+model = YOLO('trained_models/lp_detection/trained_yolov8n_2.pt')
+model.predict(source=cv2.imread('test_images/13.jpg'), save=True)
