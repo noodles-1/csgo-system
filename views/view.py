@@ -15,7 +15,7 @@ from PIL import Image, ImageTk
 from controllers import controller
 
 tableDefaultValues = [["License Plate", "Vehicle Type", "Camera ID", "Time", "Date", "Price"]]
-quitButtonImage = Image.open("views/icons/icon_close_darkmode.png")
+quitButtonImage = Image.open("icons/icon_close_darkmode.png")
 
 classNames = [
     "person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck", "boat",
@@ -76,8 +76,6 @@ class mainWindow(CTk):
         leftMainWindowFrame = CTkFrame(master = mainWindowFrame, fg_color= "#252422")
         rightMainWindowFrame = CTkScrollableFrame(master = mainWindowFrame, fg_color= "#252422")
         leftTopMainWindowFrame = CTkFrame(master = leftMainWindowFrame, fg_color= "#252422")
-        #self.frame_width = leftTopMainWindowFrame.winfo_width()
-        #self.frame_height = leftTopMainWindowFrame.winfo_height()
         leftMiddleMainWindowFrame = CTkFrame(master = leftMainWindowFrame, fg_color= "#252422")
         leftleftMiddleMainWindowFrame = CTkFrame(master=leftMiddleMainWindowFrame, fg_color= "#252422")
         rightleftMiddleMainWindowFrame = CTkFrame(master=leftMiddleMainWindowFrame, fg_color= "#252422")
@@ -182,7 +180,7 @@ class mainWindow(CTk):
         #layout right main window
         licensePlateTable.pack(side = "top", fill = "both")
         rightMainWindowFrame.pack(side = "left", fill = "both", expand = True)
-        self.start_webcam()
+        self.start_video()
     
     def bounding_box(self, frame, box):
         x1, y1, x2, y2 = box.xyxy[0]
@@ -226,6 +224,30 @@ class mainWindow(CTk):
             else:
                 cap.release()
 
+        show_frame()
+
+    def start_video(self):
+        video_path = "../testing_video/highway_videoplayback.mp4"
+        cap = cv2.VideoCapture(video_path)
+        def show_frame():
+            ret, frame = cap.read()
+            if ret:
+                results = controller.detect_vehicle(frame)
+                for result in results:
+                    for box in result.boxes:
+                        self.bounding_box(frame, box)
+
+                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                img = Image.fromarray(frame_rgb)
+                img = img.resize((self.newWidth, self.newHeight))
+                img_tk = ImageTk.PhotoImage(image=img)
+
+                self.webcamFeed.img = img_tk
+                self.webcamFeed.config(image=img_tk)
+
+                self.webcamFeed.after(20, show_frame)
+            else:
+                cap.release()
         show_frame()
 
 if __name__ == "__main__":
