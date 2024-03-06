@@ -1,6 +1,6 @@
 runs
 test_images
-*.pt
+yolov8n.pt
 
 **/test.py
 **/tempCodeRunnerFile.py
