@@ -24,6 +24,5 @@
     <tr>
         <td> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/lp+detection+metrics/yolov8n/val_batch0_pred.jpg" /> </td>
         <td> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/lp+detection+metrics/yolov8n/val_batch1_pred.jpg" /> </td>
-        <td> <img src="https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/lp+detection+metrics/yolov8n/val_batch2_pred.jpg" /> </td>
     </tr>
 </table>
