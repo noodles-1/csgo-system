@@ -1,6 +1,13 @@
 import cv2
+import os
+import sys
 
-from ultralytics import YOLO
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+root = os.path.dirname(parent)
+sys.path.append(root)
 
-model = YOLO('trained_models/lp_detection/trained_yolov8n_2.pt')
-model.predict(source=cv2.imread('test_images/13.jpg'), save=True)
+from controllers import controller
+
+results = controller.detect_license_plate(frame=cv2.imread('test_images/13.jpg'))
+print(results)

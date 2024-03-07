@@ -17,19 +17,6 @@ from controllers import controller
 tableDefaultValues = [["License Plate", "Vehicle Type", "Camera ID", "Time", "Date", "Price"]]
 quitButtonImage = Image.open("views/icons/icon_close_darkmode.png")
 
-classNames = [
-    "person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck", "boat",
-    "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat",
-    "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella",
-    "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite", "baseball bat",
-    "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup",
-    "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli",
-    "carrot", "hot dog", "pizza", "donut", "cake", "chair", "sofa", "pottedplant", "bed",
-    "diningtable", "toilet", "tvmonitor", "laptop", "mouse", "remote", "keyboard", "cell phone",
-    "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors",
-    "teddy bear", "hair drier", "toothbrush"
-]
-
 """Montserrat is already installed on my computer.
 But I downloaded a ttf file so that it can use Montserrat font without having the font to be installed on the computer.
 Though I havent specified the code to use the ttf file yet instead. so if you dont have the montserrat. you can just install the font with the ttf file
@@ -183,24 +170,6 @@ class mainWindow(CTk):
         licensePlateTable.pack(side = "top", fill = "both")
         rightMainWindowFrame.pack(side = "left", fill = "both", expand = True)
         self.start_webcam()
-    
-    def bounding_box(self, frame, box):
-        x1, y1, x2, y2 = box.xyxy[0]
-        x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
-
-        cv2.rectangle(frame, (x1, y1), (x2, y2), (200, 50, 50), 2)
-
-        confidence = math.ceil((box.conf[0] * 100)) / 100
-
-        cls = int(box.cls[0])
-
-        org = [x1, y1]
-        font = cv2.FONT_HERSHEY_PLAIN
-        fontScale = 2
-        color = (255, 255, 255)
-        thickness = 2
-
-        cv2.putText(frame, classNames[cls] + ' ' + str(confidence), org, font, fontScale, color, thickness)
 
     def start_webcam(self):
         cap = cv2.VideoCapture(0)
@@ -212,7 +181,7 @@ class mainWindow(CTk):
             if ret:
                 for result in results:
                     for box in result.boxes:
-                        self.bounding_box(frame, box)
+                        controller.bounding_box(frame, box)
                         
                 frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 img = Image.fromarray(frame_rgb)
