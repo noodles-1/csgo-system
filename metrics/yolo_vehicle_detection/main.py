@@ -1,5 +1,5 @@
 from ultralytics import YOLO
 import cv2
 
-model = YOLO("trained_models/trained_yolov8n.pt")
-model.predict(source=cv2.imread("<image>"), save=True)
+model = YOLO('yolov9c.pt')
+model.train(data='../datasets/ph-vehicles/data.yaml', pretrained=True, epochs=5, device=0, workers=0, save=True)
