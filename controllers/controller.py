@@ -1,12 +1,34 @@
-import pytesseract
+import os
+import sys
 import cv2
 import math
+import datetime
+import csv
+import pytesseract
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
 
 from ultralytics import YOLO
 
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-vehicle_detection_model = YOLO('trained_models/vehicle_detection/trained_yolov8n.pt')
-lp_detection_model = YOLO('trained_models/lp_detection/trained_yolov8n_2.pt')
+class AIModel:
+    def __init__(self):
+        pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+        self.vehicle_detection_model = YOLO('trained_models/vehicle_detection/trained_yolov8n.pt')
+        self.lp_detection_model = YOLO('trained_models/lp_detection/trained_yolov8n_2.pt')
+
+    def detect_vehicle(self, frame):
+        return self.vehicle_detection_model.predict(source=frame)
+
+    def detect_license_plate(self, frame):
+        return self.lp_detection_model.predict(source=frame)
+
+    def validate_license_number(self, frame):
+        return pytesseract.image_to_string(image=frame, lang='eng', config='--psm 10 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')
 
 classNames = [
     "person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck", "boat",
@@ -39,11 +61,28 @@ def bounding_box(frame, box):
 
     cv2.putText(frame, classNames[cls] + ' ' + str(confidence), org, font, fontScale, color, thickness)
 
-def detect_vehicle(frame):
-    return vehicle_detection_model.predict(source=frame)
+def generate_revenue_report():
+    curr_date = datetime.date.today().strftime('%Y-%m-%d')
+    df = pd.read_csv('dummy_data/data.csv')
+    curr_date_revenue = df.loc[df['Date'] == curr_date]['Price'].sum()
 
-def detect_license_plate(frame):
-    return lp_detection_model.predict(source=frame)
+    curr_month = datetime.date.today().strftime('%Y-%m')
+    curr_month_revenue = df.loc[df['Date'].str[:7] == curr_month]['Price'].sum()
+    
+    curr_year = datetime.date.today().strftime('%Y')
+    curr_year_revenue = df.loc[df['Date'].str[:4] == curr_year]['Price'].sum()
+    
+    with open('reports/revenue.csv', 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow([f'Revenue today ({curr_date})', f'Revenue this month ({curr_month})', f'Revenue this year ({curr_year})'])
+        writer.writerow([curr_date_revenue, curr_month_revenue, curr_year_revenue])
 
-def validate_license_number(frame):
-    return pytesseract.image_to_string(image=frame, lang='eng', config='--psm 10 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+def generate_busiest_time_report():
+    df = pd.read_csv('dummy_data/data.csv')
+    times = [int(time.split(':')[0]) for time in df['Time'].tolist()]
+    _, ax = plt.subplots()
+    _, bins, _ = ax.hist(times, bins=23, edgecolor='gray')
+    ax.set_xticks(bins)
+    plt.xlabel('times in 24-hour format')
+    plt.ylabel('no. of detected vehicles')
+    plt.savefig('reports/busiest_times.jpg')

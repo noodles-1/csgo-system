@@ -1,13 +1,13 @@
 runs
 test_images
-.pt
-.csv
-
+models
+reports
 prototype/sort
 prototype/sample.mp4
-models
 
-**/.jpg
+.pt
+*.jpg
+test_script.py
 **/.mp4
 **/test.py
 **/tempCodeRunnerFile.py
