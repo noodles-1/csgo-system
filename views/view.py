@@ -39,6 +39,7 @@ class mainWindow(CTk):
         self.attributes("-fullscreen", True)
         set_appearance_mode("dark")
         self._current_theme = "dark"
+        self.ai = controller.AIModel()
 
         #calculation to retain the webcam feed size in any window size
         windowWidth = self.winfo_screenwidth()
@@ -176,7 +177,7 @@ class mainWindow(CTk):
             ret, frame = cap.read()
 
             if ret:
-                results = controller.detect_vehicle(frame)
+                results = self.ai.detect_vehicle(frame)
                 for result in results:
                     for box in result.boxes:
                         controller.bounding_box(frame, box)
@@ -202,7 +203,7 @@ class mainWindow(CTk):
             ret, frame = cap.read()
 
             if ret:
-                results = controller.detect_vehicle(frame)
+                results = self.ai.detect_vehicle(frame)
                 for result in results:
                     for box in result.boxes:
                         controller.bounding_box(frame, box)
@@ -218,7 +219,7 @@ class mainWindow(CTk):
                 self.webcamFeed.after(20, show_frame)
             else:
                 cap.release()
-                
+
         show_frame()
 
 if __name__ == "__main__":
