@@ -1,12 +1,13 @@
 runs
 test_images
-yolov8n.pt
-yolov9c.pt
+.pt
+.csv
 
 prototype/sort
 prototype/sample.mp4
 models
 
+**/.jpg
 **/.mp4
 **/test.py
 **/tempCodeRunnerFile.py

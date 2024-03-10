@@ -43,7 +43,7 @@ def detect_vehicle(frame):
     return vehicle_detection_model.predict(source=frame)
 
 def detect_license_plate(frame):
-    return lp_detection_model.predict(source=frame, save=True)
+    return lp_detection_model.predict(source=frame)
 
 def validate_license_number(frame):
     return pytesseract.image_to_string(image=frame, lang='eng', config='--psm 10 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')
