@@ -168,33 +168,15 @@ class mainWindow(CTk):
         licensePlateTable.pack(side = "top", fill = "both")
         rightMainWindowFrame.pack(side = "left", fill = "both", expand = True)
         self.start_video()
-    
-    def bounding_box(self, frame, box):
-        x1, y1, x2, y2 = box.xyxy[0]
-        x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
-
-        cv2.rectangle(frame, (x1, y1), (x2, y2), (200, 50, 50), 2)
-
-        confidence = math.ceil((box.conf[0] * 100)) / 100
-
-        cls = int(box.cls[0])
-
-        org = [x1, y1]
-        font = cv2.FONT_HERSHEY_PLAIN
-        fontScale = 2
-        color = (255, 255, 255)
-        thickness = 2
-
-        cv2.putText(frame, classNames[cls] + ' ' + str(confidence), org, font, fontScale, color, thickness)
 
     def start_webcam(self):
         cap = cv2.VideoCapture(0)
 
         def show_frame():
             ret, frame = cap.read()
-            results = controller.detect_vehicle(frame)
 
             if ret:
+                results = controller.detect_vehicle(frame)
                 for result in results:
                     for box in result.boxes:
                         controller.bounding_box(frame, box)
@@ -218,11 +200,12 @@ class mainWindow(CTk):
         cap = cv2.VideoCapture(video_path)
         def show_frame():
             ret, frame = cap.read()
+
             if ret:
                 results = controller.detect_vehicle(frame)
                 for result in results:
                     for box in result.boxes:
-                        self.bounding_box(frame, box)
+                        controller.bounding_box(frame, box)
 
                 frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 img = Image.fromarray(frame_rgb)
@@ -235,6 +218,7 @@ class mainWindow(CTk):
                 self.webcamFeed.after(20, show_frame)
             else:
                 cap.release()
+                
         show_frame()
 
 if __name__ == "__main__":
