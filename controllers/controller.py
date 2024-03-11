@@ -14,12 +14,14 @@ parent = os.path.dirname(current)
 sys.path.append(parent)
 
 from ultralytics import YOLO
+from cnocr import CnOcr
 
 class AIModel:
     def __init__(self):
         pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
         self.vehicle_detection_model = YOLO('trained_models/vehicle_detection/trained_yolov8n.pt')
         self.lp_detection_model = YOLO('trained_models/lp_detection/trained_yolov8n_2.pt')
+        self.cnocr = CnOcr(det_model_name='en_PP-OCRv3_det', rec_model_name='en_PP-OCRv3')
 
     def detect_vehicle(self, frame):
         return self.vehicle_detection_model.predict(source=frame)
@@ -27,8 +29,11 @@ class AIModel:
     def detect_license_plate(self, frame):
         return self.lp_detection_model.predict(source=frame)
 
-    def validate_license_number(self, frame):
+    def get_license_number_tesseract(self, frame):
         return pytesseract.image_to_string(image=frame, lang='eng', config='--psm 10 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+    
+    def get_license_number_cnocr(self, frame):
+        return self.cnocr.ocr(img_fp=frame)
 
 classNames = ["car", "motorbike"]
 

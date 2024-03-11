@@ -30,7 +30,7 @@ for i in range(33):
     img = cv2.GaussianBlur(img, (5,5), 0)
     results = ocr.ocr(img_fp=img)
     temp = [results[i]['text'] for i in range(len(results))]
-    predicted = ''.join(temp).strip()
+    predicted = ''.join(temp)
     predicted = predicted.replace(' ', '')
     print('actual: ', annotation[i], ' | predicted: ', predicted)
     y_pred.append('correct' if annotation[i] in predicted else 'incorrect')

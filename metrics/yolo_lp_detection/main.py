@@ -21,5 +21,8 @@ _, cropped_lp = cv2.threshold(cropped_lp, 64, 255, cv2.THRESH_BINARY_INV)
 cropped_lp = cv2.GaussianBlur(cropped_lp, (11,11), 0)
 cv2.imwrite('cropped_lp.jpg', cropped_lp)
 
-predicted = ai.validate_license_number(frame=cropped_lp)
+results = ai.get_license_number_cnocr(frame=cropped_lp)
+temp = [results[i]['text'] for i in range(len(results))]
+predicted = ''.join(temp)
+predicted = predicted.replace(' ', '')
 print('predicted: ', predicted)
