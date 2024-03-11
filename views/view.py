@@ -15,7 +15,7 @@ from PIL import Image, ImageTk
 from controllers import controller
 
 tableDefaultValues = [["License Plate", "Vehicle Type", "Camera ID", "Time", "Date", "Price"]]
-quitButtonImage = Image.open("icons/icon_close_darkmode.png")
+quitButtonImage = Image.open("views/icons/icon_close_darkmode.png")
 
 """Montserrat is already installed on my computer.
 But I downloaded a ttf file so that it can use Montserrat font without having the font to be installed on the computer.
@@ -197,7 +197,7 @@ class mainWindow(CTk):
         show_frame()
 
     def start_video(self):
-        video_path = "../testing_video/highway_videoplayback.mp4"
+        video_path = "https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/highway_videoplayback.mp4"
         cap = cv2.VideoCapture(video_path)
         def show_frame():
             ret, frame = cap.read()
