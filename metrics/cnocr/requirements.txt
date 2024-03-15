@@ -1,0 +1,5 @@
+cnocr==2.3.0.1
+opencv_contrib_python==4.6.0.66
+opencv_python==4.6.0.66
+opencv_python_headless==4.9.0.80
+scikit_learn==1.4.1.post1

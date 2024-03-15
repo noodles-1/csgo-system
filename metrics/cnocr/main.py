@@ -1,11 +1,11 @@
 import cv2
+import cnocr
 from collections import Counter
 
-from cnocr import CnOcr
 from sklearn.metrics import recall_score
 from sklearn.metrics import f1_score
 
-ocr = CnOcr(det_model_name='en_PP-OCRv3_det', rec_model_name='en_PP-OCRv3')
+ocr = cnocr.CnOcr(det_model_name='en_PP-OCRv3_det', rec_model_name='en_PP-OCRv3')
 
 annotation = [
     'AHL839', 'NCZ9506', 'NCV3895',
