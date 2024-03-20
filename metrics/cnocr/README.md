@@ -1,10 +1,8 @@
 <h1> License Plate Recognition Metrics </h1>
 <p> 
-    <a href="https://github.com/UB-Mannheim/tesseract/wiki"> Tesseract 5.3.3 </a>
+    <a href="https://github.com/breezedeus/CnOCR">CnOCR 2.3.0.1</a>
     was used to test 33 
-    <a href="https://universe.roboflow.com/2014-series-license-plate/knn-brxiq"> 
-        Philippine 2014 License Plates.
-    </a>
+    <a href="https://universe.roboflow.com/2014-series-license-plate/knn-brxiq">Philippine 2014 License Plates.</a>
 </p>
 <h3> Results </h3>
 <table>
