@@ -1,5 +1,5 @@
 <h1> License Plate Detection Metrics </h1>
-<p> <a href="https://github.com/ultralytics/ultralytics"> YOLOv8n </a> was trained over 20 epochs. </p>
+<p> <a href="https://github.com/ultralytics/ultralytics">YOLOv8n</a> was trained over 20 epochs. </p>
 <p> Datasets: 
     <a href="https://universe.roboflow.com/thesis-u0tkq/anpr-ver79"> ANPR</a>,
     <a href="https://universe.roboflow.com/2014-series-license-plate/knn-brxiq"> KNN</a>,
