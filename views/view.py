@@ -39,7 +39,7 @@ class mainWindow(CTk):
         self.attributes("-fullscreen", True)
         set_appearance_mode("dark")
         self._current_theme = "dark"
-        self.ai = controller.AIModel()
+        self.ai = controller.AIController()
 
         #calculation to retain the webcam feed size in any window size
         windowWidth = self.winfo_screenwidth()
