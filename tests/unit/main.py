@@ -10,15 +10,17 @@ sys.path.append(root)
 
 from controllers import controller
 
+ai = controller.AIController()
+
 class TestControllerMethods(unittest.TestCase):
     # checks if an image has vehicles
     def test_has_vehicle(self):
-        results = controller.detect_vehicle(frame=cv2.imread('test_images/1.jpg'))
+        results = ai.detect_vehicle(frame=cv2.imread('test_images/1.jpg'))
         self.assertTrue(results[0].boxes)
     
     # checks if an image has a license plate
     def test_has_license_plate(self):
-        results = controller.detect_license_plate(frame=cv2.imread('test_images/2.jpg'))
+        results = ai.detect_license_plate(frame=cv2.imread('test_images/2.jpg'))
         self.assertTrue(results[0].boxes)
 
     # checks if an input license plate image's number matches with predicted number
@@ -26,7 +28,7 @@ class TestControllerMethods(unittest.TestCase):
         img = cv2.imread('test_images/7.jpg')
         img = cv2.resize(img, (0,0), fx=3, fy=3)
         img = cv2.GaussianBlur(img, (5,5), 0)
-        predicted = controller.validate_license_number(frame=img)
+        predicted = ai.get_license_number_cnocr(frame=img)
         self.assertEqual(predicted.strip(), 'FAB3478')
 
 unittest.main()
