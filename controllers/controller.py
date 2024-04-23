@@ -19,12 +19,12 @@ from cnocr import CnOcr
 class AIController:
     def __init__(self):
         pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-        self.vehicle_detection_model = YOLO('trained_models/vehicle_detection/trained_yolov8n.pt')
+        self.vehicle_detection_model = YOLO('trained_models/vehicle_detection/trained_yolov8n_2.pt')
         self.lp_detection_model = YOLO('trained_models/lp_detection/trained_yolov8n_3.pt')
         self.cnocr = CnOcr(det_model_name='en_PP-OCRv3_det', rec_model_name='en_PP-OCRv3')
 
     def detect_vehicle(self, frame):
-        return self.vehicle_detection_model.predict(source=frame)
+        return self.vehicle_detection_model.predict(source=frame, save=True)
 
     def detect_license_plate(self, frame):
         return self.lp_detection_model.predict(source=frame)
