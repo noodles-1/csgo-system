@@ -23,8 +23,7 @@ Though I havent specified the code to use the ttf file yet instead. so if you do
 I will update the code to be able to use the font without installation needed 2morrow
 """
 
-"""
-You also might encounter an error with webcam. If you dont have a webcam plugged or webcam enabled.
+"""You also might encounter an error with webcam. If you dont have a webcam plugged or webcam enabled.
 enable it. I used webcam so I can test if its possible to send frames to the front-end with the framework.
 you can easily replace the source from webcam to the output of the object detection frames.
 
