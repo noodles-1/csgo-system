@@ -5,6 +5,8 @@ reports
 prototype/sort
 prototype/sample.mp4
 wandb
+localFolder
+venv
 
 .pt
 *.jpg

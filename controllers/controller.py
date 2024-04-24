@@ -8,6 +8,9 @@ import pytesseract
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import tkinter as tk
+from scipy.interpolate import make_interp_spline
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -80,3 +83,41 @@ def generate_busiest_time_report():
     plt.xlabel('times in 24-hour format')
     plt.ylabel('no. of detected vehicles')
     plt.savefig('reports/busiest_times.jpg')
+    
+def generateBusiestTimeReport(master=None, targetDate=None):
+    # update in the future to request data from the databse
+    df = pd.read_csv('dummy_data/newData.csv')  # dummy data
+
+    df['Time'] = pd.to_datetime(df['Time'], format='%H:%M:%S', errors='coerce')
+    df = df.dropna(subset=['Time'])
+
+    if targetDate:
+        df = df[df['Date'] == targetDate]
+
+    df['Hour'] = df['Time'].dt.round('h')
+    hourCounts = df.groupby('Hour').size()
+
+    fig, ax = plt.subplots(figsize=(10, 6))  # Adjust figsize
+
+    # Perform spline interpolation
+    x = np.arange(len(hourCounts.index))
+    y = hourCounts.values
+    spl = make_interp_spline(x, y, k=3)  # Choose the degree of the spline (k)
+    xnew = np.linspace(x.min(), x.max(), 200)
+    y_smooth = spl(xnew)
+
+    ax.plot(xnew, y_smooth, color='b')  # Plot smooth line
+
+    ax.set_title("Busiest Time of Day")
+    ax.set_xlabel("Time")
+    ax.set_ylabel("Number of Vehicles")
+    ax.grid(True)
+
+    hour_labels = [hour.strftime('%I%p') for hour in hourCounts.index]
+    ax.set_xticks(x)
+    ax.set_xticklabels(hour_labels, rotation=45, ha='right', fontsize=10)
+
+    canvas = FigureCanvasTkAgg(fig, master=master)
+    canvas.get_tk_widget().pack()
+
+    return ax, canvas
