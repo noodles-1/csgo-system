@@ -1,10 +1,10 @@
 # This is the repository of the system for the Thesis of the Group Computer Science Global Offensive
 
 Members of the thesis group are:
-  - **Pagtalunan**
-  - **Roa**
-  - **Rayray**
-  - **Mendoza**
+  - **Pagtalunan, John Gabriel T.**
+  - **Roa, Adriane Gil**
+  - **Rayray, Kassandra Beatriz**
+  - **Mendoza, Mendoza**
 
 Students major in **Software Engineering** in **Far Eastern University Institute of Technology**
 
