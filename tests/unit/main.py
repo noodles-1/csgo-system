@@ -119,5 +119,32 @@ class TestControllerMethods(unittest.TestCase):
         with self.assertRaises(FileNotFoundError):
             # Call downloadAndProcessCSV() with the invalid file path
             success, output_path = self.reportController.downloadAndProcessCSV(invalid_file_path)
+    
+    @patch('controllers.controller.psutil.cpu_percent')
+    def test_get_cpu_usage(self, mock_cpu_percent):
+        # Arrange: Mock the psutil.cpu_percent function
+        mock_cpu_percent.return_value = 50  # Simulate 50% CPU usage
+
+        # Action: Call the function
+        x_cpu, y_cpu = ctrl.get_cpu_usage()
+
+        # Assert: Check the results
+        self.assertEqual(x_cpu, [])
+        self.assertEqual(y_cpu, [50])
+
+    @patch('controllers.controller.psutil.virtual_memory')
+    def test_get_memory_usage(self, mock_virtual_memory):
+        # Arrange: Mock the psutil.virtual_memory function
+        mock_memory = MagicMock()
+        mock_memory.percent = 60  # Simulate 60% memory usage
+        mock_virtual_memory.return_value = mock_memory
+
+        # Action: Call the function
+        x_memory, y_memory = ctrl.get_memory_usage()
+
+        # Assert: Check the results
+        self.assertEqual(x_memory, [])
+        self.assertEqual(y_memory, [60])
+
 
 unittest.main()

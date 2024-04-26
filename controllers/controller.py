@@ -1,6 +1,7 @@
 import os
 import sys
 import cv2
+import psutil
 import math
 import datetime
 from datetime import datetime as datetime_module
@@ -221,3 +222,11 @@ class ReportGenerationController:
         except Exception as e:
             print(f"Error: {e}")
             return False, None
+        
+def get_cpu_usage():
+    cpu_percent = psutil.cpu_percent(interval=1)
+    return [], [cpu_percent]
+
+def get_memory_usage():
+    memory_percent = psutil.virtual_memory().percent
+    return [], [memory_percent]
