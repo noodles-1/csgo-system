@@ -3,14 +3,17 @@ import sys
 import cv2
 import math
 import datetime
+from datetime import datetime as datetime_module
 import csv
 import pytesseract
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import tkinter as tk
 from scipy.interpolate import make_interp_spline
+from scipy.interpolate import interp1d
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -83,41 +86,138 @@ def generate_busiest_time_report():
     plt.xlabel('times in 24-hour format')
     plt.ylabel('no. of detected vehicles')
     plt.savefig('reports/busiest_times.jpg')
+
+class ReportGenerationController:
+    def busiestTimeReport(self, file_path):
+        """
+        Description:
+        - This function generates a report of the busiest time based on the data provided in the specified CSV file for the current date.
+
+        Arguments:
+        - file_path (str): The path to the CSV file containing the data.
+
+        Returns:
+        - xData (list): A list of time intervals representing the x-axis data.
+        - yData (list): A list of corresponding counts representing the y-axis data.
+        """
+        today = datetime_module.today().strftime('%Y-%m-%d')
+        time_counts = {}
+
+        with open(file_path, 'r') as file:
+            reader = csv.reader(file)
+            next(reader)
+            for row in reader:
+                time_str = row[3]
+                date_str = row[4]
+
+                if date_str == today:
+                    time = time_str.split(':')[0]
+
+                    if time in time_counts:
+                        time_counts[time] += 1
+                    else:
+                        time_counts[time] = 1
+
+        xData = list(time_counts.keys())
+        yData = list(time_counts.values())
+
+        return xData, yData
     
-def generateBusiestTimeReport(master=None, targetDate=None):
-    # update in the future to request data from the databse
-    df = pd.read_csv('dummy_data/newData.csv')  # dummy data
+    def revenueReport(self, file_path):
+        """
+        Description:
+        - This function generates a report of the revenue based on the data provided in the specified CSV file for the latest 15 dates.
 
-    df['Time'] = pd.to_datetime(df['Time'], format='%H:%M:%S', errors='coerce')
-    df = df.dropna(subset=['Time'])
+        Arguments:
+        - file_path (str): The path to the CSV file containing the data.
 
-    if targetDate:
-        df = df[df['Date'] == targetDate]
+        Returns:
+        - latest_dates (list): A list of the latest 15 dates.
+        - latest_revenues (list): A list of corresponding revenues for the latest 15 dates.
+        """
+        date_revenue = {}
 
-    df['Hour'] = df['Time'].dt.round('h')
-    hourCounts = df.groupby('Hour').size()
+        with open(file_path, 'r') as file:
+            reader = csv.reader(file)
+            next(reader)
+            for row in reader:
+                date = row[4]
+                price = int(row[5])
 
-    fig, ax = plt.subplots(figsize=(10, 6))  # Adjust figsize
+                if date not in date_revenue:
+                    date_revenue[date] = price
+                else:
+                    date_revenue[date] += price
 
-    # Perform spline interpolation
-    x = np.arange(len(hourCounts.index))
-    y = hourCounts.values
-    spl = make_interp_spline(x, y, k=3)  # Choose the degree of the spline (k)
-    xnew = np.linspace(x.min(), x.max(), 200)
-    y_smooth = spl(xnew)
+        sorted_date_revenue = dict(sorted(date_revenue.items(), key=lambda x: datetime_module.strptime(x[0], "%Y-%m-%d"), reverse=True))
 
-    ax.plot(xnew, y_smooth, color='b')  # Plot smooth line
+        latest_dates = list(sorted_date_revenue.keys())[:15]
+        latest_revenues = [sorted_date_revenue[date] for date in latest_dates]
 
-    ax.set_title("Busiest Time of Day")
-    ax.set_xlabel("Time")
-    ax.set_ylabel("Number of Vehicles")
-    ax.grid(True)
+        return latest_dates, latest_revenues
+    
+    def vehiclesDetectedReport(self, file_path):
+        """
+        Description:
+        - This function generates a report of the vehicles detected based on the data provided in the specified CSV file for the latest 15 dates.
 
-    hour_labels = [hour.strftime('%I%p') for hour in hourCounts.index]
-    ax.set_xticks(x)
-    ax.set_xticklabels(hour_labels, rotation=45, ha='right', fontsize=10)
+        Arguments:
+        - file_path (str): The path to the CSV file containing the data.
 
-    canvas = FigureCanvasTkAgg(fig, master=master)
-    canvas.get_tk_widget().pack()
+        Returns:
+        - latest_dates (list): A list of the latest 15 dates.
+        - latest_counts (list): A list of corresponding counts of vehicles detected for the latest 15 dates.
+        """
+        date_counts = {}
 
-    return ax, canvas
+        with open(file_path, 'r') as file:
+            reader = csv.reader(file)
+            next(reader)
+
+            for row in reader:
+                date = row[4]
+                date_counts[date] = date_counts.get(date, 0) + 1
+
+        sorted_date_counts = dict(sorted(date_counts.items(), key=lambda x: datetime_module.strptime(x[0], "%Y-%m-%d"), reverse=True))
+
+        latest_dates = list(sorted_date_counts.keys())[:15]
+        latest_counts = [sorted_date_counts[date] for date in latest_dates]
+
+        return latest_dates, latest_counts
+
+    @staticmethod
+    def downloadAndProcessCSV(filePath):
+        """
+        Description:
+        - This function saves a CSV file with a modified name to the user's "Downloads" folder after downloading it from a specified path and processing it if necessary.
+
+        Arguments:
+        - filePath (str): The path to the CSV file to be downloaded and processed.
+
+        Returns:
+        - success (bool): Indicates whether the operation was successful.
+        - output_path (str or None): If successful, returns the path to the downloaded and processed CSV file; otherwise, returns None.
+        """
+        try:
+            if not os.path.exists(filePath):
+                raise FileNotFoundError(f"CSV File '{filePath}' not found.")
+            
+            dataFrame = pd.read_csv(filePath)
+
+            # Perform processing if needed here
+
+            # Get the path to the "Downloads" folder
+            downloadPath = os.path.join(os.path.expanduser("~"), "Downloads")
+
+            outputPath = os.path.join(downloadPath, 'downloaded_data.csv')
+            dataFrame.to_csv(outputPath, index = False)
+
+            return True, outputPath
+        
+        except FileNotFoundError as e:
+            print(f"Error: {e}")
+            raise 
+
+        except Exception as e:
+            print(f"Error: {e}")
+            return False, None
