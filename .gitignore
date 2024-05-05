@@ -9,7 +9,7 @@ venv
 
 .pt
 *.jpg
-test_script.py
+**/test_script.py
 **/.mp4
 **/test.py
 **/tempCodeRunnerFile.py
