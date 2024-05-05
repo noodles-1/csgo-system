@@ -2,19 +2,21 @@ from schemas import Base
 from sqlalchemy import create_engine
 
 class Connection:
-    def __init__(self):
-        self.engine = None
+    engine = None
 
-    def createConnection(self, path):
+    @staticmethod
+    def createConnection(path):
         try:
-            self.engine = create_engine(f'sqlite:///{path}', echo=True)
+            Connection.engine = create_engine(f'sqlite:///{path}', echo=True)
             return True
-        except:
+        except Exception as e:
+            print(e)
             return False
     
-    def connect(self, path):
-        if self.createConnection(path):
-            Base.metadata.create_all(self.engine)
+    @staticmethod
+    def connect(path):
+        if Connection.createConnection(path):
+            Base.metadata.create_all(Connection.engine)
             return True
         else:
             return False
