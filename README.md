@@ -1,5 +1,5 @@
 # This is the repository of the system for the Thesis of the Group Computer Science Global Offensive
-## Version 1.0.4
+## Version 1.0.5
 
 Members of the thesis group are:
   - **Pagtalunan, John Gabriel T.**

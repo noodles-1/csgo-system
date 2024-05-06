@@ -22,7 +22,7 @@ class User(Base):
     password: Mapped[str]
 
     def __repr__(self) -> str:
-        return f'User(userId={self.id}, email={self.email}, name={self.name})'
+        return f'User(userId={self.id}, email={self.email}, username={self.username}, fullName={self.fullName}, isAdmin={self.isAdmin})'
     
 class Camera(Base):
     __tablename__ = 'camera'

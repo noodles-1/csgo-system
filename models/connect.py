@@ -5,7 +5,7 @@ class Connection:
     engine = None
 
     @staticmethod
-    def createConnection(path):
+    def createConnection(path) -> bool:
         try:
             Connection.engine = create_engine(f'sqlite:///{path}', echo=True)
             return True
@@ -14,7 +14,7 @@ class Connection:
             return False
     
     @staticmethod
-    def connect(path):
+    def connect(path) -> bool:
         if Connection.createConnection(path):
             Base.metadata.create_all(Connection.engine)
             return True
