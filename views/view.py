@@ -14,7 +14,8 @@ class MainWindow(tk.Tk):
         super().__init__()
         self.title("Frame Switching Example")
         self.attributes('-fullscreen', True)
-
+        self.tk.call('source', 'views/assets/theme/forest-dark.tcl')
+        
         self.loginFrame = LoginPage(self)
         self.dashboardFrame = DashboardPage(self)
         self.analyticsFrame = AnalyticsPage(self)
@@ -93,7 +94,6 @@ class LoginPage(tk.Frame):
         mainFrameLeft.pack(expand = True, fill = "both", side = "left")
         mainFrameRight.pack(fill = "both", side = "left")
 
-        #labelImageCover = tk.Label(mainFrameLeft, image = coverPhoto, text = "")
         labelImageCover = CTkLabel(mainFrameLeft, image = coverPhoto, text = "")
         labelImageCover.pack(side = "top", fill = "both", expand = "yes")
 
@@ -142,12 +142,9 @@ class DashboardPage(tk.Frame):
 
     def __init__(self, parent):
         tk.Frame.__init__(self, parent, bg = "#090E18")
-        self.tk.call('source', 'views/assets/theme/forest-dark.tcl')
 
         style = ttk.Style()
-        
         style.theme_use('forest-dark')
-        #style.theme_use('default')
 
         closeImage = Image.open("views/icons/icon_close_darkmode.png")
         closeImage = closeImage.resize((20, 20))
@@ -246,7 +243,7 @@ class DashboardPage(tk.Frame):
         style.map("Treeview.Heading",
                   background=[('active', '#48BFE3')])
 
-        # ADD or REMOVE headers as needed
+        # ADD or REMOVE headers as needed @Database Integration
         databaseTable = ttk.Treeview(databaseFrame, columns = ('licensePlate', 'vehicleType', 'cameraID', 'time', 'date', 'price'), show = "headings", style = 'Custom.Treeview')
 
         for _ in range(100):
@@ -323,6 +320,9 @@ class DashboardPage(tk.Frame):
         '''
         @Mendoza
         topLeftMainFrame is the Frame where the camera should be setup and visualized.
+        How you'll do this is using frames and continuously displaying each frame.
+        Refer to oldView.py for reference.
+        If you have CCTV camera in your house use it, if not, use a webcam.1
         '''
 
         '''
@@ -341,14 +341,116 @@ class AnalyticsPage(tk.Frame):
         button.pack()
 
 class ConfigPage(tk.Frame):
+    def closeApplication(self):
+        self.master.destroy()
+
+    def minimizeApplicaiton(self):
+        self.master.iconify()
+        
     def __init__(self, parent):
-        tk.Frame.__init__(self, parent, bg = "red")
-        label = tk.Label(self, text = "This is the Config Page", font = ('Helvetica', 14))
-        label.pack(pady = 10, padx = 10)
-        button1 = tk.Button(self, text = "Dashboard", command = lambda: parent.show_frame(parent.dashboardFrame))
-        button1.pack()
-        button2 = tk.Button(self, text = "Logout", command = lambda: parent.show_frame(parent.loginFrame))
-        button2.pack()
+        tk.Frame.__init__(self, parent, bg = "#090E18")
+        style = ttk.Style()
+        style.theme_use('forest-dark')
+        
+        closeImage = Image.open("views/icons/icon_close_darkmode.png")
+        closeImage = closeImage.resize((20, 20))
+        closePhoto = ImageTk.PhotoImage(closeImage)
+
+        minimizeImage = Image.open("views/icons/icon_minimize_darkmode.png")
+        minimizeImage = minimizeImage.resize((20, 20))
+        minimizePhoto = ImageTk.PhotoImage(minimizeImage)
+        
+        toolbarFrame = tk.Frame(self, bg = "#090E18", height = 30)
+        toolbarFrame.pack(fill = "both", side = "top")
+
+        closeButton = CTkButton(toolbarFrame, 
+                                image = closePhoto,
+                                text = "",
+                                width = 20,
+                                height = 20,
+                                fg_color = "#090E18",
+                                bg_color = "#000000",
+                                hover = True,
+                                hover_color = "#48BFE3",
+                                command = self.closeApplication)
+        closeButton.pack(side = "right", padx = 10, pady = 10)
+
+        minimizeButton = CTkButton(toolbarFrame, 
+                                image = minimizePhoto,
+                                text = "",
+                                width = 20,
+                                height = 20,
+                                fg_color = "#090E18",
+                                bg_color = "#000000",
+                                hover = True,
+                                hover_color = "#48BFE3",
+                                command = self.minimizeApplicaiton)
+        minimizeButton.pack(side = "right", padx = 0, pady = 10)
+
+        mainFrame = tk.Frame(self, bg = "#090E18")
+        mainFrame.pack(expand = True, fill = "both", side = "top")
+        
+        mainFrameLeft = tk.Frame(mainFrame, bg = "#090E18")
+        mainFrameRight = tk.Frame(mainFrame, bg = "#090E18")
+        
+        mainFrameLeft.pack(expand = True, fill = "both", side = "left")
+        mainFrameRight.pack(expand = True, fill = "both", side = "left")
+
+        bottomFrame = tk.Frame(self, bg = "#090E18")
+        bottomFrame.pack(fill = "both", side = "top", padx = 20)
+        
+        analyticsButton = CTkButton(bottomFrame,
+                                    text = 'Apply Now',
+                                    command = print("Apply Now Button Pressed"),
+                                    font = ('Montserrat', 15),
+                                    border_width = 1,
+                                    corner_radius = 15,
+                                    border_color = '#5E60CE',
+                                    text_color = '#090E18',
+                                    fg_color = '#5E60CE',
+                                    height = 30,
+                                    width = 130)
+        
+        scheduledApplyButton = CTkButton(bottomFrame,
+                                text = 'Scheduled Apply',
+                                command = print("Scheduled Apply Button Pressed"), 
+                                font = ('Montserrat', 12),
+                                border_width = 1,
+                                corner_radius = 15,
+                                border_color = '#5E60CE',
+                                text_color = '#5E60CE',
+                                fg_color = '#090E18',
+                                height = 30,
+                                width = 140)
+
+        dashboardButton = CTkButton(bottomFrame,
+                                text = 'Dashboard',
+                                command = lambda: parent.show_frame(parent.dashboardFrame), 
+                                font = ('Montserrat', 15),
+                                border_width = 1,
+                                corner_radius = 15,
+                                border_color = '#5E60CE',
+                                text_color = '#5E60CE',
+                                fg_color = '#090E18',
+                                height = 30,
+                                width = 140)
+
+        logoutButton = CTkButton(bottomFrame,
+                                text = 'Logout',
+                                command = lambda: parent.show_frame(parent.loginFrame), 
+                                font = ('Montserrat', 15),
+                                border_width = 1,
+                                corner_radius = 15,
+                                border_color = '#C1121F',
+                                text_color = '#090E18',
+                                fg_color = '#C1121F',
+                                height = 30,
+                                width = 100)
+        
+        analyticsButton.pack(side = 'right', padx = 10, pady = 10)
+        scheduledApplyButton.pack(side = 'right', padx = 10, pady = 10)
+        dashboardButton.pack(side = 'right', padx = 10, pady = 10)
+        logoutButton.pack(side = 'right', padx = 10, pady = 10)
                                                                                  
 class AdminPage(tk.Frame):
     def __init__(self, parent):
