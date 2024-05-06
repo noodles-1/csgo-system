@@ -347,6 +347,12 @@ class ConfigPage(tk.Frame):
     def minimizeApplicaiton(self):
         self.master.iconify()
         
+    def fromComboBox_callback(self, choice):
+        print("From Combobox callback: ", choice)
+
+    def toComboBox_callback(self, choice):
+        print("From Combobox callback: ", choice)
+
     def __init__(self, parent):
         tk.Frame.__init__(self, parent, bg = "#090E18")
         style = ttk.Style()
@@ -390,16 +396,62 @@ class ConfigPage(tk.Frame):
         mainFrame = tk.Frame(self, bg = "#090E18")
         mainFrame.pack(expand = True, fill = "both", side = "top")
         
-        mainFrameLeft = tk.Frame(mainFrame, bg = "#090E18")
-        mainFrameRight = tk.Frame(mainFrame, bg = "#090E18")
+        # mainFrameLeft = tk.Frame(mainFrame, bg = "#090E18")
+        # mainFrameRight = tk.Frame(mainFrame, bg = "#090E18")
+
+        mainFrameLeft = tk.Frame(mainFrame, bg = "blue")
+        mainFrameRight = tk.Frame(mainFrame, bg = "green")
         
         mainFrameLeft.pack(expand = True, fill = "both", side = "left")
         mainFrameRight.pack(expand = True, fill = "both", side = "left")
 
+        addScheduleFrame = CTkFrame(mainFrameLeft, fg_color = "#1B2431")
+        addScheduleFrame.pack(expand = True, fill = "both", side = "top", padx = 20)
+
+        scheduleLabel = CTkLabel(addScheduleFrame, text = "Active Hours", font = ('Montserrat', 15), text_color = "#FFFFFF", anchor = "w")
+        scheduleLabel.pack(fill = "x", side = "top", padx = 5)
+
+        lineSeparator = CTkFrame(addScheduleFrame, height = 2, fg_color = "#FFFFFF")
+        lineSeparator.pack(fill = "x", side = "top", pady = 5)
+
+        scheduleLineFrame = CTkFrame(addScheduleFrame, fg_color = "#1B2431")
+        scheduleLineFrame.pack(fill = "x", side = "top", padx = 5)
+
+        fromLabel = CTkLabel(scheduleLineFrame, text = "From", font = ('Montserrat', 15), text_color = "#FFFFFF", anchor = "w")
+        fromLabel.pack(side = "left", padx = 5)
+
+        fromComboBox = CTkComboBox(scheduleLineFrame,
+                                   values = ["1 AM", "2 AM", "3 AM", "4 AM",
+                                             "5 AM", "6 AM", "7 AM", "8 AM",
+                                             "9 AM", "10 AM", "11 AM", "12 PM",
+                                             "1 PM", "2 PM", "3 PM", "4 PM",
+                                             "5 PM", "6 PM", "7 PM", "8 PM",
+                                             "9 PM", "10 PM", "11 PM", "12 AM"],
+                                    command = self.fromComboBox_callback)
+        fromComboBox.set("1 AM")
+        fromComboBox.pack(side = "left", padx = 5)
+
+        toLabel = CTkLabel(scheduleLineFrame, text = "To", font = ('Montserrat', 15), text_color = "#FFFFFF", anchor = "w")
+        toLabel.pack(side = "left", padx = 5)
+
+        toComboBox = CTkComboBox(scheduleLineFrame,
+                                   values = ["1 AM", "2 AM", "3 AM", "4 AM",
+                                             "5 AM", "6 AM", "7 AM", "8 AM",
+                                             "9 AM", "10 AM", "11 AM", "12 PM",
+                                             "1 PM", "2 PM", "3 PM", "4 PM",
+                                             "5 PM", "6 PM", "7 PM", "8 PM",
+                                             "9 PM", "10 PM", "11 PM", "12 AM"],
+                                    command = self.toComboBox_callback)
+        toComboBox.set("1 AM")
+        toComboBox.pack(side = "left", padx = 5)
+
+        reservedFrame = CTkFrame(mainFrameLeft, fg_color = "#090E18")
+        reservedFrame.pack(expand = True, fill = "both", side = "top")
+
         bottomFrame = tk.Frame(self, bg = "#090E18")
         bottomFrame.pack(fill = "both", side = "top", padx = 20)
         
-        analyticsButton = CTkButton(bottomFrame,
+        applyButton = CTkButton(bottomFrame,
                                     text = 'Apply Now',
                                     command = print("Apply Now Button Pressed"),
                                     font = ('Montserrat', 15),
@@ -447,7 +499,7 @@ class ConfigPage(tk.Frame):
                                 height = 30,
                                 width = 100)
         
-        analyticsButton.pack(side = 'right', padx = 10, pady = 10)
+        applyButton.pack(side = 'right', padx = 10, pady = 10)
         scheduledApplyButton.pack(side = 'right', padx = 10, pady = 10)
         dashboardButton.pack(side = 'right', padx = 10, pady = 10)
         logoutButton.pack(side = 'right', padx = 10, pady = 10)
