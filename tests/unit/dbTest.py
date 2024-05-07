@@ -27,11 +27,12 @@ class TestDBControllerMethods(unittest.TestCase):
     @patch('controllers.dbController.DBController.emailExists')
     @patch('controllers.dbController.DBController.usernameExists')
     def test_login_user(self, mock_username_exists, mock_email_exists, mock_get_user):
-        mock_username_exists = False
-        mock_email_exists = False
+        mock_username_exists.return_value = True
+        mock_email_exists.return_value = True
         mock_get_user.return_value = MagicMock(password='321')
 
         response = db.loginUser('321', username='aasdf')
+        print(response.messages)
         self.assertTrue(response.ok)
         
 if __name__ == '__main__':
