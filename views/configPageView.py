@@ -145,7 +145,7 @@ class ConfigPage(tk.Frame):
                                               label_anchor = "w",
                                               label_fg_color = "#1B2431",
                                               fg_color = "#1b2431",
-                                              width = 400)
+                                              width = 500)
         addScheduleFrame.pack(expand = True, fill = "both", side = "top", padx = 40)
 
         lineSeparator = tk.Frame(addScheduleFrame, height = 2, bg = "#FFFFFF")
@@ -170,6 +170,68 @@ class ConfigPage(tk.Frame):
         
         lineSeparator = tk.Frame(detectableVehiclesFrame, height = 2, bg = "#FFFFFF")
         lineSeparator.pack(fill = "x", side = "top", pady = 5)
+        
+        VehiclesFrame = tk.Frame(detectableVehiclesFrame, bg = "#1B2431")
+        VehiclesFrame.pack(fill = "both", padx = 10, side = "top", expand = True)
+        
+        VehiclesFrameFirstRow = tk.Frame(VehiclesFrame, bg = "#1B2431")
+        VehiclesFrameSecondRow = tk.Frame(VehiclesFrame, bg = "#1B2431")
+        VehiclesFrameFirstRow.pack(side = "top", fill = "both", expand = True)
+        VehiclesFrameSecondRow.pack(side = "top", fill = "both", expand = True)
+        
+        carFrame = tk.Frame(VehiclesFrameFirstRow, bg = "#1B2431")
+        truckFrame = tk.Frame(VehiclesFrameFirstRow, bg = "#1B2431")
+        jeepneyFrame = tk.Frame(VehiclesFrameFirstRow, bg = "#1B2431")
+        busFrame = tk.Frame(VehiclesFrameSecondRow, bg = "#1B2431")
+        motorcycleFrame = tk.Frame(VehiclesFrameSecondRow, bg = "#1B2431")
+        
+        carFrame.pack(side = "left", padx = 20, expand = True, fill = "x")
+        truckFrame.pack(side = "left", padx = 40, expand = True, fill = "x")
+        jeepneyFrame.pack(side = "left", padx = 20, expand = True, fill = "x")
+        busFrame.pack(side = "left", padx = 20, expand = True)
+        motorcycleFrame.pack(side = "left", padx = 40, expand = True)
+        
+        
+        self.carVar = IntVar(value = 1)
+        carTrueRadioButton = CTkRadioButton(carFrame, variable = self.carVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        carFalseRadioButton = CTkRadioButton(carFrame, variable = self.carVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        carRadioLabel = CTkLabel(carFrame, text = "Car", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
+        carRadioLabel.pack(side = "top", padx = 20, pady = 5, expand = True, fill = "x")
+        carTrueRadioButton.pack(side = "left", padx = 10, pady = 5, expand = True, fill = "x")
+        carFalseRadioButton.pack(side = "right", padx = 10, pady = 5, expand = True, fill = "x")
+        
+        self.truckVar = IntVar(value = 1)
+        truckTrueRadioButton = CTkRadioButton(truckFrame, variable = self.truckVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        truckFalseRadioButton = CTkRadioButton(truckFrame, variable = self.truckVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        truckRadioLabel = CTkLabel(truckFrame, text = "Truck", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
+        truckRadioLabel.pack(side = "top", padx = 10, pady = 5)
+        truckTrueRadioButton.pack(side = "left", padx = 10, pady = 5)
+        truckFalseRadioButton.pack(side = "right", padx = 10, pady = 5)
+        
+        
+        self.jeepneyVar = IntVar(value = 1)
+        jeepneyTrueRadioButton = CTkRadioButton(jeepneyFrame, variable = self.jeepneyVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        jeepneyFalseRadioButton = CTkRadioButton(jeepneyFrame, variable = self.jeepneyVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        jeepneyRadioLabel = CTkLabel(jeepneyFrame, text = "Jeepney", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
+        jeepneyRadioLabel.pack(side = "top", padx = 10, pady = 5)
+        jeepneyTrueRadioButton.pack(side = "left", padx = 10, pady = 5)
+        jeepneyFalseRadioButton.pack(side = "right", padx = 10, pady = 5)
+        
+        self.busVar = IntVar(value = 1)
+        busTrueRadioButton = CTkRadioButton(busFrame, variable = self.busVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        busFalseRadioButton = CTkRadioButton(busFrame, variable = self.busVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        busRadioLabel = CTkLabel(busFrame, text = "Bus", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
+        busRadioLabel.pack(side = "top", padx = 10, pady = 5)
+        busTrueRadioButton.pack(side = "left", padx = 10, pady = 5)
+        busFalseRadioButton.pack(side = "right", padx = 10, pady = 5)
+        
+        self.motorVar = IntVar(value = 1)
+        motorTrueRadioButton = CTkRadioButton(motorcycleFrame, variable = self.motorVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        motorFalseRadioButton = CTkRadioButton(motorcycleFrame, variable = self.motorVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        motorRadioLabel = CTkLabel(motorcycleFrame, text = "Motorcycle", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
+        motorRadioLabel.pack(side = "top", padx = 10, pady = 5)
+        motorTrueRadioButton.pack(side = "left", padx = 10, pady = 5)
+        motorFalseRadioButton.pack(side = "right", padx = 10, pady = 5)
         # End of Detectable Vehicles Frame
         
         # Conggestion Price Frame
@@ -274,7 +336,7 @@ class ConfigPage(tk.Frame):
         changeThemeForm = tk.Frame(changeThemeFrame, bg = "#1B2431")
         changeThemeForm.pack(fill = "both", side = "top", pady = 5, expand = True, padx = 20)
         
-        self.themeVar = IntVar()
+        self.themeVar = IntVar(value = 2)
         lightRadioButton = CTkRadioButton(changeThemeForm,
                                             text = "Light",
                                             text_color = "#FFFFFF",
