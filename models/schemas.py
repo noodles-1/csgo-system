@@ -12,6 +12,9 @@ class Base(DeclarativeBase):
     pass
 
 class User(Base):
+    '''
+    User table with columns ID (PK), email, username, full name, is admin, and password.
+    '''
     __tablename__ = 'user'
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -25,6 +28,9 @@ class User(Base):
         return f'User(userId={self.id}, email={self.email}, username={self.username}, fullName={self.fullName}, isAdmin={self.isAdmin})'
     
 class Camera(Base):
+    '''
+    Camera table with columns ID (PK) and the camera name.
+    '''
     __tablename__ = 'camera'
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -34,6 +40,10 @@ class Camera(Base):
         return f'Camera(cameraId={self.id}, name={self.name})'
 
 class DetectedLicensePlate(Base):
+    '''
+    DetectedLicensePlate table with columns ID (PK), user ID (FK from User), camera ID (FK from Camera),
+    license number, vehicle type, and datetime of detection.
+    '''
     __tablename__ = 'detected_license_plate'
 
     id: Mapped[int] = mapped_column(primary_key=True)
