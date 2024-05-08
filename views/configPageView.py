@@ -48,7 +48,8 @@ class ConfigPage(tk.Frame):
                                                              "1 PM", "2 PM", "3 PM", "4 PM",
                                                              "5 PM", "6 PM", "7 PM", "8 PM",
                                                              "9 PM", "10 PM", "11 PM", "12 AM"],
-                                      command=self.fromComboBox_callback)
+                                      command=self.fromComboBox_callback,
+                                      width = 80)
         fromComboBox.set("1 AM")
         fromComboBox.pack(side="left", padx=5)
 
@@ -61,7 +62,8 @@ class ConfigPage(tk.Frame):
                                                            "1 PM", "2 PM", "3 PM", "4 PM",
                                                            "5 PM", "6 PM", "7 PM", "8 PM",
                                                            "9 PM", "10 PM", "11 PM", "12 AM"],
-                                    command=self.toComboBox_callback)
+                                    command=self.toComboBox_callback,
+                                    width = 80)
         toComboBox.set("1 AM")
         toComboBox.pack(side="left", padx=5)
 
@@ -71,7 +73,8 @@ class ConfigPage(tk.Frame):
         everyComboBox = CTkComboBox(newRowFrame,
                                        values=["Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays",
                                                "Saturdays", "Sundays"],
-                                       command=self.toComboBox_callback)
+                                       command=self.toComboBox_callback,
+                                       width = 100)
         everyComboBox.set("Mondays")
         everyComboBox.pack(side="left", padx=5)
 
@@ -148,7 +151,7 @@ class ConfigPage(tk.Frame):
                                               label_fg_color = "#1B2431",
                                               fg_color = "#1b2431",
                                               width = 500)
-        addScheduleFrame.pack(expand = True, fill = "both", side = "top", padx = 40)
+        addScheduleFrame.pack(expand = True, fill = "both", side = "top", padx = 10)
 
         lineSeparator = tk.Frame(addScheduleFrame, height = 2, bg = "#FFFFFF")
         lineSeparator.pack(fill = "x", side = "top", pady = 5)
@@ -165,7 +168,7 @@ class ConfigPage(tk.Frame):
         # Right Side of the Panel
         # Detectable Vehicles Frame
         detectableVehiclesFrame = tk.Frame(mainFrameRight, bg = "#1B2431")
-        detectableVehiclesFrame.pack(expand = True, fill = "both", side = "top", padx = 20)
+        detectableVehiclesFrame.pack(expand = True, fill = "both", side = "top", padx = 10)
         
         detectableVehiclesLabel = CTkLabel(detectableVehiclesFrame, text = "Detectable Vehicles Type", text_color = "#FFFFFF", font = ('Montserrat', 15), anchor = "w")
         detectableVehiclesLabel.pack(fill = "x", padx = 5)
@@ -187,11 +190,11 @@ class ConfigPage(tk.Frame):
         busFrame = tk.Frame(VehiclesFrameSecondRow, bg = "#1B2431")
         motorcycleFrame = tk.Frame(VehiclesFrameSecondRow, bg = "#1B2431")
         
-        carFrame.pack(side = "left", padx = 20, expand = True, fill = "x")
-        truckFrame.pack(side = "left", padx = 40, expand = True, fill = "x")
-        jeepneyFrame.pack(side = "left", padx = 20, expand = True, fill = "x")
-        busFrame.pack(side = "left", padx = 20, expand = True)
-        motorcycleFrame.pack(side = "left", padx = 40, expand = True)
+        carFrame.pack(side = "left", padx = 10, expand = True, fill = "x")
+        truckFrame.pack(side = "left", padx = 20, expand = True, fill = "x")
+        jeepneyFrame.pack(side = "left", padx = 10, expand = True, fill = "x")
+        busFrame.pack(side = "left", padx = 10, expand = True)
+        motorcycleFrame.pack(side = "left", padx = 20, expand = True)
         
         
         self.carVar = IntVar(value = 1)
@@ -238,7 +241,7 @@ class ConfigPage(tk.Frame):
         
         # Conggestion Price Frame
         congestionPricingFrame = tk.Frame(mainFrameRight, bg = "#1B2431")
-        congestionPricingFrame.pack(expand = True, fill = "both", side = "top", padx = 20, pady = (20, 0))
+        congestionPricingFrame.pack(expand = True, fill = "both", side = "top", padx = 10, pady = (20, 0))
         
         congestionPricingLabel = CTkLabel(congestionPricingFrame, text = "Congestion Price", text_color = "#FFFFFF", font = ('Montserrat', 15), anchor = "w")
         congestionPricingLabel.pack(fill = "x", padx = 5, side = "top")
@@ -247,7 +250,7 @@ class ConfigPage(tk.Frame):
         lineSeparator.pack(fill = "x", side = "top", pady = 5)
         
         allVehiclesFrame = tk.Frame(congestionPricingFrame, bg = "#1B2431")
-        allVehiclesFrame.pack(fill = 'both', padx = 10, side = "top", expand = True)
+        allVehiclesFrame.pack(fill = 'both', padx = 5, side = "top", expand = True)
         
         allvehiclesFirstRowFrame = tk.Frame(allVehiclesFrame, bg = "#1B2431")
         allvehiclesSecondRowFrame = tk.Frame(allVehiclesFrame, bg = "#1B2431")
@@ -260,11 +263,11 @@ class ConfigPage(tk.Frame):
         busFrame = tk.Frame(allvehiclesSecondRowFrame, bg = "#1B2431")
         motorcycleFrame = tk.Frame(allvehiclesSecondRowFrame, bg = "#1B2431")
         
-        carFrame.pack(side = "left", padx = 40)
-        truckFrame.pack(side = "left", padx = 40)
-        jeepneyFrame.pack(side = "left", padx = 40)
-        busFrame.pack(side = "left", padx = 40)
-        motorcycleFrame.pack(side = "left", padx = 40)
+        carFrame.pack(side = "left", padx = 20)
+        truckFrame.pack(side = "left", padx = 20)
+        jeepneyFrame.pack(side = "left", padx = 20)
+        busFrame.pack(side = "left", padx = 20)
+        motorcycleFrame.pack(side = "left", padx = 20)
         
         carEntry = CTkEntry(carFrame, corner_radius = 20,
                             border_color = "#FFFFFF",
@@ -327,7 +330,7 @@ class ConfigPage(tk.Frame):
         
         # Change Theme Frame
         changeThemeFrame = tk.Frame(mainFrameRight, bg = "#1B2431")
-        changeThemeFrame.pack(fill = "both", side = "top", padx = 20, pady = (20, 20))
+        changeThemeFrame.pack(fill = "both", side = "top", padx = 10, pady = (20, 20))
         
         changeThemeLabel = CTkLabel(changeThemeFrame, text = "Change Theme", text_color = "#FFFFFF", font = ('Montserrat', 15), anchor = "w")
         changeThemeLabel.pack(fill = "x", padx = 5)
@@ -389,7 +392,7 @@ class ConfigPage(tk.Frame):
         
         # Change Password Frame
         changePasswordFrame = tk.Frame(mainFrameRight, bg = "#1B2431")
-        changePasswordFrame.pack(fill = "both", side = "top", padx = 20)
+        changePasswordFrame.pack(fill = "both", side = "top", padx = 10)
         
         changePasswordLabel = CTkLabel(changePasswordFrame, text = "Change Password", text_color = "#FFFFFF", font = ('Montserrat', 15), anchor = "w")
         changePasswordLabel.pack(fill = "x", padx = 5)

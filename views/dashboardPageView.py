@@ -191,11 +191,11 @@ class DashboardPage(tk.Frame):
         dropdownFrame = CTkFrame(cameraFrame, fg_color = "#1B2431")
         dropdownFrame.pack(fill = 'x', side = "bottom", padx = 10, pady = 10)
         
-        changeCameraDisplay = CTkComboBox(dropdownFrame, values = ["Camera 1", "Camera 2", "Camera 3", "Camera 4", "Camera 5"], command = self.changeCameraDisplay_callback)
+        changeCameraDisplay = CTkComboBox(dropdownFrame, values = ["Camera 1", "Camera 2", "Camera 3", "Camera 4", "Camera 5"], command = self.changeCameraDisplay_callback, width = 100)
         changeCameraDisplay.set("Camera 1")
         changeCameraDisplay.pack(side = "right")
         
-        changeCameraLabel = CTkLabel(dropdownFrame, text = "Change Camera", font = ('Montserrat', 13))
+        changeCameraLabel = CTkLabel(dropdownFrame, text = "Change Camera", font = ('Montserrat', 13), text_color = "#FFFFFF")
         changeCameraLabel.pack(side = "right", padx = 10)
         
         settingsButton = CTkButton(middleLeftMainFrame,
