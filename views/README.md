@@ -1,14 +1,20 @@
 # Structure of the GUI
 For Reference click the [GUI flow](https://drive.google.com/file/d/1-EQPn6qUzVsC2B4StnYKVexv7ps9LH9F/view?usp=sharing)
 
-## Branch Current Version is 1.0.5
+## Branch Current Version is 1.0.6
 
-General To do:
+### Doing
+> 1. Analytics Page - 20%
+
+### To Do
+
+General To Do:
 > 1. Integrate The functions from Controller.py to GUI.
 > 2. Database Connection.
 > 3. Forget Password Page
+> 4. Change Global Theme
 
-Specific To do **(Login)**:
+Specific To Do **(Login)**:
 > 1. Input Validation.
 > 2. Warning whenever an incorrect ID/Password is entered.
 > 3. Create a function for loginButton that verifies the password and ID before parent.show_frame(parent.dashboardFrame).
@@ -24,8 +30,9 @@ Specific To do **(Dashboard)**:
 > 7. Must show the up-time of the algorithm.
 > 8. Must show the camera ID of the current Camera displayed.
 > 9. Must show the live detection feed of vehicles in the Camera Placeholder.
+> 10. Admin Button must be disabled if the access level of the user is insufficient.
 
-Specific To do **(Config)**:
+Specific To Do **(Config)**:
 > 1. Input validation for Active Hours.
 > 2. Modify the addRow function to validate the row first if the time and day is valid before adding another row.
 > 3. When the Config Page is loaded, the saved values for the Active Hours must be visible from the start. For example, if I have previously set ***From 6 AM To 8 AM Every Mondays***, if I click the Settings button from the Dashboard Page, the **first row of the Active Hours** should be ***From 6 AM To 8 AM Every Mondays***.
@@ -42,10 +49,18 @@ Specific To do **(Config)**:
 > 14. Layout for Scheduled Apply. Preferrably a popup.
 > 15. Logout Button must have a confirmation popup first.
 
-Specific To do **(Admin)**:
+Specific To Do **(Admin)**:
 > 1. Define the Requirements.
 > 2. Build the GUI.
 
-Specific to do **(Analytics)**:
+Specific To Do **(Analytics)**:
+> 1. Define the Requirements.
+> 2. Build the GUI.
+
+Specific To Do **(Forget Password)**:
+> 1. Define the Requirements.
+> 2. Build the GUI.
+
+Specific To Do **(Error Feedback)**:
 > 1. Define the Requirements.
 > 2. Build the GUI.

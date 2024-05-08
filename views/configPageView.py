@@ -91,6 +91,8 @@ class ConfigPage(tk.Frame):
     
     def __init__(self, parent):
         tk.Frame.__init__(self, parent, bg = "#090E18")
+        
+        # Style definition. Can be utilized with the Change Theme from Light to Dark
         style = ttk.Style()
         style.theme_use('forest-dark')
         
