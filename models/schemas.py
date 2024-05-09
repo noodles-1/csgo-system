@@ -1,8 +1,8 @@
-import datetime
-
+from datetime import datetime
 from sqlalchemy import ForeignKey
 from sqlalchemy import String
-from sqlalchemy import DateTime
+from sqlalchemy import Date
+from sqlalchemy import Time
 from sqlalchemy.sql import func
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped
@@ -38,6 +38,19 @@ class Camera(Base):
 
     def __repr__(self) -> str:
         return f'Camera(cameraId={self.id}, name={self.name})'
+    
+class Price(Base):
+    '''
+    Price table that associates a variable price with a corresponding vehicle type.
+    '''
+    __tablename__ = 'price'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    vehicleType: Mapped[str]
+    price: Mapped[int]
+
+    def __repr__(self) -> str:
+        return f'Price(priceId={self.id}, vehicleType={self.vehicleType})'
 
 class DetectedLicensePlate(Base):
     '''
@@ -49,9 +62,10 @@ class DetectedLicensePlate(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     userId: Mapped[int] = mapped_column(ForeignKey('user.id'))
     cameraId: Mapped[int] = mapped_column(ForeignKey('camera.id'))
+    priceId: Mapped[int] = mapped_column(ForeignKey('price.id'))
     licenseNumber: Mapped[str] = mapped_column(String(14))
-    vehicleType: Mapped[str]
-    dateTime: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    date: Mapped[Date] = mapped_column(Date())
+    time: Mapped[Time] = mapped_column(Time(timezone=True))
 
     def __repr__(self) -> str:
-        return f'Detection(id={self.id}, userId={self.userId}, cameraId={self.cameraId}, licenseNumber={self.licenseNumber}, vehicleType={self.vehicleType}, dateTime={self.dateTime})'
+        return f'Detection(id={self.id}, userId={self.userId}, cameraId={self.cameraId}, priceId={self.priceId}, licenseNumber={self.licenseNumber}, date={self.date}, time={self.time})'

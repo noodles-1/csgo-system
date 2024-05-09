@@ -1,12 +1,14 @@
 import os
 import sys
 import re
+import csv
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
 from collections import defaultdict
+from datetime import datetime, timedelta
 from models.connect import Connection
 from models.schemas import User
 from models.schemas import Camera
@@ -157,6 +159,27 @@ class DBController:
 
         return response
     
+    @staticmethod
+    def licensePlateExists(licenseNumber: str) -> bool:
+        '''
+        Checks if the license plate number already exists in the database.
+
+        params:
+        - licenseNumber: str => the license number which will be checked for existence in the database
+
+        returns:
+        - True => if the executed query contains a license plate data
+        - False => if the executed query does contain a license plate data
+        '''
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(DetectedLicensePlate).where(DetectedLicensePlate.licenseNumber == licenseNumber)
+                result = session.scalar(stmt)
+                return result is not None
+        except Exception as e:
+            print(repr(e))
+            return False
+    
     '''
     Database transaction methods
     '''
@@ -274,6 +297,105 @@ class DBController:
                 else:
                     response.ok = True
                     response.data = user
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+
+        return response
+    
+    @staticmethod
+    def addLicensePlate(userId: int, cameraId: int, priceId: int, licenseNumber: str) -> Response:
+        '''
+        Adds a recognized license plate number from the object detection module to the database, 
+        accompanied with the user ID, camera ID, vehicle type, and the time and date when the 
+        detection occurred.
+
+        params:
+        - userId: str => the ID of the logged in user that detected the license plate
+        - cameraId: str => the ID of the camera used in the detection of the license plate
+        - priceId: str => the ID of the vehicle type with the variable price
+        - licenseNubmer: str => the license plate number extracted using the OCR
+
+        returns:
+        - response: Response => contains the response status and error messages if any
+        '''
+        response = DBController.Response()
+
+        try:
+            if DBController.licensePlateExists(licenseNumber):
+                response.ok = False
+                response.messages['error'] = 'License plate already detected.'
+            else:
+                with Session(Connection.engine) as session:
+                    license = DetectedLicensePlate(
+                        userId=userId,
+                        cameraId=cameraId,
+                        priceId=priceId,
+                        licenseNumber=licenseNumber,
+                        date=datetime.now(),
+                        time=datetime.now().time()
+                    )
+                    session.add(license)
+                    session.commit()
+                    response.ok = True
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+
+        return response
+    
+    @staticmethod
+    def deleteLicensePlate(licenseNumber: str) -> Response:
+        '''
+        Deletes an already existing detected license plate from the database.
+
+        params:
+        - licenseNubmer: str => the license plate number to be deleted
+
+        returns:
+        - response: Response => contains the response status and error messages if any
+        '''
+        response = DBController.Response()
+
+        try:
+            if not DBController.licensePlateExists(licenseNumber):
+                response.ok = False
+                response.messages['error'] = 'Detected license plate number does not exist.'
+            else:
+                with Session(Connection.engine) as session:
+                    stmt = select(DetectedLicensePlate).where(DetectedLicensePlate.licenseNumber == licenseNumber)
+                    result = session.scalar(stmt)
+                    session.delete(result)
+                    session.commit()
+                    response.ok = True
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+
+        return response
+    
+    @staticmethod
+    def generateTemporaryCSV() -> Response:
+        '''
+        Generates a temporary CSV file polled every few constant minutes to be used for report generation
+        methods found on controllers/controller.py.
+
+        returns:
+        - response: Response => contains the response status and error messages if any
+        '''
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(DetectedLicensePlate)
+                results = session.execute(stmt).all()
+                with open('tempReports/temp.csv', 'w', newline='') as file:
+                    writer = csv.writer(file)
+                    writer.writerow(['License Plate', 'Camera ID', 'Price ID', 'Time', 'Date'])
+                    for result in results:
+                        res = result[0]
+                        writer.writerow([res.licenseNumber, res.cameraId, res.priceId, res.time, res.date])
+                response.ok = True
         except Exception as e:
             response.ok = False
             response.messages['error'] = repr(e)

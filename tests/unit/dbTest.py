@@ -53,7 +53,42 @@ class TestDBControllerMethods(unittest.TestCase):
         mock_get_user.return_value = MagicMock(password='321')
 
         response = db.loginUser('321', username='aasdf')
-        print(response.messages)
+        self.assertTrue(response.ok)
+
+    @patch('controllers.dbController.Session')
+    @patch('controllers.dbController.DBController.licensePlateExists')
+    def test_add_license_plate(self, mock_license_exists, mock_session):
+        '''
+        Tests the addLicensePlate method from DBController. Tests the insertion of a new
+        license plate number if it does not already exist yet in the DetectedLicensePlate table.
+
+        asserts:
+        - True => if the license plate has been added
+        - False => if the license plate has not been added
+        '''
+        mock_license_exists.return_value = False
+        mock_session.add = MagicMock()
+        mock_session.commit = MagicMock()
+
+        response = db.addLicensePlate(1, 1, 1, 'AAA1111')
+        self.assertTrue(response.ok)
+
+    @patch('controllers.dbController.Session')
+    @patch('controllers.dbController.DBController.licensePlateExists')
+    def test_delete_license_plate(self, mock_license_exists, mock_session):
+        '''
+        Tests the deleteLicensePlate method from DBController. Tests the deletion of an already
+        existing license plate number in the DetectedLicensePlate table.
+
+        asserts:
+        - True => if the license plate has been deleted
+        - False => if the license plate has not been deleted
+        '''
+        mock_license_exists.return_value = True
+        mock_session.delete = MagicMock()
+        mock_session.commit = MagicMock()
+
+        response = db.deleteLicensePlate('AAA1111')
         self.assertTrue(response.ok)
         
 if __name__ == '__main__':
