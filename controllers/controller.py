@@ -14,6 +14,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import tkinter as tk
 from scipy.interpolate import make_interp_spline
 from scipy.interpolate import interp1d
+import hashlib
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -221,3 +222,4 @@ class ReportGenerationController:
         except Exception as e:
             print(f"Error: {e}")
             return False, None
+            
