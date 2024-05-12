@@ -10,27 +10,35 @@ parent = os.path.dirname(current)
 sys.path.append(parent)
 
 class ConfigPage(tk.Frame):
+    # Close Application
     def closeApplication(self):
         self.master.destroy()
-
+    
+    # Minimize or Iconify the Application
     def minimizeApplicaiton(self):
         self.master.iconify()
-        
+    
+    # Function that handles the logic for the FROM input.
     def fromComboBox_callback(self, choice):
         print("From Combobox callback: ", choice)
 
+    # Function that handles the logic for the TO input.
     def toComboBox_callback(self, choice):
         print("From Combobox callback: ", choice)
     
+    # Function that handles the changing of theme
     def themeRadioButton_callback(self):
         print("Radio Button Theme callback: ", self.themeVar.get())
         
+    # Function that applies the settings currently set to.
     def applyButton_callback(self):
         print("Apply Button Pressed")
     
+    # Function that applies the settings currently set to with delay
     def scheduleApplyButton_callback(self):
         print("Schedule Apply Button Pressed")
         
+    # Function that add rows to the Schedule of the Algorithm
     def add_row(self):
         addImage = Image.open("views/icons/icons_add.png")
         addImage = addImage.resize((25, 25))
@@ -89,8 +97,13 @@ class ConfigPage(tk.Frame):
                                 corner_radius=150)
         addButton.pack(side="left", padx=5)
 
+    # Saves the Password Changes
     def passwordChangeSaveButton_callback(self):
         print("Save Button Pressed")
+        # Note that you should first verify if the current password matches the saved password of the user.
+        # This function is excempted from the Scheduled Apply and Apply Buttons.
+        # This Change Password should be realtime updated, and not affected by the said buttons.
+    
     
     def __init__(self, parent):
         tk.Frame.__init__(self, parent, bg = "#090E18")
@@ -99,14 +112,17 @@ class ConfigPage(tk.Frame):
         style = ttk.Style()
         style.theme_use('forest-dark')
         
+        # Close Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
         closeImage = Image.open("views/icons/icon_close_darkmode.png")
         closeImage = closeImage.resize((20, 20))
         closePhoto = ImageTk.PhotoImage(closeImage)
 
+        # Minimize Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
         minimizeImage = Image.open("views/icons/icon_minimize_darkmode.png")
         minimizeImage = minimizeImage.resize((20, 20))
         minimizePhoto = ImageTk.PhotoImage(minimizeImage)
         
+        # Top-most Frame that holds the Close and Minimize buttons.
         toolbarFrame = tk.Frame(self, bg = "#090E18", height = 30)
         toolbarFrame.pack(fill = "both", side = "top")
 
@@ -134,15 +150,18 @@ class ConfigPage(tk.Frame):
                                 command = self.minimizeApplicaiton)
         minimizeButton.pack(side = "right", padx = 0, pady = 10)
 
-        mainFrame = tk.Frame(self, bg = "#090E18")
+        # Main Frame (Where the contents of the main page is)
+        # mainFrame = tk.Frame(self, bg = "#090E18")
+        mainFrame = CTkScrollableFrame(self, bg_color = "#090E18")
         mainFrame.pack(expand = True, fill = "both", side = "top")
         
+        # Again, separates the page into two Frame (Left and Right)
         mainFrameLeft = tk.Frame(mainFrame, bg = "#090E18")
         mainFrameRight = tk.Frame(mainFrame, bg = "#090E18")
         
         mainFrameLeft.pack(expand = True, fill = "both", side = "left")
         mainFrameRight.pack(expand = True, fill = "both", side = "left")
-
+        
         # Left side of the panel
         addScheduleFrame = CTkScrollableFrame(mainFrameLeft, bg_color = "#1B2431",
                                               label_text = "Active Hours", label_font = ('Montserrat', 15),

@@ -10,13 +10,17 @@ parent = os.path.dirname(current)
 sys.path.append(parent)
 
 class DashboardPage(tk.Frame):
+    # Close Application
     def closeApplication(self):
         self.master.destroy()
 
+    # Minimize or Iconify the Application
     def minimizeApplicaiton(self):
         self.master.iconify()
     
+    # Function to change the camera displayed
     def changeCameraDisplay_callback(self, choice):
+        # Insert Logic Here
         print("Change Camera Display callback: ", choice)
 
     def __init__(self, parent):
@@ -26,14 +30,17 @@ class DashboardPage(tk.Frame):
         style = ttk.Style()
         style.theme_use('forest-dark')
 
+        # Close Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
         closeImage = Image.open("views/icons/icon_close_darkmode.png")
         closeImage = closeImage.resize((20, 20))
         closePhoto = ImageTk.PhotoImage(closeImage)
 
+        # Minimize Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
         minimizeImage = Image.open("views/icons/icon_minimize_darkmode.png")
         minimizeImage = minimizeImage.resize((20, 20))
         minimizePhoto = ImageTk.PhotoImage(minimizeImage)
 
+        # Top-most Frame that holds the Close and Minimize buttons.
         toolbarFrame = tk.Frame(self, bg = "#090E18", height = 30)
         toolbarFrame.pack(fill = "both", side = "top")
 
@@ -60,13 +67,16 @@ class DashboardPage(tk.Frame):
                                 hover_color = "#48BFE3",
                                 command = self.minimizeApplicaiton)
         minimizeButton.pack(side = "right", padx = 0, pady = 10)
-
+        # End of Toolbar Frame
+        
+        # Start of Main Frame (Where the contents of the main page is)
         mainFrame = tk.Frame(self, bg = "#090E18")
         mainFrame.pack(expand = True, fill = "both", side = "top")
 
         bottomFrame = tk.Frame(self, bg = "#090E18")
         bottomFrame.pack(fill = "both", side = "top", padx = 20)
 
+        # Goes to the Analytics Page
         analyticsButton = CTkButton(bottomFrame,
                                     text = 'Analytics',
                                     command = lambda: parent.show_frame(parent.analyticsFrame),
@@ -79,6 +89,7 @@ class DashboardPage(tk.Frame):
                                     height = 30,
                                     width = 140)
         
+        # Goes to the Admin Page (Should be disabled unless the user logged in is an Admin)
         adminButton = CTkButton(bottomFrame,
                                 text = 'Admin',
                                 command = lambda: parent.show_frame(parent.adminFrame), 
@@ -100,7 +111,7 @@ class DashboardPage(tk.Frame):
         adminButton.bind("<Enter>", lambda event: adminButton.configure(text_color="#090E18", fg_color = "#5E60CE")) 
         adminButton.bind("<Leave>", lambda event: adminButton.configure(text_color="#5E60CE", fg_color = "#090E18")) 
 
-
+        # Separates the Main Frame into two Sides (Left and Right)
         leftMainFrame = tk.Frame(mainFrame, bg = "#090E18")
         rightMainFrame = tk.Frame(mainFrame, bg = "#090E18")
         leftMainFrame.pack(side = 'left', fill = 'both', expand = True, pady = 5)
@@ -132,6 +143,7 @@ class DashboardPage(tk.Frame):
         # ADD or REMOVE headers as needed @Database Integration
         databaseTable = ttk.Treeview(databaseFrame, columns = ('licensePlate', 'vehicleType', 'cameraID', 'time', 'date', 'price'), show = "headings", style = 'Custom.Treeview')
 
+        # Inserts Blank Entries to the Treeview so that it doesnt look bad when the Treeview is Empty.
         for _ in range(100):
             databaseTable.insert('', 'end', values=('', '', '', '', '', ''))
 
@@ -185,8 +197,10 @@ class DashboardPage(tk.Frame):
         cameraFrame = CTkFrame(topLeftMainFrame, fg_color = '#1B2431')
         cameraFrame.pack(fill = 'both', expand = True, padx = 15, pady = 10)
 
+        # This is where you should input the camera Frame. Delete the code below this if integrating the camera display.
         placeholder_delete_this_label = CTkLabel(cameraFrame, text = 'PLACEHOLDER ONLY. ADD CAMERA HERE', font = ('Montserrat', 45), text_color = 'white')
         placeholder_delete_this_label.pack(fill = 'both', expand = True)
+        # ----
         
         dropdownFrame = CTkFrame(cameraFrame, fg_color = "#1B2431")
         dropdownFrame.pack(fill = 'x', side = "bottom", padx = 10, pady = 10)
@@ -198,6 +212,7 @@ class DashboardPage(tk.Frame):
         changeCameraLabel = CTkLabel(dropdownFrame, text = "Change Camera", font = ('Montserrat', 13), text_color = "#FFFFFF")
         changeCameraLabel.pack(side = "right", padx = 10)
         
+        # Goes to the Config Page
         settingsButton = CTkButton(middleLeftMainFrame,
                                     text = 'Settings',
                                     height = 32,

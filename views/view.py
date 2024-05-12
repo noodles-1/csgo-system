@@ -14,6 +14,8 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
+# view.py is the starting point of the GUI. This is where each Pages are defined. (Parent Class)
+
 class MainWindow(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -37,7 +39,8 @@ class MainWindow(tk.Tk):
         self.adminFrame.grid(row=0, column=0, sticky="nsew")
 
         self.show_frame(self.loginFrame)
-
+        
+    # Function to show Frame (Can be used by the child Classes)
     def show_frame(self, cont):
         cont.tkraise()
 
