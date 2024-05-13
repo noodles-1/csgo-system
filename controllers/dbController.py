@@ -8,12 +8,14 @@ parent = os.path.dirname(current)
 sys.path.append(parent)
 
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime
 from models.connect import Connection
 from models.schemas import User
 from models.schemas import Camera
 from models.schemas import DetectedLicensePlate
+from models.schemas import Price
 from sqlalchemy import select
+from sqlalchemy import update
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
@@ -58,7 +60,9 @@ class DBController:
                 result = session.scalar(stmt)
                 return result is not None
         except Exception as e:
-            print(repr(e))
+            with open('logs.txt', 'a') as file:
+                now = datetime.now().strftime('%Y%m%d %H:%M:%S')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py emailExists() (line 44) - {repr(e)}\n')
             return False
         
     @staticmethod
@@ -79,7 +83,9 @@ class DBController:
                 result = session.scalar(stmt)
                 return result is not None
         except Exception as e:
-            print(repr(e))
+            with open('logs.txt', 'a') as file:
+                now = datetime.now().strftime('%Y%m%d %H:%M:%S')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py usernameExists() (line 67) - {repr(e)}\n')
             return False
         
     @staticmethod
@@ -101,7 +107,9 @@ class DBController:
                 result = session.scalar(stmt)
                 return result
         except Exception as e:
-            print(repr(e))
+            with open('logs.txt', 'a') as file:
+                now = datetime.now().strftime('%Y%m%d %H:%M:%S')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py getUser() (line 90) - {repr(e)}\n')
             return None
         
     @staticmethod
@@ -177,7 +185,9 @@ class DBController:
                 result = session.scalar(stmt)
                 return result is not None
         except Exception as e:
-            print(repr(e))
+            with open('logs.txt', 'a') as file:
+                now = datetime.now().strftime('%Y%m%d %H:%M:%S')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py licensePlateExists() (line 169) - {repr(e)}\n')
             return False
     
     '''
@@ -395,6 +405,32 @@ class DBController:
                     for result in results:
                         res = result[0]
                         writer.writerow([res.licenseNumber, res.cameraId, res.priceId, res.time, res.date])
+                response.ok = True
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+
+        return response
+    
+    @staticmethod
+    def editVehiclePrice(id: int, newPrice: int) -> Response:
+        '''
+        Edits the associated price of the vehicle type.
+
+        params:
+        - id: int => represents the id of the vehicle type
+        - newPrice: int => the new price that will overwrite the previous price
+
+        returns:
+        - response: Response => contains the response status and error messages if any
+        '''
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                stmt = update(Price).where(Price.id == id).values(price=newPrice)
+                session.execute(stmt)
+                session.commit()
                 response.ok = True
         except Exception as e:
             response.ok = False

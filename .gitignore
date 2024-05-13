@@ -7,6 +7,7 @@ wandb
 localFolder
 venv
 
+logs.txt
 .pt
 *.jpg
 **/test_script.py

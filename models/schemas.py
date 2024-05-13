@@ -66,6 +66,7 @@ class DetectedLicensePlate(Base):
     licenseNumber: Mapped[str] = mapped_column(String(14))
     date: Mapped[Date] = mapped_column(Date())
     time: Mapped[Time] = mapped_column(Time(timezone=True))
+    image: Mapped[str]
 
     def __repr__(self) -> str:
-        return f'Detection(id={self.id}, userId={self.userId}, cameraId={self.cameraId}, priceId={self.priceId}, licenseNumber={self.licenseNumber}, date={self.date}, time={self.time})'
+        return f'Detection(id={self.id}, userId={self.userId}, cameraId={self.cameraId}, priceId={self.priceId}, licenseNumber={self.licenseNumber}, date={self.date}, time={self.time}, image={self.image})'
