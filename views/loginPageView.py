@@ -1,13 +1,15 @@
 import os
 import sys
 import tkinter as tk
-from customtkinter import *
-from tkinter import ttk
-from PIL import Image, ImageTk
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
+
+from customtkinter import *
+from tkinter import ttk
+from PIL import Image, ImageTk
+from controllers.dbController import DBController as db
 
 class LoginPage(tk.Frame):
     # Close Application
@@ -19,7 +21,7 @@ class LoginPage(tk.Frame):
         self.master.iconify()
 
     # Function that is called when the credentials are incorrect.
-    def incorrectCredentials(self, incorrectLabel, passwordEntry, usernameEntry):
+    def incorrectCredentials(self, incorrectLabel: CTkLabel, passwordEntry: CTkEntry, usernameEntry: CTkEntry):
         incorrectLabel.configure(text_color = "#d62828")
         
         passwordEntry.delete(0, "end")
@@ -32,15 +34,16 @@ class LoginPage(tk.Frame):
         pass
     
     # Function that is called when clicking Login
-    def verifyCredentials(self):
-        # The logic for verifying the login credentials should be here
-        print("verify credentials called")
-        # End
+    def verifyCredentials(self, usernameEntry: CTkEntry, passwordEntry: CTkEntry, incorrectLabel: CTkLabel):
+        username, password = usernameEntry.get(), passwordEntry.get()
+        print("verify credentials called", username, password)
         
-        # Only continue to this line, when the verification returns True
-        self.master.show_frame(self.master.dashboardFrame)
-        
-        # Call the function incorrectCredentials, when the verification returns False
+        response = db.loginUser(password=password, username=username)
+        if response.ok:
+            self.master.show_frame(self.master.dashboardFrame)
+        else:
+            incorrectLabel.configure(text=(response.messages['username'] or response.messages['password']))
+            self.incorrectCredentials(incorrectLabel, passwordEntry, usernameEntry)
     
     def __init__(self, parent):
         tk.Frame.__init__(self, parent, bg = "blue")
@@ -129,7 +132,7 @@ class LoginPage(tk.Frame):
                                 height = 32,
                                 width = 148,
                                 text_color = '#48BFE3',
-                                command = self.verifyCredentials,
+                                command = lambda: self.verifyCredentials(usernameEntry, passwordEntry, incorrectLabel),
                                 border_color = '#48BFE3',
                                 fg_color = '#000000', 
                                 border_width = 2,
