@@ -1,31 +1,27 @@
-#function for creating a file containing the credentials
-def createFile(filePath, userCredentials): #userCredentials is a variable that contains a dictionary with username and password pairs
-    with open(filePath, 'w') as file:
-        for userUsername, userPassword in userCredentials.items():
-            file.write(f"{userUsername}:{userPassword}\n")
+import random
+import smtplib
 
-#function for reading the file, used dictionaries for username, email and password sets
-def readFile(filePath):
-    userCredentials = {}
-    with open(filePath, 'r') as file:
-        for line in file:
-            userUsername, userPassword = line.strip().split(':')
-            userCredentials[userUsername] = userPassword
-    return userCredentials
+#function for generating a random 6 digit one-time pin
+def otpGenerator():
+    oneTimePin = format(random.randint(0,999999), "06d")
+    return oneTimePin
 
-#function for updating a user's username
-def updateUsername(userCredentials, oldUsername, newUsername):
-    if oldUsername in userCredentials:
-        password = userCredentials.pop(oldUsername)
-        userCredentials[newUsername] = password
-        print(f"Username '{oldUsername}' updated to '{newUsername}' successfully.")
-    else:
-        print(f"Username '{oldUsername}' not found.")
+#function for sending the otp to the user and setting up the email server and sender address (this is just a temporary email with an app password i created at the date i wrote this code)
+def sendOTP(OTP, inputEmail):
+    emailSubject = ("Your OTP - " + OTP)
+    emailMessage = ("Hello! Your OTP is " + OTP + ". Use it to verify your account for logging in.")
+    emailSent = f"subject:{emailSubject}\n\n{emailMessage}"
+    smtpServer = smtplib.SMTP('smtp.gmail.com',587)
+    smtpServer.starttls()
+    smtpServer.login("csgolpr001@gmail.com","dbfi jcfy febq rhba")
+    smtpServer.sendmail("csgolpr001@gmail.com",inputEmail,emailSent)
+    print("Your OTP has been sent to your E-Mail!")
 
-#function for updating a user's password
-def updatePassword(userCredentials, userUsername, newPassword):
-    if userUsername in userCredentials:
-        userCredentials[userUsername] = newPassword
-        print(f"Password for user '{userUsername}' updated successfully.")
-    else:
-        print(f"User '{userUsername}' not found.")
+#function for verifying the OTP that the user will input
+def verifyOTP(inputOTP, receivedOTP):
+    while True:
+        if inputOTP == receivedOTP:
+            return "Account verified!"
+        else:
+            inputOTP = input("Invalid OTP. Please input the correct OTP: ")
+            continue

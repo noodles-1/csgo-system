@@ -31,7 +31,7 @@ class AIController:
         self.cnocr = CnOcr(det_model_name='en_PP-OCRv3_det', rec_model_name='en_PP-OCRv3')
 
     def detect_vehicle(self, frame):
-        return self.vehicle_detection_model.predict(source=frame, save=True)
+        return self.vehicle_detection_model.predict(source=frame)
 
     def detect_license_plate(self, frame):
         return self.lp_detection_model.predict(source=frame)
