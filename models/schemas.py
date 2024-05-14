@@ -47,7 +47,7 @@ class Price(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     vehicleType: Mapped[str]
-    price: Mapped[int]
+    price: Mapped[float]
 
     def __repr__(self) -> str:
         return f'Price(priceId={self.id}, vehicleType={self.vehicleType})'
