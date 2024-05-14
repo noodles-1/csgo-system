@@ -62,7 +62,7 @@ class DBController:
         except Exception as e:
             with open('logs.txt', 'a') as file:
                 now = datetime.now().strftime('%Y%m%d %H:%M:%S')
-                file.write(f'[{now}] Error at function invocation controllers/dbController.py emailExists() (line 44) - {repr(e)}\n')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py emailExists() - {repr(e)}\n')
             return False
         
     @staticmethod
@@ -85,7 +85,7 @@ class DBController:
         except Exception as e:
             with open('logs.txt', 'a') as file:
                 now = datetime.now().strftime('%Y%m%d %H:%M:%S')
-                file.write(f'[{now}] Error at function invocation controllers/dbController.py usernameExists() (line 67) - {repr(e)}\n')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py usernameExists() - {repr(e)}\n')
             return False
         
     @staticmethod
@@ -109,7 +109,7 @@ class DBController:
         except Exception as e:
             with open('logs.txt', 'a') as file:
                 now = datetime.now().strftime('%Y%m%d %H:%M:%S')
-                file.write(f'[{now}] Error at function invocation controllers/dbController.py getUser() (line 90) - {repr(e)}\n')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py getUser() - {repr(e)}\n')
             return None
         
     @staticmethod
@@ -187,14 +187,14 @@ class DBController:
         except Exception as e:
             with open('logs.txt', 'a') as file:
                 now = datetime.now().strftime('%Y%m%d %H:%M:%S')
-                file.write(f'[{now}] Error at function invocation controllers/dbController.py licensePlateExists() (line 169) - {repr(e)}\n')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py licensePlateExists() - {repr(e)}\n')
             return False
     
     '''
     Database transaction methods
     '''
     @staticmethod
-    def registerUser(email, username, fullName, password, isAdmin=False) -> Response:
+    def registerUser(email: str, username: str, fullName: str, password: str, isAdmin=False) -> Response:
         '''
         Inserts a new row (if it doesn't already exist yet) in the User table containing the 
         auto-generated ID, email, username, full name, is admin, and password. Corresponding
@@ -256,50 +256,32 @@ class DBController:
         return response
     
     @staticmethod
-    def loginUser(password, email='', username='') -> Response:
+    def loginUser(password: str, username: str) -> Response:
         '''
-        Checks for the existence of the User provided the email or username, and
-        compares the inputted hashed password with the hashed password of the User
-        in the database. This method assumes that an input field accepts either an
-        email or username for logging the user in.
+        Checks for the existence of the User provided the username, and compares
+        the inputted hashed password with the hashed password of the User in the database.
 
         params:
         - password: str => the hashed password from the input of the user
-        - email (Optional): str => the email provided by the user
-        - username (Optional): str => the username provided by the user
+        - username: str => the username provided by the user
 
         returns:
         - response: Response => contains the response status, (error) messages, and User data that
-        matched with the email or username provided by the user (considering that the passwords match)
+        matched with the username provided by the user (considering that the passwords match)
         '''
-        credentials = {'password': password}
-        if email:
-            credentials['email'] = email
-        else:
-            credentials['username'] = username
-
+        credentials = {'password': password, 'username': username}
         response = DBController.validateMissing(credentials)
 
         if not response.ok:
             return response
         
         try:
-            if (email and not DBController.isValidEmail(email)) or (username and not DBController.isValidUsername(username)):
-                response.ok = False
-                response.messages['error'] = 'Email or username error.'
-                response.messages['email'] = 'Invalid email or username.'
-                response.messages['username'] = 'Invalid email or username.'
-            elif (email and not DBController.emailExists(email)):
-                response.ok = False
-                response.messages['error'] = 'Email error.'
-                response.messages['email'] = 'Email does not exist.'
-            elif (username and not DBController.usernameExists(username)):
+            if not DBController.usernameExists(username):
                 response.ok = False
                 response.messages['error'] = 'Username error.'
                 response.messages['username'] = 'Username does not exist.'
             else:
-                user = DBController.getUser(email=email, username=username)
-
+                user = DBController.getUser(username=username)
                 if user.password != password:
                     response.ok = False
                     response.messages['error'] = 'Password error.'
@@ -427,13 +409,54 @@ class DBController:
         response = DBController.Response()
 
         try:
-            with Session(Connection.engine) as session:
-                stmt = update(Price).where(Price.id == id).values(price=newPrice)
-                session.execute(stmt)
-                session.commit()
-                response.ok = True
+            if newPrice <= 0:
+                response.ok = False
+                response.messages['error'] = 'New price should be a positive number.'
+            else:
+                with Session(Connection.engine) as session:
+                    stmt = update(Price).where(Price.id == id).values(price=newPrice)
+                    session.execute(stmt)
+                    session.commit()
+                    response.ok = True
         except Exception as e:
             response.ok = False
             response.messages['error'] = repr(e)
 
+        return response
+
+    @staticmethod
+    def changePassword(email: str, newPassword: str, confirmPassword: str) -> Response:
+        '''
+        Changes the password of the account associated with the email in which the OTP verification
+        has been sent liable for password change.
+
+        params:
+        - email: str => the email of the associated account
+        - newPassword: str => the new password of the account
+        - confirmPassword: str => verification of the new password
+
+        returns:
+        - response: Response => contains the response status and error messages if any
+        '''
+        credentials = {'newPassword': newPassword, 'confirmPassword': confirmPassword}
+        response = DBController.validateMissing(credentials)
+
+        if not response.ok:
+            return response
+        
+        try:
+            if newPassword != confirmPassword:
+                response.ok = False
+                response.messages['error'] = 'Password error.'
+                response.messages['password'] = 'Passwords do not match.'
+            else:
+                with Session(Connection.engine) as session:
+                    stmt = update(User).where(User.email == email).values(password=newPassword)
+                    session.execute(stmt)
+                    session.commit()
+                    response.ok = True
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+        
         return response

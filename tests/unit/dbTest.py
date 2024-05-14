@@ -35,9 +35,8 @@ class TestDBControllerMethods(unittest.TestCase):
         self.assertTrue(response.ok)
 
     @patch('controllers.dbController.DBController.getUser')
-    @patch('controllers.dbController.DBController.emailExists')
     @patch('controllers.dbController.DBController.usernameExists')
-    def test_login_user(self, mock_username_exists, mock_email_exists, mock_get_user):
+    def test_login_user(self, mock_username_exists, mock_get_user):
         '''
         Tests the loginUser method from DBController. Assumes that the username and email
         provided exists and can be logged in. This test case tests the functionality of the
@@ -49,7 +48,6 @@ class TestDBControllerMethods(unittest.TestCase):
         - False => if the passwords do not match, or the email or username format is invalid
         '''
         mock_username_exists.return_value = True
-        mock_email_exists.return_value = True
         mock_get_user.return_value = MagicMock(password='321')
 
         response = db.loginUser('321', username='aasdf')
@@ -89,6 +87,39 @@ class TestDBControllerMethods(unittest.TestCase):
         mock_session.commit = MagicMock()
 
         response = db.deleteLicensePlate('AAA1111')
+        self.assertTrue(response.ok)
+
+    @patch('controllers.dbController.Session')
+    def test_edit_vehicle_price(self, mock_session):
+        '''
+        Tests the editVehiclePrice method from DBController. Tests the price update
+        of the vehicle type where the price should be a positive number.
+
+        asserts:
+        - True => if the price update is successful
+        - False => if the price update is unsuccessful
+        '''
+        mock_session.execute = MagicMock()
+        mock_session.commit = MagicMock()
+
+        response = db.editVehiclePrice(id=1, newPrice=500)
+        self.assertTrue(response.ok)
+
+    @patch('controllers.dbController.Session')
+    def test_change_password(self, mock_session):
+        '''
+        Tests the changePassword method from DBController. Tests the password change
+        of an account considering that the new password and confirm password fields
+        are non-empty and matching.
+
+        asserts:
+        - True => if the password change is successful
+        - False => if the password change is unsuccessful
+        '''
+        mock_session.execute = MagicMock()
+        mock_session.commit = MagicMock()
+
+        response = db.changePassword(email='a@gmail.com', newPassword='123', confirmPassword='123')
         self.assertTrue(response.ok)
         
 if __name__ == '__main__':
