@@ -1,31 +1,27 @@
-#function for creating a file containing the credentials
-def createFile(filePath, userCredentials): #userCredentials is a variable that contains a dictionary with username and password pairs
-    with open(filePath, 'w') as file:
-        for userUsername, userPassword in userCredentials.items():
-            file.write(f"{userUsername}:{userPassword}\n")
+import configparser
 
-#function for reading the file, used dictionaries for username, email and password sets
-def readFile(filePath):
-    userCredentials = {}
-    with open(filePath, 'r') as file:
-        for line in file:
-            userUsername, userPassword = line.strip().split(':')
-            userCredentials[userUsername] = userPassword
-    return userCredentials
+#function for creating the configuration file
+def createFile(filePath):
+    config = configparser.ConfigParser()
+    
+    #adding categories and settings to the created ini file
+    config['categoryOne'] = {'settingOne': 'True', 'settingTwo': 'False', 'settingThree': 'False'}
+    config['categoryTwo'] = {'settingOne': 'True', 'settingTwo': 'True', 'settingThree': 'True'}
+    
+    #writing the configurations to the ini file
+    with open(filePath, 'w') as configFile:
+        config.write(configFile)
 
-#function for updating a user's username
-def updateUsername(userCredentials, oldUsername, newUsername):
-    if oldUsername in userCredentials:
-        password = userCredentials.pop(oldUsername)
-        userCredentials[newUsername] = password
-        print(f"Username '{oldUsername}' updated to '{newUsername}' successfully.")
-    else:
-        print(f"Username '{oldUsername}' not found.")
-
-#function for updating a user's password
-def updatePassword(userCredentials, userUsername, newPassword):
-    if userUsername in userCredentials:
-        userCredentials[userUsername] = newPassword
-        print(f"Password for user '{userUsername}' updated successfully.")
-    else:
-        print(f"User '{userUsername}' not found.")
+#function for editing the configuration file
+def updateFile(filePath, configCategory, configSetting, configValue):
+    config = configparser.ConfigParser()
+    config.read(filePath)
+  
+    #changing the value in the file
+    if not config.has_section(configCategory):
+        config.add_section(configCategory)
+    config.set(configCategory, configSetting, configValue)
+    
+    #writing the changes made back to the file
+    with open(filePath, 'w') as configfile:
+        config.write(configfile)
