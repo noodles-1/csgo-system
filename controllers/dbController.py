@@ -258,8 +258,9 @@ class DBController:
     @staticmethod
     def loginUser(password: str, username: str) -> Response:
         '''
-        Checks for the existence of the User provided the username, and compares
-        the inputted hashed password with the hashed password of the User in the database.
+        Checks for the existence of the User provided the username, checks whether the username 
+        is in valid format, and compares the inputted hashed password with the hashed password 
+        of the User in the database.
 
         params:
         - password: str => the hashed password from the input of the user
@@ -276,7 +277,11 @@ class DBController:
             return response
         
         try:
-            if not DBController.usernameExists(username):
+            if not DBController.isValidUsername(username):
+                response.ok = False
+                response.messages['error'] = 'Username error.'
+                response.messages['username'] = 'Username should be alphanumeric only.'
+            elif not DBController.usernameExists(username):
                 response.ok = False
                 response.messages['error'] = 'Username error.'
                 response.messages['username'] = 'Username does not exist.'

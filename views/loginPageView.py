@@ -23,10 +23,6 @@ class LoginPage(tk.Frame):
     # Function that is called when the credentials are incorrect.
     def incorrectCredentials(self, incorrectLabel: CTkLabel, passwordEntry: CTkEntry, usernameEntry: CTkEntry):
         incorrectLabel.configure(text_color = "#d62828")
-        
-        passwordEntry.delete(0, "end")
-        usernameEntry.delete(0, "end")
-        
         self.after(2000, lambda: incorrectLabel.configure(text_color="#000000"))
     
     # Function that is called to go to the Forgot Password Page (Unfinished)
@@ -44,6 +40,9 @@ class LoginPage(tk.Frame):
         else:
             incorrectLabel.configure(text=(response.messages['username'] or response.messages['password']))
             self.incorrectCredentials(incorrectLabel, passwordEntry, usernameEntry)
+
+        passwordEntry.delete(0, "end")
+        usernameEntry.delete(0, "end")
     
     def __init__(self, parent):
         tk.Frame.__init__(self, parent, bg = "blue")
