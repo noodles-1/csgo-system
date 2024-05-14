@@ -21,8 +21,7 @@ def sendOTP(OTP, inputEmail):
 def verifyOTP(inputOTP, receivedOTP):
     while True:
         if inputOTP == receivedOTP:
-            print("Account verified!")
-            break
+            return "Account verified!"
         else:
             inputOTP = input("Invalid OTP. Please input the correct OTP: ")
             continue
