@@ -42,7 +42,7 @@ class ConfigPage(tk.Frame):
     def add_row(self):
         addImage = Image.open("views/icons/icons_add.png")
         addImage = addImage.resize((25, 25))
-        addPhoto = ImageTk.PhotoImage(addImage)
+        addPhoto = CTkImage(addImage)
         
         newRowFrame = tk.Frame(self.scheduleLineFrame, bg="#1B2431")
         newRowFrame.pack(fill="x", side="top", padx=5, pady=5, expand = True)
@@ -113,14 +113,20 @@ class ConfigPage(tk.Frame):
         style.theme_use('forest-dark')
         
         # Close Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
-        closeImage = Image.open("views/icons/icon_close_darkmode.png")
-        closeImage = closeImage.resize((20, 20))
-        closePhoto = ImageTk.PhotoImage(closeImage)
+        # closeImage = Image.open("views/icons/icon_close_darkmode.png")
+        # closeImage = closeImage.resize((20, 20))
+        # closePhoto = CTkImage(closeImage)
+        closePhoto = CTkImage(light_image = Image.open("views/icons/icon_close_lightmode.png"),
+                              dark_image = Image.open("views/icons/icon_close_darkmode.png"),
+                              size = (20, 20))
 
         # Minimize Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
-        minimizeImage = Image.open("views/icons/icon_minimize_darkmode.png")
-        minimizeImage = minimizeImage.resize((20, 20))
-        minimizePhoto = ImageTk.PhotoImage(minimizeImage)
+        # minimizeImage = Image.open("views/icons/icon_minimize_darkmode.png")
+        # minimizeImage = minimizeImage.resize((20, 20))
+        # minimizePhoto = CTkImage(minimizeImage)
+        minimizePhoto = CTkImage(light_image = Image.open("views/icons/icon_minimize_lightmode.png"),
+                              dark_image = Image.open("views/icons/icon_minimize_darkmode.png"),
+                              size = (20, 20))
         
         # Top-most Frame that holds the Close and Minimize buttons.
         toolbarFrame = tk.Frame(self, bg = "#090E18", height = 30)
@@ -152,7 +158,8 @@ class ConfigPage(tk.Frame):
 
         # Main Frame (Where the contents of the main page is)
         # mainFrame = tk.Frame(self, bg = "#090E18")
-        mainFrame = CTkScrollableFrame(self, bg_color = "#090E18")
+        
+        mainFrame = CTkFrame(self, bg_color = "#090E18")
         mainFrame.pack(expand = True, fill = "both", side = "top")
         
         # Again, separates the page into two Frame (Left and Right)
@@ -200,62 +207,109 @@ class ConfigPage(tk.Frame):
         
         VehiclesFrameFirstRow = tk.Frame(VehiclesFrame, bg = "#1B2431")
         VehiclesFrameSecondRow = tk.Frame(VehiclesFrame, bg = "#1B2431")
+        VehiclesFrameThirdRow = tk.Frame(VehiclesFrame, bg = "#1B2431")
         VehiclesFrameFirstRow.pack(side = "top", fill = "both", expand = True)
         VehiclesFrameSecondRow.pack(side = "top", fill = "both", expand = True)
+        VehiclesFrameThirdRow.pack(side = "top", fill = "both", expand = True)
         
-        carFrame = tk.Frame(VehiclesFrameFirstRow, bg = "#1B2431")
-        truckFrame = tk.Frame(VehiclesFrameFirstRow, bg = "#1B2431")
-        jeepneyFrame = tk.Frame(VehiclesFrameFirstRow, bg = "#1B2431")
-        busFrame = tk.Frame(VehiclesFrameSecondRow, bg = "#1B2431")
-        motorcycleFrame = tk.Frame(VehiclesFrameSecondRow, bg = "#1B2431")
+        carFrame = tk.Frame(VehiclesFrameFirstRow, bg = "#1B2431", highlightthickness = 2, highlightbackground = "#FFFFFF")
+        truckFrame = tk.Frame(VehiclesFrameFirstRow, bg = "#1B2431", highlightthickness = 2, highlightbackground = "#FFFFFF")
+        jeepneyFrame = tk.Frame(VehiclesFrameFirstRow, bg = "#1B2431", highlightthickness = 2, highlightbackground = "#FFFFFF")
         
-        carFrame.pack(side = "left", padx = 10, expand = True, fill = "x")
-        truckFrame.pack(side = "left", padx = 20, expand = True, fill = "x")
-        jeepneyFrame.pack(side = "left", padx = 10, expand = True, fill = "x")
-        busFrame.pack(side = "left", padx = 10, expand = True)
-        motorcycleFrame.pack(side = "left", padx = 20, expand = True)
+        busFrame = tk.Frame(VehiclesFrameSecondRow, bg = "#1B2431", highlightthickness = 2, highlightbackground = "#FFFFFF")
+        motorcycleFrame = tk.Frame(VehiclesFrameSecondRow, bg = "#1B2431", highlightthickness = 2, highlightbackground = "#FFFFFF")
+        tricycleFrame = tk.Frame(VehiclesFrameSecondRow, bg = "#1B2431", highlightthickness = 2, highlightbackground = "#FFFFFF")
         
+        vanFrame = tk.Frame(VehiclesFrameThirdRow, bg = "#1B2431", highlightthickness = 2, highlightbackground = "#FFFFFF")
+        taxiFrame = tk.Frame(VehiclesFrameThirdRow, bg = "#1B2431", highlightthickness = 2, highlightbackground = "#FFFFFF")
+        mJeepneyFrame = tk.Frame(VehiclesFrameThirdRow, bg = "#1B2431", highlightthickness = 2, highlightbackground = "#FFFFFF")
         
+        carFrame.pack(side = "left", padx = 5, expand = False, fill = "x")
+        truckFrame.pack(side = "left", padx = 10, expand = False, fill = "x")
+        jeepneyFrame.pack(side = "left", padx = 5, expand = False, fill = "x")
+        
+        busFrame.pack(side = "left", padx = 5, expand = False, fill = "x")
+        motorcycleFrame.pack(side = "left", padx = 10, expand = False, fill = "x")
+        tricycleFrame.pack(side = "left", padx = 5, expand = False, fill = "x")
+        
+        vanFrame.pack(side = "left", padx = 5, expand = False, fill = "x")
+        taxiFrame.pack(side = "left", padx = 10, expand = False, fill = "x")
+        mJeepneyFrame.pack(side = "left", padx = 5, expand = False, fill = "x")
+        
+        # -- First Row --
         self.carVar = IntVar(value = 1)
         carTrueRadioButton = CTkRadioButton(carFrame, variable = self.carVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
         carFalseRadioButton = CTkRadioButton(carFrame, variable = self.carVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
         carRadioLabel = CTkLabel(carFrame, text = "Car", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
-        carRadioLabel.pack(side = "top", padx = 20, pady = 5, expand = True, fill = "x")
-        carTrueRadioButton.pack(side = "left", padx = 10, pady = 5, expand = True, fill = "x")
-        carFalseRadioButton.pack(side = "right", padx = 10, pady = 5, expand = True, fill = "x")
+        carRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
+        carTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
+        carFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
         
         self.truckVar = IntVar(value = 1)
         truckTrueRadioButton = CTkRadioButton(truckFrame, variable = self.truckVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
         truckFalseRadioButton = CTkRadioButton(truckFrame, variable = self.truckVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
         truckRadioLabel = CTkLabel(truckFrame, text = "Truck", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
-        truckRadioLabel.pack(side = "top", padx = 10, pady = 5)
-        truckTrueRadioButton.pack(side = "left", padx = 10, pady = 5)
-        truckFalseRadioButton.pack(side = "right", padx = 10, pady = 5)
-        
+        truckRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
+        truckTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
+        truckFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
         
         self.jeepneyVar = IntVar(value = 1)
         jeepneyTrueRadioButton = CTkRadioButton(jeepneyFrame, variable = self.jeepneyVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
         jeepneyFalseRadioButton = CTkRadioButton(jeepneyFrame, variable = self.jeepneyVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
         jeepneyRadioLabel = CTkLabel(jeepneyFrame, text = "Jeepney", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
-        jeepneyRadioLabel.pack(side = "top", padx = 10, pady = 5)
-        jeepneyTrueRadioButton.pack(side = "left", padx = 10, pady = 5)
-        jeepneyFalseRadioButton.pack(side = "right", padx = 10, pady = 5)
+        jeepneyRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
+        jeepneyTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
+        jeepneyFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
         
+        # -- Second Row --
         self.busVar = IntVar(value = 1)
         busTrueRadioButton = CTkRadioButton(busFrame, variable = self.busVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
         busFalseRadioButton = CTkRadioButton(busFrame, variable = self.busVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
         busRadioLabel = CTkLabel(busFrame, text = "Bus", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
-        busRadioLabel.pack(side = "top", padx = 10, pady = 5)
-        busTrueRadioButton.pack(side = "left", padx = 10, pady = 5)
-        busFalseRadioButton.pack(side = "right", padx = 10, pady = 5)
+        busRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
+        busTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
+        busFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
         
         self.motorVar = IntVar(value = 1)
         motorTrueRadioButton = CTkRadioButton(motorcycleFrame, variable = self.motorVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
         motorFalseRadioButton = CTkRadioButton(motorcycleFrame, variable = self.motorVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
         motorRadioLabel = CTkLabel(motorcycleFrame, text = "Motorcycle", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
-        motorRadioLabel.pack(side = "top", padx = 10, pady = 5)
-        motorTrueRadioButton.pack(side = "left", padx = 10, pady = 5)
-        motorFalseRadioButton.pack(side = "right", padx = 10, pady = 5)
+        motorRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
+        motorTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
+        motorFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
+        
+        self.tricycleVar = IntVar(value = 1)
+        tricycleTrueRadioButton = CTkRadioButton(tricycleFrame, variable = self.tricycleVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        tricycleFalseRadioButton = CTkRadioButton(tricycleFrame, variable = self.tricycleVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        tryclceRadioLabel = CTkLabel(tricycleFrame, text = "Tricycle", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
+        tryclceRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
+        tricycleTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
+        tricycleFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
+        
+        # -- Third Row -- 
+        self.vanVar = IntVar(value = 1)
+        vanTrueRadioButton = CTkRadioButton(vanFrame, variable = self.vanVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        vanFalseRadioButton = CTkRadioButton(vanFrame, variable = self.vanVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        vanRadioLabel = CTkLabel(vanFrame, text = "Van", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
+        vanRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
+        vanTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
+        vanFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
+        
+        self.taxiVar = IntVar(value = 1)
+        taxiTrueRadioButton = CTkRadioButton(taxiFrame, variable = self.taxiVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        taxiFalseRadioButton = CTkRadioButton(taxiFrame, variable = self.taxiVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        taxiRadioLabel = CTkLabel(taxiFrame, text = "Taxi", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
+        taxiRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
+        taxiTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
+        taxiFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
+        
+        self.mJeepneyVar = IntVar(value = 1)
+        mJeepneyTrueRadioButton = CTkRadioButton(mJeepneyFrame, variable = self.mJeepneyVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        mJeepneyFalseRadioButton = CTkRadioButton(mJeepneyFrame, variable = self.mJeepneyVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        mJeepneyRadioLabel = CTkLabel(mJeepneyFrame, text = "Modern Jeepney", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
+        mJeepneyRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
+        mJeepneyTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
+        mJeepneyFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
         # End of Detectable Vehicles Frame
         
         # Conggestion Price Frame
@@ -474,7 +528,7 @@ class ConfigPage(tk.Frame):
         
         # Bottom Frame for navigation buttons
         bottomFrame = tk.Frame(self, bg = "#090E18")
-        bottomFrame.pack(fill = "both", side = "top", padx = 20, pady = 20)
+        bottomFrame.pack(fill = "x", side = "top", padx = 20, pady = 20)
         
         # Apply Button, function placeholder is print. For the assignee, update the "command"
         applyButton = CTkButton(bottomFrame,
