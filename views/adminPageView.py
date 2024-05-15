@@ -88,17 +88,11 @@ class AdminPage(tk.Frame):
         tk.Frame.__init__(self, parent, bg = "#090E18")
         
         # Close Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
-        # closeImage = Image.open("views/icons/icon_close_darkmode.png")
-        # closeImage = closeImage.resize((20, 20))
-        # closePhoto = CTkImage(closeImage)
         closePhoto = CTkImage(light_image = Image.open("views/icons/icon_close_lightmode.png"),
                               dark_image = Image.open("views/icons/icon_close_darkmode.png"),
                               size = (20, 20))
 
         # Minimize Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
-        # minimizeImage = Image.open("views/icons/icon_minimize_darkmode.png")
-        # minimizeImage = minimizeImage.resize((20, 20))
-        # minimizePhoto = CTkImage(minimizeImage)
         minimizePhoto = CTkImage(light_image = Image.open("views/icons/icon_minimize_lightmode.png"),
                               dark_image = Image.open("views/icons/icon_minimize_darkmode.png"),
                               size = (20, 20))
