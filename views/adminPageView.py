@@ -3,11 +3,62 @@ import sys
 import tkinter as tk
 from customtkinter import *
 from tkinter import ttk
-from PIL import Image, ImageTk
+from tkcalendar import Calendar
+from PIL import Image
+import random
+import string
+import datetime
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
+
+# These are just samples for the database
+licensePlates = []
+vehicleTypes = {
+    'Car': 50,
+    'Taxi': 60,
+    'Motorcycle': 30,
+    'Bus': 100,
+    'Tricycle': 40,
+    'Jeepney': 70,
+    'Modern Jeepney': 80,
+    'Van': 90,
+    'Truck': 120
+}
+cameraID = ['Camera 1', 'Camera 2', 'Camera 3', 'Camera 4']
+dates = []
+times = []
+data = []
+
+def generate_license_plate():
+    letters = ''.join(random.choices(string.ascii_uppercase, k=3))
+    digits = ''.join(random.choices(string.digits, k=4))
+    license_plate = letters + digits
+    return license_plate
+
+def generate_random_past_date():
+    today = datetime.date.today()
+    random_days = random.randint(1, 365)
+    random_date = today - datetime.timedelta(days=random_days)
+    return random_date
+
+def generate_random_time():
+    random_hour = random.randint(0, 23)
+    random_minute = random.randint(0, 59)
+    return f"{random_hour:02d}:{random_minute:02d}"
+
+# Generate 100 Data Entries
+for _ in range(100):
+    license_plate = generate_license_plate()
+    vehicle_type = random.choice(list(vehicleTypes.keys()))
+    camera_id = random.choice(cameraID)
+    random_date = generate_random_past_date()
+    random_time = generate_random_time()
+    price = vehicleTypes[vehicle_type]
+
+    data.append((license_plate, vehicle_type, camera_id, random_time, random_date.strftime("%Y-%m-%d"), price))
+# -------
 
 class AdminPage(tk.Frame):
     # Close Application
@@ -83,9 +134,65 @@ class AdminPage(tk.Frame):
     # Apply download csv restriction to user
     def downloadCSVRadioButton_callback(self):
         pass
+    
+    def selectDateTime(self):
+        top = tk.Toplevel(bg="#090E18")
+        top.title("Select Date/Time")
+
+        # Calendar for date selection
+        calendarFrame = tk.Frame(top, bg="#1B2431")
+        calendarFrame.pack(padx=10, pady=(10, 2), ipadx=5, ipady=5, expand=True, fill="both")
+        cal = Calendar(calendarFrame, selectmode='day', date_pattern='dd/mm/y', foreground="#FFFFFF", background="#1B2431", bordercolor="#1B2431")
+        cal.pack(padx=5, pady=5)
+
+        # Frame for time selection
+        frame_time = tk.Frame(top, bg="#1B2431")
+        frame_time.pack(padx=10, pady=(2, 10), expand=True, fill="x")
+
+        # Spinbox for hours selection
+        label_hours = tk.Label(frame_time, text="Hours:", foreground="#FFFFFF", background="#090E18")
+        label_hours.grid(row=0, column=0, padx=5, pady=5, sticky = "w")
+        spinbox_hours = ttk.Spinbox(frame_time, from_=0, to=23, foreground="#FFFFFF", background="#FFFFFF")
+        spinbox_hours.grid(row=0, column=1, padx=5, pady=5, sticky = "ew")
+
+        def getSelectedDateTime():
+            global selected_date, selected_hour_from, selected_hour_to
+            
+            self.selected_date = cal.get_date()
+            selected_hour = spinbox_hours.get()
+            self.selected_hour_from = f"{selected_hour}:00"
+            self.selected_hour_to = f"{selected_hour}:59"
+            
+            #tk.messagebox.showinfo("Selected Date/Time", f"Date: {self.selected_date}\nTime: {self.selected_hour_from} - {self.selected_hour_to}")
+            top.destroy()
+            self.selectedDateTimeLabel.configure(text = f"Selected: {self.selected_date} at {self.selected_hour_from} - {self.selected_hour_to}")
+            
+
+        # Button for confirming selection
+        button_confirm = tk.Button(top, text="Confirm", command=getSelectedDateTime, foreground="#FFFFFF", background="#090E18")
+        button_confirm.pack(pady=10)
+        
+    def clearFilter_callback(self):
+        self.selected_date = ""
+        self.selected_hour_from = ""
+        self.selected_hour_to = ""
+        self.vehicleTypeComboBox.set("")
+        
+        self.selectedDateTimeLabel.configure(text = "Select Date-Time")
+        
+    
+    def goFilter_callback(self):
+        pass
         
     def __init__(self, parent):
         tk.Frame.__init__(self, parent, bg = "#090E18")
+        
+        style = ttk.Style()
+        style.theme_use('forest-dark')
+        
+        self.selected_date = ""
+        self.selected_hour_from = ""
+        self.selected_hour_to = ""
         
         # Close Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
         closePhoto = CTkImage(light_image = Image.open("views/icons/icon_close_lightmode.png"),
@@ -97,6 +204,26 @@ class AdminPage(tk.Frame):
                               dark_image = Image.open("views/icons/icon_minimize_darkmode.png"),
                               size = (20, 20))
 
+        # ---- Styles of Widgets ----
+        style.configure("Treeview",
+                        background = '#1B2431',
+                        foreground = '#FFFFFF',
+                        rowheight = 25,
+                        fieldbackgrounds = '#1B2431',
+                        bordercolor = '#343638',
+                        borderwidth = 0)
+        
+        style.map('Treeview', background = [('selected', '#48BFE3')], foreground = [('selected', '#000000')])
+        
+        style.configure("Treeview.Heading",
+                        background="#1B2431",
+                        color = "#1B2431",
+                        foreground="white",
+                        font = ('Montserrat', 10),
+                        relief="flat")
+        
+        style.map("Treeview.Heading",
+                  background=[('active', '#48BFE3')])
         # ---- Declaration of Widgets ----
         toolBarFrame = tk.Frame(self, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
         
@@ -139,7 +266,7 @@ class AdminPage(tk.Frame):
         filterLabel = CTkLabel(upperLowerLeft, text= "Filter By:", font = ('Montserrat', 12, 'bold'), anchor = "w", text_color = "#FFFFFF")
         # Dropdown for vehicle Type
         self.vehicleTypeComboVar = StringVar()
-        vehicleTypeComboBox = CTkComboBox(upperLowerLeft,
+        self.vehicleTypeComboBox = CTkComboBox(upperLowerLeft,
                                           values = ['', 'Car', 'Taxi', 'Jeepney', 'Modern Jeepney', 'Motorcycle', 'Truck', 'Bus', 'Taxi', 'Tricycle'],
                                           command = self.vehicleTypeCombo_callback,
                                           variable = self.vehicleTypeComboVar,
@@ -151,13 +278,61 @@ class AdminPage(tk.Frame):
                                           dropdown_text_color = "#000000",
                                           dropdown_font = ('Montserrat', 12))
         # Date Time Picker
-        dateTimeButton = CTkButton(upperLowerLeft, text = "Date and Time", font = ('Montserrat', 12, 'bold'), text_color = "#000000", fg_color = "#FFFFFF", corner_radius = 5)
+        dateTimeButton = CTkButton(upperLowerLeft,
+                                   text = "Date and Time",
+                                   font = ('Montserrat', 12, 'bold'),
+                                   text_color = "#000000",
+                                   fg_color = "#FFFFFF",
+                                   corner_radius = 5,
+                                   command = self.selectDateTime)
         # Label for selected Date-Time
-        selectedDateTimeLabel = CTkLabel(upperLowerLeft, text = "Select Date-Time", font = ('Montserrat', 12, 'bold'), text_color = "#FFFFFF")
+        self.selectedDateTimeLabel = CTkLabel(upperLowerLeft, text = "Select Date-Time", font = ('Montserrat', 12, 'bold'), text_color = "#FFFFFF")
         # Go Button
-        goFilterButton = CTkButton(upperLowerLeft, text = "Go", font = ('Montserrat', 12, 'bold'), text_color = "#000000", fg_color = "#FFFFFF", corner_radius = 5)
+        goFilterButton = CTkButton(upperLowerLeft,
+                                   text = "Go",
+                                   font = ('Montserrat', 12, 'bold'),
+                                   text_color = "#000000",
+                                   fg_color = "#FFFFFF",
+                                   corner_radius = 5,
+                                   command = self.goFilter_callback)
+        
+        clearFilterButton = CTkButton(upperLowerLeft,
+                                      text = "Clear",
+                                      font = ('Montserrat', 12, 'bold'),
+                                      text_color = "#000000",
+                                      fg_color = "#FFFFFF",
+                                      corner_radius = 5,
+                                      command = self.clearFilter_callback)
         
         lowerLowerLeft = tk.Frame(lowerLeftContent, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        databaseFrame = tk.Frame(lowerLowerLeft, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        databaseTable = ttk.Treeview(databaseFrame, columns = ('licensePlate', 'vehicleType', 'cameraID', 'time', 'date', 'price'), show = "headings", style = 'Custom.Treeview')
+        
+        for entry in data:
+            databaseTable.insert('', 'end', values=entry)
+        
+        databaseTable.tag_configure('even', background='#2A2D2E', foreground='#FFFFFF')
+        databaseTable.tag_configure('odd', background='#343638', foreground='#FFFFFF')
+        
+        databaseTable.heading('licensePlate', text="License Plate", anchor='center')
+        databaseTable.heading('vehicleType', text="Vehicle Type", anchor='center')
+        databaseTable.heading('cameraID', text="Camera ID", anchor='center')
+        databaseTable.heading('time', text="Time", anchor='center')
+        databaseTable.heading('date', text="Date", anchor='center')
+        databaseTable.heading('price', text="Price", anchor='center')
+        
+        databaseTable.column('licensePlate', width=150, anchor='center')
+        databaseTable.column('vehicleType', width=150, anchor='center')
+        databaseTable.column('cameraID', width=120, anchor='center')
+        databaseTable.column('time', width=100, anchor='center')
+        databaseTable.column('date', width=100, anchor='center')
+        databaseTable.column('price', width=80, anchor='center')
+        
+        yscrollbar = ttk.Scrollbar(databaseFrame, orient='vertical', command=databaseTable.yview)
+        databaseTable.configure(yscrollcommand=yscrollbar.set)
+        
+        xscrollbar = ttk.Scrollbar(lowerLowerLeft, orient='horizontal', command=databaseTable.xview)
+        databaseTable.configure(xscrollcommand=xscrollbar.set)
         # End of Contents of Left Content Frame
         
         rightContentFrame = tk.Frame(contentFrame, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
@@ -303,15 +478,19 @@ class AdminPage(tk.Frame):
         # Label for context
         filterLabel.pack(side = "left", padx = 5, pady = 5)
         # Dropdown for vehicle Type
-        vehicleTypeComboBox.pack(side = "left", padx = 5, pady = 5)
+        self.vehicleTypeComboBox.pack(side = "left", padx = 5, pady = 5)
         # Date Time Picker
         dateTimeButton.pack(side = "left", padx = 5, pady = 5)
         # Label for selected Date-Time
-        selectedDateTimeLabel.pack(side = "left", padx = 5, pady = 5)
+        self.selectedDateTimeLabel.pack(side = "left", padx = 5, pady = 5)
         # Go Button
         goFilterButton.pack(side = "right", padx = 5, pady = 5)
-        lowerLowerLeft.pack(side = "top", expand = True, fill = "both", padx = 10, pady = 10)
-        
+        clearFilterButton.pack(side = "right", padx = 5, pady = 5)
+        lowerLowerLeft.pack(side = "top", expand = True, fill = "both", padx = 5, pady = 5)
+        databaseFrame.pack(side = "top", expand = True, fill = "both", padx = 2, pady = 2)
+        databaseTable.pack(expand=True, fill='both', padx=0, pady=0, side = "left")
+        yscrollbar.pack(side='left', fill='both', padx=0, pady=0)
+        xscrollbar.pack(side='top', fill='both', padx=0, pady=0)
         # End of Contents of Left Content Frame
         rightContentFrame.pack(side = "left", expand = False, fill = "both")
         

@@ -1,5 +1,5 @@
 # This is the repository of the system for the Thesis of the Group Computer Science Global Offensive
-## This Branch is currently in Version 1.3.2
+## This Branch is currently in Version 1.3.3
 ### This Branch is for the GUI (Views)
 
 Members of the thesis group are:
