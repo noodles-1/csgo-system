@@ -1,49 +1,32 @@
-import tkinter as tk
-from tkinter import ttk
+import os
+import sys
 
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
 
-class VehiclePricingApp:
-    def __init__(self, vehicle_prices):
-        self.vehicle_prices = vehicle_prices
-        self.entry_vars = {}  # Dictionary to store StringVar objects
-
-        self.root = tk.Tk()
-        self.root.title("Vehicle Pricing")
-
-        self.create_vehicle_entries()
-
-        update_button = ttk.Button(self.root, text="Update Prices", command=self.update_prices)
-        update_button.pack(pady=10)
-
-        self.root.mainloop()
-
-    def create_vehicle_entries(self):
-        for vehicle, price in self.vehicle_prices.items():
-            frame = ttk.Frame(self.root)
-            frame.pack(pady=5)
-
-            label = ttk.Label(frame, text=f"{vehicle.capitalize()} Price:")
-            label.grid(row=0, column=0)
-
-            entry_var = tk.StringVar()
-            entry_var.set(f"{price:.2f}")
-            entry = ttk.Entry(frame, textvariable=entry_var)
-            entry.grid(row=0, column=1)
-
-            self.entry_vars[vehicle] = entry_var
-
-    def update_prices(self):
-        for vehicle, entry_var in self.entry_vars.items():
-            try:
-                new_price = float(entry_var.get())
-                self.vehicle_prices[vehicle] = new_price
-                entry_var.set(f"{new_price:.2f}")  # Update displayed price
-            except ValueError:
-                pass
-
+def updateVehiclePrice(vehicleType, newPrice, vehiclePrices):
+    
+    # Convert vehicleType to uppercase
+    vehicleType = vehicleType.lower() # any input ni user will be all lowercase
+    
+    if vehicleType not in vehiclePrices:
+        print("Error: Vehicle type not found.")
+        return
+    
+    if not isinstance(newPrice, float):
+        print("Error: Price should be a floating point number") # 0 - Infinity
+        return
+    
+    if newPrice < 0:
+        print("Error: Price should be non-negative.")
+        return
+    
+    vehiclePrices[vehicleType] = newPrice # Simple assignment to the dictionary
+    print(f"Price for {vehicleType} updated to {newPrice}.")
 
 # Dictionary to store vehicle prices
-vehicle_prices = {
+vehiclePrices = {
     "car": 50.00,
     "motorcycle": 30.00,
     "jeepney": 50.00,
@@ -55,6 +38,5 @@ vehicle_prices = {
     "modern_jeepney": 40.00
 }
 
-# Run the application
-if __name__ == "__main__":
-    app = VehiclePricingApp(vehicle_prices)
+# Example usage
+updateVehiclePrice("car", 55.00, vehiclePrices)
