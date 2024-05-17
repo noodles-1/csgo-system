@@ -252,7 +252,17 @@ class AdminPage(tk.Frame):
                                 hover_color = "#48BFE3",
                                 command = self.minimizeApplicaiton)
 
-        contentFrame = tk.Frame(self, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        mainCanvas = tk.Canvas(self)
+        
+        canvasFrame = tk.Frame(mainCanvas)
+        
+        contentFrame = tk.Frame(canvasFrame, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        
+        v_scrollbar = tk.Scrollbar(canvasFrame, orient = tk.VERTICAL, command = mainCanvas.yview)
+        mainCanvas.configure(yscrollcommand = v_scrollbar.set)
+        
+        h_scrollbar = tk.Scrollbar(self, orient = tk.HORIZONTAL, command = mainCanvas.xview)
+        mainCanvas.configure(xscrollcommand = h_scrollbar.set)
         
         
         leftContentFrame = tk.Frame(contentFrame, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
@@ -463,8 +473,12 @@ class AdminPage(tk.Frame):
         toolBarFrame.pack(side = "top", fill = "x")
         closeButton.pack(side = "right", padx = 10, pady = 10)
         minimizeButton.pack(side = "right", padx = 0, pady = 10)
-                
-        contentFrame.pack(side = "top", expand = True, fill = "both")
+        
+        mainCanvas.pack(side = tk.TOP, fill = tk.BOTH, expand = True)
+        canvasFrame.pack(side = tk.TOP, fill = tk.BOTH, expand = True)
+        contentFrame.pack(side = tk.LEFT, expand = True, fill = "both")
+        v_scrollbar.pack(side = tk.RIGHT, fill = tk.Y)
+        h_scrollbar.pack(side = tk.TOP, fill = tk.X)
         
         leftContentFrame.pack(side = "left", expand = True, fill = "both")
         # Contents of Left Content Frame

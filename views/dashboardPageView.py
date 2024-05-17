@@ -70,9 +70,23 @@ class DashboardPage(tk.Frame):
         # End of Toolbar Frame
         
         # Start of Main Frame (Where the contents of the main page is)
-        mainFrame = tk.Frame(self, bg = "#090E18")
-        mainFrame.pack(expand = True, fill = "both", side = "top")
+        mainCanvas = tk.Canvas(self)
+        mainCanvas.pack(side = tk.TOP, fill = tk.BOTH, expand = True)
+        
+        canvasFrame = tk.Frame(mainCanvas)
+        canvasFrame.pack(side = tk.TOP, fill = tk.BOTH, expand = True)
+        
+        mainFrame = tk.Frame(canvasFrame, bg = "#090E18")
+        mainFrame.pack(expand = True, fill = "both", side = tk.LEFT)
+        
+        v_scrollbar = tk.Scrollbar(canvasFrame, orient=tk.VERTICAL, command=mainCanvas.yview)
+        v_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        mainCanvas.configure(yscrollcommand=v_scrollbar.set)
 
+        h_scrollbar = tk.Scrollbar(self, orient=tk.HORIZONTAL, command=mainCanvas.xview)
+        h_scrollbar.pack(side=tk.TOP, fill=tk.X)
+        mainCanvas.configure(xscrollcommand=h_scrollbar.set)
+        
         bottomFrame = tk.Frame(self, bg = "#090E18")
         bottomFrame.pack(fill = "both", side = "top", padx = 20)
 
