@@ -252,16 +252,17 @@ class AdminPage(tk.Frame):
                                 hover_color = "#48BFE3",
                                 command = self.minimizeApplicaiton)
 
-        mainCanvas = tk.Canvas(self)
+        mainCanvasFrame = tk.Frame(self)
+        mainCanvas = tk.Canvas(mainCanvasFrame)
         
         canvasFrame = tk.Frame(mainCanvas)
         
         contentFrame = tk.Frame(canvasFrame, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
         
-        v_scrollbar = tk.Scrollbar(canvasFrame, orient = tk.VERTICAL, command = mainCanvas.yview)
+        v_scrollbar = ttk.Scrollbar(canvasFrame, orient = tk.VERTICAL, command = mainCanvas.yview)
         mainCanvas.configure(yscrollcommand = v_scrollbar.set)
         
-        h_scrollbar = tk.Scrollbar(self, orient = tk.HORIZONTAL, command = mainCanvas.xview)
+        h_scrollbar = ttk.Scrollbar(mainCanvasFrame, orient = tk.HORIZONTAL, command = mainCanvas.xview)
         mainCanvas.configure(xscrollcommand = h_scrollbar.set)
         
         
@@ -474,6 +475,7 @@ class AdminPage(tk.Frame):
         closeButton.pack(side = "right", padx = 10, pady = 10)
         minimizeButton.pack(side = "right", padx = 0, pady = 10)
         
+        mainCanvasFrame.pack(side = tk.TOP, fill = tk.BOTH, expand = False)
         mainCanvas.pack(side = tk.TOP, fill = tk.BOTH, expand = True)
         canvasFrame.pack(side = tk.TOP, fill = tk.BOTH, expand = True)
         contentFrame.pack(side = tk.LEFT, expand = True, fill = "both")
