@@ -21,7 +21,7 @@ class LoginPage(tk.Frame):
         self.master.iconify()
 
     # Function that is called when the credentials are incorrect.
-    def incorrectCredentials(self, incorrectLabel: CTkLabel, passwordEntry: CTkEntry, usernameEntry: CTkEntry):
+    def incorrectCredentials(self, incorrectLabel: CTkLabel):
         incorrectLabel.configure(text_color = "#d62828")
         self.after(2000, lambda: incorrectLabel.configure(text_color="#000000"))
     
@@ -39,7 +39,7 @@ class LoginPage(tk.Frame):
             self.master.show_frame(self.master.dashboardFrame)
         else:
             incorrectLabel.configure(text=(response.messages['username'] or response.messages['password']))
-            self.incorrectCredentials(incorrectLabel, passwordEntry, usernameEntry)
+            self.incorrectCredentials(incorrectLabel)
 
         passwordEntry.delete(0, "end")
         usernameEntry.delete(0, "end")
