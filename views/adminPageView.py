@@ -253,13 +253,12 @@ class AdminPage(tk.Frame):
                                 command = self.minimizeApplicaiton)
 
         mainCanvasFrame = tk.Frame(self)
-        mainCanvas = tk.Canvas(mainCanvasFrame)
+        mainCanvasFrameTOP = tk.Frame(mainCanvasFrame)
+        mainCanvas = tk.Canvas(mainCanvasFrameTOP)
         
-        canvasFrame = tk.Frame(mainCanvas)
+        contentFrame = tk.Frame(mainCanvas, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
         
-        contentFrame = tk.Frame(canvasFrame, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
-        
-        v_scrollbar = ttk.Scrollbar(canvasFrame, orient = tk.VERTICAL, command = mainCanvas.yview)
+        v_scrollbar = ttk.Scrollbar(mainCanvasFrameTOP, orient = tk.VERTICAL, command = mainCanvas.yview)
         mainCanvas.configure(yscrollcommand = v_scrollbar.set)
         
         h_scrollbar = ttk.Scrollbar(mainCanvasFrame, orient = tk.HORIZONTAL, command = mainCanvas.xview)
@@ -477,7 +476,6 @@ class AdminPage(tk.Frame):
         
         mainCanvasFrame.pack(side = tk.TOP, fill = tk.BOTH, expand = False)
         mainCanvas.pack(side = tk.TOP, fill = tk.BOTH, expand = True)
-        canvasFrame.pack(side = tk.TOP, fill = tk.BOTH, expand = True)
         contentFrame.pack(side = tk.LEFT, expand = True, fill = "both")
         v_scrollbar.pack(side = tk.RIGHT, fill = tk.Y)
         h_scrollbar.pack(side = tk.TOP, fill = tk.X)
