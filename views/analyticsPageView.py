@@ -2,10 +2,9 @@ import os
 import sys
 import tkinter as tk
 import matplotlib
-import matplotlib.pyplot as plt
 from customtkinter import *
 from tkinter import ttk
-from PIL import Image, ImageTk
+from PIL import Image
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 

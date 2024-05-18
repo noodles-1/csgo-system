@@ -177,12 +177,88 @@ class AdminPage(tk.Frame):
         self.selected_hour_from = ""
         self.selected_hour_to = ""
         self.vehicleTypeComboBox.set("")
-        
         self.selectedDateTimeLabel.configure(text = "Select Date-Time")
         
-    
     def goFilter_callback(self):
         pass
+    
+    def insertDataToTable(self, inputLicensePlate, inputVehicleType, inputCameraID, inputTime, inputDate, inputPrice):
+        self.databaseTable.insert(parent = '', index = 0, values = (inputLicensePlate, inputVehicleType, inputCameraID, inputTime, inputDate, inputPrice))
+        print(f'Inserted {inputLicensePlate}, {inputVehicleType}, {inputCameraID}, {inputTime}, {inputDate}, {inputPrice}')
+    
+    def deleteDataFromTable(self, _):
+        if tk.messagebox.askyesno("Confirm Delete", "Are you sure you want to delete the selected items?"):
+            for i in self.databaseTable.selection():
+                self.databaseTable.delete(i)
+    
+    def selectDataFromTable(self, _):
+        selected_items = self.databaseTable.selection()
+        
+        if not selected_items:
+            self.licensePlateEntry.delete(0, tk.END)
+            self.vehicleTypeEntry.delete(0, tk.END)
+            self.priceEntry.delete(0, tk.END)
+            return
+        
+        if len(selected_items) != 1:
+            self.licensePlateEntry.delete(0, tk.END)
+            self.vehicleTypeEntry.delete(0, tk.END)
+            self.priceEntry.delete(0, tk.END)
+            return
+        
+        self.licensePlateEntry.delete(0, tk.END)
+        self.vehicleTypeEntry.delete(0, tk.END)
+        self.priceEntry.delete(0, tk.END)
+        
+        for item in selected_items:
+            values = self.databaseTable.item(item)['values']
+            if len(values) >= 6:
+                self.licensePlateEntry.insert(0, values[0])
+                self.vehicleTypeEntry.insert(0, values[1])
+                self.priceEntry.insert(0, values[5])
+        
+    def discoverCameras_callback(self):
+        # This function discovers cameras from the system using ONVIF or SSDP
+        # Calls self.discoveredCamerasDrop.configure to config the values of the dropdown
+        '''
+            Sample for this code:
+                self.discoveredCamerasDrop.configure(values = [str1, str2 , str3...])
+        '''
+        pass
+    
+    def addCamera_callback(self):
+        # This function gets the Assign ID Entry and the current value of the discoveredCamerasDrop
+        '''
+            Sample for this code:
+                self.assignID.get()
+                self.discoveredCamerasDrop.get()
+        '''
+        pass
+    
+    def deleteSavedCamera_callback(self):
+        self.savedCameraID.configure(text = "")
+        # This function retrieves the values of savedCameraId and savedCamerasDrop and deletes them from the saved cameras.
+        # Then configs the drop down with the updated list of the saved cameras
+        print("Delete Saved Camera Button Pressed")
+    
+    def updateSavedCamera_callback(self):
+        print("Update Saved Camera Button Pressed")
+        print("Saved Camera ID: ", self.savedCameraID.get())
+        print("Saved Camera Drop Item: ",self.savedCamerasDrop.get())
+        
+    def updateTable_callback(self):
+        inputLicensePlate = self.licensePlateEntry.get()
+        inputVehicleType = self.vehicleTypeEntry.get()
+        inputPrice = self.priceEntry.get()
+        
+        self.licensePlateEntry.delete(0, tk.END)
+        self.vehicleTypeEntry.delete(0, tk.END)
+        self.priceEntry.delete(0, tk.END)
+        
+        '''
+            call update row
+        '''
+        
         
     def __init__(self, parent):
         tk.Frame.__init__(self, parent, bg = "#090E18")
@@ -225,7 +301,7 @@ class AdminPage(tk.Frame):
         style.map("Treeview.Heading",
                   background=[('active', '#48BFE3')])
         # ---- Declaration of Widgets ----
-        toolBarFrame = tk.Frame(self, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        toolBarFrame = tk.Frame(self, bg = "#090E18",  )
         
         # Close Button
         closeButton = CTkButton(toolBarFrame, 
@@ -251,27 +327,30 @@ class AdminPage(tk.Frame):
                                 hover = True,
                                 hover_color = "#48BFE3",
                                 command = self.minimizeApplicaiton)
-
-        mainCanvasFrame = tk.Frame(self)
-        mainCanvasFrameTOP = tk.Frame(mainCanvasFrame)
-        mainCanvas = tk.Canvas(mainCanvasFrameTOP)
         
-        contentFrame = tk.Frame(mainCanvas, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        contentFrame = CTkScrollableFrame(self, bg_color = "#090E18", fg_color = "#090E18")
         
-        v_scrollbar = ttk.Scrollbar(mainCanvasFrameTOP, orient = tk.VERTICAL, command = mainCanvas.yview)
-        mainCanvas.configure(yscrollcommand = v_scrollbar.set)
-        
-        h_scrollbar = ttk.Scrollbar(mainCanvasFrame, orient = tk.HORIZONTAL, command = mainCanvas.xview)
-        mainCanvas.configure(xscrollcommand = h_scrollbar.set)
-        
-        
-        leftContentFrame = tk.Frame(contentFrame, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        leftContentFrame = tk.Frame(contentFrame, bg = "#090E18")
         # Contents of Left Content Frame
-        upperLeftContent = tk.Frame(leftContentFrame, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        upperLeftContent = CTkFrame(leftContentFrame, fg_color = "#1B2431", corner_radius = 5)
+        addCamerasLabel = CTkLabel(upperLeftContent, text = "Add Camera", font = ('Montserrat', 12, 'bold'), anchor = "w", text_color = "#FFFFFF")
+        
+        manageCamerasFirstRow = tk.Frame(upperLeftContent, bg = "#1B2431")
+        discoverCameraButton = CTkButton(manageCamerasFirstRow, text = "Discover Cameras", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5, command = self.discoverCameras_callback)
+        self.discoveredCamerasDrop = CTkComboBox(manageCamerasFirstRow, values = ["Camera 1", "Camera 2", "Camera 3"], font = ('Montserrat', 12), fg_color = "#FFFFFF", dropdown_fg_color = "#FFFFFF", dropdown_text_color = "#000000", border_color = "#FFFFFF", button_color = "#FFFFFF", text_color = "#000000")
+        self.assignID = CTkEntry(manageCamerasFirstRow, placeholder_text = "Assign ID", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        addCameraButton = CTkButton(manageCamerasFirstRow, text = "Add Camera", fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5, font = ('Montserrat', 12, 'bold'), command = self.addCamera_callback)
+        
         manageCamerasLabel = CTkLabel(upperLeftContent, text = "Manage Cameras", font = ('Montserrat', 12, 'bold'), anchor = "w", text_color = "#FFFFFF")
         
-        lowerLeftContent = tk.Frame(leftContentFrame, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
-        upperLowerLeft = tk.Frame(lowerLeftContent, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        manageCamerasSecondRow = tk.Frame(upperLeftContent, bg = "#1B2431")
+        self.savedCamerasDrop = CTkComboBox(manageCamerasSecondRow, values = ["Camera 1", "Camera 2", "Camera 3"], font = ('Montserrat', 12), fg_color = "#FFFFFF", dropdown_fg_color = "#FFFFFF", dropdown_text_color = "#000000", border_color = "#FFFFFF", button_color = "#FFFFFF", text_color = "#000000")
+        self.savedCameraID = CTkEntry(manageCamerasSecondRow, placeholder_text = "Assigned ID", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        updateSavedCameraButton = CTkButton(manageCamerasSecondRow, text = "Update Camera", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5, command = self.updateSavedCamera_callback)
+        deleteSavedCameraButton = CTkButton(manageCamerasSecondRow, text = "Delete Camera", font = ('Montserrat', 12, 'bold'), fg_color = "#D62828", text_color = "#FFFFFF", corner_radius = 5, command = self.deleteSavedCamera_callback)
+        
+        lowerLeftContent = CTkFrame(leftContentFrame, fg_color = "#1B2431", corner_radius = 5)
+        upperLowerLeft = tk.Frame(lowerLeftContent, bg = "#1B2431")
         # Label for context
         filterLabel = CTkLabel(upperLowerLeft, text= "Filter By:", font = ('Montserrat', 12, 'bold'), anchor = "w", text_color = "#FFFFFF")
         # Dropdown for vehicle Type
@@ -314,45 +393,65 @@ class AdminPage(tk.Frame):
                                       corner_radius = 5,
                                       command = self.clearFilter_callback)
         
-        lowerLowerLeft = tk.Frame(lowerLeftContent, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
-        databaseFrame = tk.Frame(lowerLowerLeft, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
-        databaseTable = ttk.Treeview(databaseFrame, columns = ('licensePlate', 'vehicleType', 'cameraID', 'time', 'date', 'price'), show = "headings", style = 'Custom.Treeview')
+        lowerLowerLeft = tk.Frame(lowerLeftContent, bg = "#090E18")
+        databaseFrame = tk.Frame(lowerLowerLeft, bg = "#090E18")
+        self.databaseTable = ttk.Treeview(databaseFrame, columns = ('licensePlate', 'vehicleType', 'cameraID', 'time', 'date', 'price'), show = "headings", style = 'Custom.Treeview')
+        
+        self.databaseTable.bind('<<TreeviewSelect>>', self.selectDataFromTable)
+        self.databaseTable.bind('<Delete>', self.deleteDataFromTable)
         
         for entry in data:
-            databaseTable.insert('', 'end', values=entry)
+            self.databaseTable.insert('', 'end', values=entry)
         
-        databaseTable.tag_configure('even', background='#2A2D2E', foreground='#FFFFFF')
-        databaseTable.tag_configure('odd', background='#343638', foreground='#FFFFFF')
+        self.databaseTable.tag_configure('even', background='#2A2D2E', foreground='#FFFFFF')
+        self.databaseTable.tag_configure('odd', background='#343638', foreground='#FFFFFF')
         
-        databaseTable.heading('licensePlate', text="License Plate", anchor='center')
-        databaseTable.heading('vehicleType', text="Vehicle Type", anchor='center')
-        databaseTable.heading('cameraID', text="Camera ID", anchor='center')
-        databaseTable.heading('time', text="Time", anchor='center')
-        databaseTable.heading('date', text="Date", anchor='center')
-        databaseTable.heading('price', text="Price", anchor='center')
+        self.databaseTable.heading('licensePlate', text="License Plate", anchor='center')
+        self.databaseTable.heading('vehicleType', text="Vehicle Type", anchor='center')
+        self.databaseTable.heading('cameraID', text="Camera ID", anchor='center')
+        self.databaseTable.heading('time', text="Time", anchor='center')
+        self.databaseTable.heading('date', text="Date", anchor='center')
+        self.databaseTable.heading('price', text="Price", anchor='center')
         
-        databaseTable.column('licensePlate', width=150, anchor='center')
-        databaseTable.column('vehicleType', width=150, anchor='center')
-        databaseTable.column('cameraID', width=120, anchor='center')
-        databaseTable.column('time', width=100, anchor='center')
-        databaseTable.column('date', width=100, anchor='center')
-        databaseTable.column('price', width=80, anchor='center')
+        self.databaseTable.column('licensePlate', width=150, anchor='center')
+        self.databaseTable.column('vehicleType', width=150, anchor='center')
+        self.databaseTable.column('cameraID', width=120, anchor='center')
+        self.databaseTable.column('time', width=100, anchor='center')
+        self.databaseTable.column('date', width=100, anchor='center')
+        self.databaseTable.column('price', width=80, anchor='center')
         
-        yscrollbar = ttk.Scrollbar(databaseFrame, orient='vertical', command=databaseTable.yview)
-        databaseTable.configure(yscrollcommand=yscrollbar.set)
+        yscrollbar = ttk.Scrollbar(databaseFrame, orient='vertical', command=self.databaseTable.yview)
+        self.databaseTable.configure(yscrollcommand=yscrollbar.set)
         
-        xscrollbar = ttk.Scrollbar(lowerLowerLeft, orient='horizontal', command=databaseTable.xview)
-        databaseTable.configure(xscrollcommand=xscrollbar.set)
+        xscrollbar = ttk.Scrollbar(lowerLowerLeft, orient='horizontal', command=self.databaseTable.xview)
+        self.databaseTable.configure(xscrollcommand=xscrollbar.set)
+        
+        databaseHandlerFrame = tk.Frame(lowerLowerLeft, bg = "#1B2431")
+        databaseHandlerRow = tk.Frame(databaseHandlerFrame, bg = "#1B2431")
+                
+        licensePlateHandlerFrame = tk.Frame(databaseHandlerRow, bg = "#1B2431")
+        self.licensePlateLabel = CTkLabel(licensePlateHandlerFrame, text = "License Plate", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = 'w')
+        self.licensePlateEntry = CTkEntry(licensePlateHandlerFrame, text_color = "#000000", fg_color = "#FFFFFF", corner_radius = 5, font = ('Montserrat', 12))
+        
+        vehicleTypeHandlerFrame = tk.Frame(databaseHandlerRow, bg = "#1B2431")
+        self.vehicleTypeLabel = CTkLabel(vehicleTypeHandlerFrame, text = "Vehicle Type", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = 'w')
+        self.vehicleTypeEntry = CTkEntry(vehicleTypeHandlerFrame, text_color = "#000000", fg_color = "#FFFFFF", corner_radius = 5, font = ('Montserrat', 12))
+        
+        priceHandlerFrame = tk.Frame(databaseHandlerRow, bg = "#1B2431")
+        self.priceLabel = CTkLabel(priceHandlerFrame, text = "Price", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = 'w')
+        self.priceEntry = CTkEntry(priceHandlerFrame, text_color = "#000000", fg_color = "#FFFFFF", corner_radius = 5, font = ('Montserrat', 12))
+        
+        self.updateTableButton = CTkButton(databaseHandlerRow, fg_color = "#FFFFFF", text = "Update", font = ('Montserrat', 12, 'bold'), corner_radius = 5, text_color = "#000000", command = self.updateTable_callback)
         # End of Contents of Left Content Frame
         
-        rightContentFrame = tk.Frame(contentFrame, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        rightContentFrame = CTkFrame(contentFrame, fg_color = "#1B2431", corner_radius = 5)
         # Contents of Right Content Frame
         manageUsers = CTkLabel(rightContentFrame, text = "Manage Users", font = ('Montserrat', 12, 'bold'), anchor = "w", text_color = "#FFFFFF")
         
-        upperRight = tk.Frame(rightContentFrame, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        upperRight = tk.Frame(rightContentFrame, bg = "#1B2431")
         
-        leftUpperRight = tk.Frame(upperRight, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
-        selectUserFrame = tk.Frame(leftUpperRight, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        leftUpperRight = tk.Frame(upperRight, bg = "#1B2431")
+        selectUserFrame = tk.Frame(leftUpperRight, bg = "#1B2431")
         selectUserLabel = CTkLabel(selectUserFrame, text = "Select User", font = ('Montserrat', 12), anchor = "w", text_color = "#FFFFFF")
         self.selectUserComboVar = StringVar()
         self.selectUserCombo = CTkComboBox(selectUserFrame,
@@ -367,92 +466,92 @@ class AdminPage(tk.Frame):
                                       dropdown_text_color = "#000000",
                                       dropdown_font = ('Montserrat', 12))
         
-        rightUpperRight = tk.Frame(upperRight, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        rightUpperRight = tk.Frame(upperRight, bg = "#1B2431")
         addUserButton = CTkButton(rightUpperRight, text = "Add User", font = ('Montserrat', 12, 'bold'), text_color = "#000000", fg_color = "#FFFFFF",
                                   command = self.addUserButton_callback, corner_radius = 5)
         clearFieldButton = CTkButton(rightUpperRight, text = "Clear Field", font = ('Montserrat', 12, 'bold'), text_color = "#000000", fg_color = "#FFFFFF",
                                command = self.clearFieldButton_callback, corner_radius = 5)
         
-        middleRight = tk.Frame(rightContentFrame, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
-        upperMiddleRight = tk.Frame(middleRight, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        middleRight = tk.Frame(rightContentFrame, bg = "#1B2431")
+        upperMiddleRight = tk.Frame(middleRight, bg = "#1B2431")
         
         userLabel = CTkLabel(upperMiddleRight, text = "User Information", font = ('Montserrat', 12, 'bold'), anchor = "w", text_color = "#FFFFFF")
         
-        firstNameOuter = tk.Frame(upperMiddleRight, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
-        firstNameInner = tk.Frame(firstNameOuter, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        firstNameOuter = tk.Frame(upperMiddleRight, bg = "#1B2431")
+        firstNameInner = tk.Frame(firstNameOuter, bg = "#1B2431")
         firstNameLabel = CTkLabel(firstNameInner, text = "First Name", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
         self.firstNameEntry = CTkEntry(firstNameInner, placeholder_text = "Ex. Juan", font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF")
         
-        lastNameOuter = tk.Frame(upperMiddleRight, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
-        lastNameInner = tk.Frame(lastNameOuter, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        lastNameOuter = tk.Frame(upperMiddleRight, bg = "#1B2431")
+        lastNameInner = tk.Frame(lastNameOuter, bg = "#1B2431")
         lastNameLabel = CTkLabel(lastNameInner, text = "Last Name", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
         self.lastNameEntry = CTkEntry(lastNameInner, placeholder_text = "Ex. Cruz", font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF")
         
-        emailOuter = tk.Frame(upperMiddleRight, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
-        emailInner = tk.Frame(emailOuter, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        emailOuter = tk.Frame(upperMiddleRight, bg = "#1B2431")
+        emailInner = tk.Frame(emailOuter, bg = "#1B2431")
         emailLabel = CTkLabel(emailInner, text = "Email", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
         self.emailEntry = CTkEntry(emailInner, placeholder_text = "Ex. juancruz@domain.com", font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF")
         
-        usernamePasswordOuter = tk.Frame(upperMiddleRight, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
-        usernameInner = tk.Frame(usernamePasswordOuter, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        usernamePasswordOuter = tk.Frame(upperMiddleRight, bg = "#1B2431")
+        usernameInner = tk.Frame(usernamePasswordOuter, bg = "#1B2431")
         usernameLabel = CTkLabel(usernameInner, text = "Username", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
         self.usernameEntry = CTkEntry(usernameInner, font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF")
-        passwordInner = tk.Frame(usernamePasswordOuter, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        passwordInner = tk.Frame(usernamePasswordOuter, bg = "#1B2431")
         passwordLabel = CTkLabel(passwordInner, text = "Password", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
         self.passwordEntry = CTkEntry(passwordInner, font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF", show = "*")
         
-        lowerMiddleRight = tk.Frame(middleRight, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        lowerMiddleRight = tk.Frame(middleRight, bg = "#1B2431")
         
         accessLabel = CTkLabel(lowerMiddleRight, text = "Access", font = ('Montserrat', 12, 'bold'), anchor = "w", text_color = "#FFFFFF")
         
-        adminFrameOuter = tk.Frame(lowerMiddleRight, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
-        leftAdminFrameInner = tk.Frame(adminFrameOuter, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        adminFrameOuter = tk.Frame(lowerMiddleRight, bg = "#1B2431")
+        leftAdminFrameInner = tk.Frame(adminFrameOuter, bg = "#1B2431")
         adminLabel = CTkLabel(leftAdminFrameInner, text = "Administrator", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
-        rightAdminFrameInner = tk.Frame(adminFrameOuter, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        rightAdminFrameInner = tk.Frame(adminFrameOuter, bg = "#1B2431")
         adminVar = IntVar(value = 0)
         adminRadio_yes = CTkRadioButton(rightAdminFrameInner, text = "Yes", variable = adminVar, value = 1, command = self.adminRadioButton_callback)
         adminRadio_no = CTkRadioButton(rightAdminFrameInner, text = "No", variable = adminVar, value = 2, command = self.adminRadioButton_callback)
         
-        congestionPriceFrameOuter = tk.Frame(lowerMiddleRight, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
-        leftCongestionPriceFrameInner = tk.Frame(congestionPriceFrameOuter, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        congestionPriceFrameOuter = tk.Frame(lowerMiddleRight, bg = "#1B2431")
+        leftCongestionPriceFrameInner = tk.Frame(congestionPriceFrameOuter, bg = "#1B2431")
         congestionPriceLabel = CTkLabel(leftCongestionPriceFrameInner, text = "Change Congestion Price", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
-        rightCongestionPriceFrameInner = tk.Frame(congestionPriceFrameOuter, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        rightCongestionPriceFrameInner = tk.Frame(congestionPriceFrameOuter, bg = "#1B2431")
         changePriceVar = IntVar(value = 0)
         changePriceRadio_yes = CTkRadioButton(rightCongestionPriceFrameInner, text = "Yes", variable = changePriceVar, value = 1, command = self.changePriceRadioButton_callback)
         changePriceRadio_no = CTkRadioButton(rightCongestionPriceFrameInner, text = "No", variable = changePriceVar, value = 2, command = self.changePriceRadioButton_callback)
         
-        activeHoursFrameOuter = tk.Frame(lowerMiddleRight, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
-        leftActiveHoursFrameInner = tk.Frame(activeHoursFrameOuter, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        activeHoursFrameOuter = tk.Frame(lowerMiddleRight, bg = "#1B2431")
+        leftActiveHoursFrameInner = tk.Frame(activeHoursFrameOuter, bg = "#1B2431")
         activeHoursLabel = CTkLabel(leftActiveHoursFrameInner, text = "Change Active Hours", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
-        rightActiveHoursFrameInner = tk.Frame(activeHoursFrameOuter, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        rightActiveHoursFrameInner = tk.Frame(activeHoursFrameOuter, bg = "#1B2431")
         activeHoursRadioVar = IntVar(value = 0)
         activeHoursRadio_yes = CTkRadioButton(rightActiveHoursFrameInner, text = "Yes", variable = activeHoursRadioVar, value = 1, command = self.changeDetectableRadioButton_callback)
         activeHoursRadio_no = CTkRadioButton(rightActiveHoursFrameInner, text = "No", variable = activeHoursRadioVar, value = 2, command = self.changeDetectableRadioButton_callback)
         
-        detectableFrameOuter = tk.Frame(lowerMiddleRight, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
-        leftDetectableFrameInner = tk.Frame(detectableFrameOuter, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        detectableFrameOuter = tk.Frame(lowerMiddleRight, bg = "#1B2431")
+        leftDetectableFrameInner = tk.Frame(detectableFrameOuter, bg = "#1B2431")
         detectableLabel = CTkLabel(leftDetectableFrameInner, text = "Change Detectable Vehicles", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
-        rightDetectableFrameInner = tk.Frame(detectableFrameOuter, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        rightDetectableFrameInner = tk.Frame(detectableFrameOuter, bg = "#1B2431")
         detectableRadioVar = IntVar(value = 0)
         detectableRadio_yes = CTkRadioButton(rightDetectableFrameInner, text = "Yes", variable = detectableRadioVar, value = 1, command = self.changeDetectableRadioButton_callback)
         detectableRadio_no = CTkRadioButton(rightDetectableFrameInner, text = "No", variable = detectableRadioVar, value = 2, command = self.changeDetectableRadioButton_callback)
         
-        downloadFrameOuter = tk.Frame(lowerMiddleRight, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
-        leftDownloadFrameInner = tk.Frame(downloadFrameOuter, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        downloadFrameOuter = tk.Frame(lowerMiddleRight, bg = "#1B2431")
+        leftDownloadFrameInner = tk.Frame(downloadFrameOuter, bg = "#1B2431")
         downloadLabel = CTkLabel(leftDownloadFrameInner, text = "Download CSV", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
-        rightDownloadFrameInner = tk.Frame(downloadFrameOuter, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        rightDownloadFrameInner = tk.Frame(downloadFrameOuter, bg = "#1B2431")
         downloadRadioVar = IntVar(value = 0)
         downloadRadio_yes = CTkRadioButton(rightDownloadFrameInner, text = "Yes", variable = downloadRadioVar, value = 1, command = self.downloadCSVRadioButton_callback)
         downloadRadio_no = CTkRadioButton(rightDownloadFrameInner, text = "No", variable = downloadRadioVar, value = 2, command = self.downloadCSVRadioButton_callback)
         
-        lowerRight = tk.Frame(rightContentFrame, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        lowerRight = tk.Frame(rightContentFrame, bg = "#1B2431")
         deleteUserButton = CTkButton(lowerRight, text = "Delete User", font = ('Montserrat', 12, 'bold'), text_color = "#FFFFFF", fg_color = "#D62828",
                                   command = self.deleteUserButton_callback, corner_radius = 5)
         applyUserButton = CTkButton(lowerRight, text = "Apply", font = ('Montserrat', 12, 'bold'), text_color = "#000000", fg_color = "#FFFFFF",
                                command = self.applyUserButton_callback, corner_radius = 5)
         # End of Contents of Right Content Frame
         
-        navigationFrame = tk.Frame(self, bg = "#090E18", highlightbackground = "#FFFFFF", highlightthickness = 2)
+        navigationFrame = tk.Frame(self, bg = "#090E18")
         # Dashboard Button - Navigates to Dashboard
         dashboardButton = CTkButton(navigationFrame,
                                 text = 'Dashboard',
@@ -468,25 +567,35 @@ class AdminPage(tk.Frame):
         dashboardButton.bind("<Enter>", lambda event: dashboardButton.configure(text_color="#090E18", fg_color = "#5E60CE")) 
         dashboardButton.bind("<Leave>", lambda event: dashboardButton.configure(text_color="#5E60CE", fg_color = "#090E18")) 
         
-        # ---------------------------- Packing of Widgets -------------------------------- #
+        # --------------------------- Packing of Widgets -------------------------------- #
         
         toolBarFrame.pack(side = "top", fill = "x")
         closeButton.pack(side = "right", padx = 10, pady = 10)
         minimizeButton.pack(side = "right", padx = 0, pady = 10)
         
-        mainCanvasFrame.pack(side = tk.TOP, fill = tk.BOTH, expand = False)
-        mainCanvas.pack(side = tk.TOP, fill = tk.BOTH, expand = True)
-        contentFrame.pack(side = tk.LEFT, expand = True, fill = "both")
-        v_scrollbar.pack(side = tk.RIGHT, fill = tk.Y)
-        h_scrollbar.pack(side = tk.TOP, fill = tk.X)
+        contentFrame.pack(side = tk.TOP, expand = True, fill = "both")
         
         leftContentFrame.pack(side = "left", expand = True, fill = "both")
         # Contents of Left Content Frame
-        upperLeftContent.pack(side = "top", expand = True, fill = "both", padx = 10, pady = 10)
+        upperLeftContent.pack(side = "top", expand = True, fill = "both", padx = 10, pady = 10, ipadx = 10, ipady = 10)
         
-        manageCamerasLabel.pack(side = "top", fill = "x", padx = 10, pady = 5)
+        addCamerasLabel.pack(side = "top", fill = "x", padx = 10, pady = (5,0))
         
-        lowerLeftContent.pack(side = "top", expand = True, fill = "both", padx = 10, pady = 10)
+        manageCamerasFirstRow.pack(side = "top", fill = "x", padx = 10, pady = (2, 10))
+        discoverCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
+        self.discoveredCamerasDrop.pack(side = "left", fill = "x", expand = True, padx = 15)
+        self.assignID.pack(side = "left", fill = "x", expand = True, padx = 15)
+        addCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
+        
+        manageCamerasLabel.pack(side = "top", fill = "x", padx = 10, pady = (5,0))
+        
+        manageCamerasSecondRow.pack(side = "top", fill = "x", padx = 10, pady = (2, 10))
+        self.savedCamerasDrop.pack(side = "left", fill = "x", expand = True, padx = 15)
+        self.savedCameraID.pack(side = "left", fill = "x", expand = True, padx = 15)
+        updateSavedCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
+        deleteSavedCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
+        
+        lowerLeftContent.pack(side = "top", expand = True, fill = "both", padx = 10, pady = 10, ipadx = 10, ipady = 10)
         
         upperLowerLeft.pack(side = "top", fill = "both", padx = 10, pady = 10)
         # Label for context
@@ -502,11 +611,29 @@ class AdminPage(tk.Frame):
         clearFilterButton.pack(side = "right", padx = 5, pady = 5)
         lowerLowerLeft.pack(side = "top", expand = True, fill = "both", padx = 5, pady = 5)
         databaseFrame.pack(side = "top", expand = True, fill = "both", padx = 2, pady = 2)
-        databaseTable.pack(expand=True, fill='both', padx=0, pady=0, side = "left")
+        self.databaseTable.pack(expand=True, fill='both', padx=0, pady=0, side = "left")
         yscrollbar.pack(side='left', fill='both', padx=0, pady=0)
         xscrollbar.pack(side='top', fill='both', padx=0, pady=0)
+        
+        databaseHandlerFrame.pack(side = "top", fill = "x")
+        databaseHandlerRow.pack(side = "top", fill = "both")
+                
+        licensePlateHandlerFrame.pack(side = "left", fill = "y", expand = True)
+        self.licensePlateLabel.pack(side = "top", fill = "x", padx = 10, expand = True)
+        self.licensePlateEntry.pack(side = "top", fill = "x", expand = True)
+        
+        vehicleTypeHandlerFrame.pack(side = "left", fill = "y", expand = True)
+        self.vehicleTypeLabel.pack(side = "top", fill = "x", padx = 10, expand = True)
+        self.vehicleTypeEntry.pack(side = "top", fill = "x", expand = True)
+        
+        priceHandlerFrame.pack(side = "left", fill = "y", expand = True)
+        self.priceLabel.pack(side = "top", fill = "x", padx = 10, expand = True)
+        self.priceEntry.pack(side = "top", fill = "x", expand = True)
+        
+        self.updateTableButton.pack(side = "left", fill = "x", expand = True)
+        
         # End of Contents of Left Content Frame
-        rightContentFrame.pack(side = "left", expand = False, fill = "both")
+        rightContentFrame.pack(side = "left", expand = False, fill = "both", padx = 10, pady = 10, ipadx = 10, ipady = 10)
         
         manageUsers.pack(side = "top", fill = "x", padx = 10, pady = 5)
         

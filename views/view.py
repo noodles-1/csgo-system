@@ -2,8 +2,6 @@ import os
 import sys
 import tkinter as tk
 from customtkinter import *
-from tkinter import ttk
-from PIL import Image, ImageTk
 from loginPageView import LoginPage
 from dashboardPageView import DashboardPage
 from configPageView import ConfigPage
@@ -19,9 +17,13 @@ sys.path.append(parent)
 class MainWindow(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Frame Switching Example")
+        self.title("Toll-less Toll by CSGO")
         self.attributes('-fullscreen', True)
         self.tk.call('source', 'views/assets/theme/forest-dark.tcl')
+        
+        icon = tk.PhotoImage(file = 'views/assets/app-icon.png')
+        
+        self.iconphoto(True, icon)
         
         self.loginFrame = LoginPage(self)
         self.dashboardFrame = DashboardPage(self)
