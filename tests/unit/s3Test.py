@@ -14,6 +14,14 @@ from controllers.s3controller import S3Controller
 class TestS3ControllerMethods(unittest.TestCase):
     @patch('controllers.s3controller.boto3.client')
     def test_upload_image(self, mock_s3_client):
+        '''
+        Tests the uploadImage method from S3Controller. Tests the validity
+        of an image format while mocking actual s3 object insertion.
+
+        asserts:
+        - True => if the image is valid
+        - False => if the image cannot be encoded due to invalidity
+        '''
         mock_s3 = MagicMock()
         mock_s3.put_object.return_value = None
         mock_s3_client.return_value = mock_s3
