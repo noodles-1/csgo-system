@@ -7,8 +7,6 @@ parent = os.path.dirname(current)
 sys.path.append(parent)
 
 from customtkinter import *
-from tkinter import ttk
-from PIL import Image, ImageTk
 from loginPageView import LoginPage
 from dashboardPageView import DashboardPage
 from configPageView import ConfigPage
@@ -21,9 +19,13 @@ from models.connect import Connection as connection
 class MainWindow(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Frame Switching Example")
+        self.title("Toll-less Toll by CSGO")
         self.attributes('-fullscreen', True)
         self.tk.call('source', 'views/assets/theme/forest-dark.tcl')
+        
+        icon = tk.PhotoImage(file = 'views/assets/app-icon.png')
+        
+        self.iconphoto(True, icon)
         
         self.loginFrame = LoginPage(self)
         self.dashboardFrame = DashboardPage(self)

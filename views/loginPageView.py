@@ -2,6 +2,9 @@ import os
 import sys
 import tkinter as tk
 
+from customtkinter import *
+from PIL import Image
+
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
@@ -48,19 +51,19 @@ class LoginPage(tk.Frame):
         tk.Frame.__init__(self, parent, bg = "blue")
         
         # Cover Image (The Eye)
-        coverImage = Image.open("views/assets/blue-iris-updated.png")
-        coverImage = coverImage.resize((838, 479))
-        coverPhoto = ImageTk.PhotoImage(coverImage)
+        coverPhoto = CTkImage(light_image = Image.open("views/assets/blue-iris-updated.png"),
+                              dark_image = Image.open("views/assets/blue-iris-updated.png"),
+                              size = (838, 479))
 
         # Close Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
-        closeImage = Image.open("views/icons/icon_close_darkmode.png")
-        closeImage = closeImage.resize((20, 20))
-        closePhoto = ImageTk.PhotoImage(closeImage)
+        closePhoto = CTkImage(light_image = Image.open("views/icons/icon_close_lightmode.png"),
+                              dark_image = Image.open("views/icons/icon_close_darkmode.png"),
+                              size = (20, 20))
 
         # Minimize Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
-        minimizeImage = Image.open("views/icons/icon_minimize_darkmode.png")
-        minimizeImage = minimizeImage.resize((20, 20))
-        minimizePhoto = ImageTk.PhotoImage(minimizeImage)
+        minimizePhoto = CTkImage(light_image = Image.open("views/icons/icon_minimize_lightmode.png"),
+                              dark_image = Image.open("views/icons/icon_minimize_darkmode.png"),
+                              size = (20, 20))
 
         # Top-most Frame that holds the Close and Minimize buttons.
         toolbarFrame = tk.Frame(self, bg = "#000000", height = 30)
@@ -102,7 +105,7 @@ class LoginPage(tk.Frame):
         mainFrameRight.pack(fill = "both", side = "left")
 
         labelImageCover = CTkLabel(mainFrameLeft, image = coverPhoto, text = "")
-        labelImageCover.pack(side = "top", fill = "both", expand = "yes")
+        labelImageCover.pack(side = "top", fill = "both", expand = True)
         
         # This is the Frame where the login form is rooted to.
         loginFormFrame = tk.Frame(mainFrameRight, bg = "#000000")

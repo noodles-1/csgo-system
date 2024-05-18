@@ -3,6 +3,10 @@ import sys
 import cv2
 import tkinter as tk
 
+from customtkinter import *
+from tkinter import ttk
+from PIL import Image
+
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
@@ -34,16 +38,16 @@ class DashboardPage(tk.Frame):
         # Style definition. Can be utilized with the Change Theme from Light to Dark
         style = ttk.Style()
         style.theme_use('forest-dark')
-
+        
         # Close Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
-        closeImage = Image.open("views/icons/icon_close_darkmode.png")
-        closeImage = closeImage.resize((20, 20))
-        closePhoto = ImageTk.PhotoImage(closeImage)
+        closePhoto = CTkImage(light_image = Image.open("views/icons/icon_close_lightmode.png"),
+                              dark_image = Image.open("views/icons/icon_close_darkmode.png"),
+                              size = (20, 20))
 
         # Minimize Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
-        minimizeImage = Image.open("views/icons/icon_minimize_darkmode.png")
-        minimizeImage = minimizeImage.resize((20, 20))
-        minimizePhoto = ImageTk.PhotoImage(minimizeImage)
+        minimizePhoto = CTkImage(light_image = Image.open("views/icons/icon_minimize_lightmode.png"),
+                              dark_image = Image.open("views/icons/icon_minimize_darkmode.png"),
+                              size = (20, 20))
 
         # Top-most Frame that holds the Close and Minimize buttons.
         toolbarFrame = tk.Frame(self, bg = "#090E18", height = 30)
@@ -75,9 +79,12 @@ class DashboardPage(tk.Frame):
         # End of Toolbar Frame
         
         # Start of Main Frame (Where the contents of the main page is)
-        mainFrame = tk.Frame(self, bg = "#090E18")
-        mainFrame.pack(expand = True, fill = "both", side = "top")
-
+        mainContentFrame = CTkScrollableFrame(self, bg_color = "#090E18", fg_color = "#090E18")
+        mainContentFrame.pack(expand = True, fill = tk.BOTH, side = tk.TOP)
+        
+        mainFrame = CTkFrame(mainContentFrame, bg_color = "#090E18")
+        mainFrame.pack(expand = True, fill = tk.BOTH, side = tk.TOP)
+        
         bottomFrame = tk.Frame(self, bg = "#090E18")
         bottomFrame.pack(fill = "both", side = "top", padx = 20)
 
@@ -124,6 +131,9 @@ class DashboardPage(tk.Frame):
 
         databaseFrame = tk.Frame(rightMainFrame, bg = '#1B2431')
         databaseFrame.pack(expand = True, fill = 'both', padx = 15, pady = 10)
+        
+        databaseTableFrame = tk.Frame(databaseFrame, bg = '#1B2431')
+        databaseTableFrame.pack(expand = True, fill = 'both', padx = 0, pady = 0)
 
         style.configure("Treeview",
                         background = '#1B2431',
@@ -146,8 +156,7 @@ class DashboardPage(tk.Frame):
                   background=[('active', '#48BFE3')])
 
         # ADD or REMOVE headers as needed @Database Integration
-        databaseTable = ttk.Treeview(databaseFrame, columns = ('licensePlate', 'vehicleType', 'cameraID', 'time', 'date', 'price'), show = "headings", style = 'Custom.Treeview')
-        
+        databaseTable = ttk.Treeview(databaseTableFrame, columns = ('licensePlate', 'vehicleType', 'cameraID', 'time', 'date', 'price'), show = "headings", style = 'Custom.Treeview')
 
         # Inserts Blank Entries to the Treeview so that it doesnt look bad when the Treeview is Empty.
         #for _ in range(100):
@@ -170,12 +179,16 @@ class DashboardPage(tk.Frame):
         databaseTable.column('date', width=100, anchor='center')
         databaseTable.column('price', width=80, anchor='center')
 
-        databaseTable.pack(expand=True, fill='both', padx=0, pady=0)
+        databaseTable.pack(side = 'left', expand=True, fill='both', padx=0, pady=0)
 
+        yscrollbar = ttk.Scrollbar(databaseTableFrame, orient='vertical', command=databaseTable.yview)
+        databaseTable.configure(yscrollcommand=yscrollbar.set)
+        yscrollbar.pack(side='right', fill='both', padx=5, pady=0)
+        
         xscrollbar = ttk.Scrollbar(databaseFrame, orient='horizontal', command=databaseTable.xview)
         databaseTable.configure(xscrollcommand=xscrollbar.set)
-        xscrollbar.pack(side='bottom', fill='both', padx=0, pady=0)
-
+        xscrollbar.pack(side='bottom', fill='both', padx=0, pady=5)
+        
         topLeftMainFrame = tk.Frame(leftMainFrame, bg = "#090E18")
         middleLeftMainFrame = tk.Frame(leftMainFrame, bg = "#090E18")
         bottomLeftMainFrame = tk.Frame(leftMainFrame, bg = "#090E18")
