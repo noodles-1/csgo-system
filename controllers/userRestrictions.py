@@ -24,8 +24,4 @@ def updateFile(filePath, configCategory, configSetting, configValue):
     
     #writing the changes made back to the file
     with open(filePath, 'w') as configfile:
-        #prints a file not found message when function is used on a nonexistent file
-        try:
-            config.read(configfile)
-        except:
-            print("File not found.")
+        config.write(configfile)
