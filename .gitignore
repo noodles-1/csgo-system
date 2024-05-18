@@ -10,6 +10,7 @@ venv
 logs.txt
 .pt
 *.jpg
+**/.env
 **/test_script.py
 **/.mp4
 **/test.py

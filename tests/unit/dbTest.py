@@ -38,10 +38,10 @@ class TestDBControllerMethods(unittest.TestCase):
     @patch('controllers.dbController.DBController.usernameExists')
     def test_login_user(self, mock_username_exists, mock_get_user):
         '''
-        Tests the loginUser method from DBController. Assumes that the username and email
-        provided exists and can be logged in. This test case tests the functionality of the
-        loginUser method in identifying missing credentials and invalid email or username
-        format while mocking database transactions.
+        Tests the loginUser method from DBController. Assumes that the username provided is valid, 
+        exists, and can be logged in. This test case tests the functionality of the loginUser method 
+        in identifying missing credentials and invalid email or username format while mocking database 
+        transactions.
 
         asserts:
         - True => if the passwords match, then the user has successfully logged in

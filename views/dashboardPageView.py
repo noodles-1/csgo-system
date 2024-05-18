@@ -1,6 +1,8 @@
 import os
 import sys
+import cv2
 import tkinter as tk
+
 from customtkinter import *
 from tkinter import ttk
 from PIL import Image
@@ -8,6 +10,11 @@ from PIL import Image
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
+
+from customtkinter import *
+from tkinter import ttk
+from PIL import Image, ImageTk
+from controllers import controller
 
 class DashboardPage(tk.Frame):
     # Close Application
@@ -24,6 +31,8 @@ class DashboardPage(tk.Frame):
         print("Change Camera Display callback: ", choice)
 
     def __init__(self, parent):
+        self.ai = controller.AIController()
+
         tk.Frame.__init__(self, parent, bg = "#090E18")
         
         # Style definition. Can be utilized with the Change Theme from Light to Dark
@@ -150,8 +159,8 @@ class DashboardPage(tk.Frame):
         databaseTable = ttk.Treeview(databaseTableFrame, columns = ('licensePlate', 'vehicleType', 'cameraID', 'time', 'date', 'price'), show = "headings", style = 'Custom.Treeview')
 
         # Inserts Blank Entries to the Treeview so that it doesnt look bad when the Treeview is Empty.
-        for _ in range(100):
-            databaseTable.insert('', 'end', values=('', '', '', '', '', ''))
+        #for _ in range(100):
+            #databaseTable.insert('', 'end', values=('', '', '', '', '', ''))
 
         databaseTable.tag_configure('even', background='#2A2D2E', foreground='#FFFFFF')
         databaseTable.tag_configure('odd', background='#343638', foreground='#FFFFFF')
@@ -208,7 +217,7 @@ class DashboardPage(tk.Frame):
         cameraFrame.pack(fill = 'both', expand = True, padx = 15, pady = 10)
 
         # This is where you should input the camera Frame. Delete the code below this if integrating the camera display.
-        placeholder_delete_this_label = CTkLabel(cameraFrame, text = 'PLACEHOLDER ONLY. ADD CAMERA HERE', font = ('Montserrat', 45), text_color = 'white')
+        placeholder_delete_this_label = CTkLabel(cameraFrame, text = 'PLACEHOLDER TEXT HERE', font = ('Montserrat', 45), text_color = 'white')
         placeholder_delete_this_label.pack(fill = 'both', expand = True)
         # ----
         

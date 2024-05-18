@@ -1,16 +1,18 @@
 import os
 import sys
 import tkinter as tk
+
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
+
 from customtkinter import *
 from loginPageView import LoginPage
 from dashboardPageView import DashboardPage
 from configPageView import ConfigPage
 from analyticsPageView import AnalyticsPage
 from adminPageView import AdminPage
-
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-sys.path.append(parent)
+from models.connect import Connection as connection
 
 # view.py is the starting point of the GUI. This is where each Pages are defined. (Parent Class)
 
@@ -47,5 +49,6 @@ class MainWindow(tk.Tk):
         cont.tkraise()
 
 if __name__ == "__main__":
+    connection.connect('database/test.db')
     app = MainWindow()
     app.mainloop()

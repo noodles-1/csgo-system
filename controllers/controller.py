@@ -31,10 +31,10 @@ class AIController:
         self.cnocr = CnOcr(det_model_name='en_PP-OCRv3_det', rec_model_name='en_PP-OCRv3')
 
     def detect_vehicle(self, frame):
-        return self.vehicle_detection_model.predict(source=frame)
+        return self.vehicle_detection_model.predict(source=frame, verbose=False)
 
     def detect_license_plate(self, frame):
-        return self.lp_detection_model.predict(source=frame)
+        return self.lp_detection_model.predict(source=frame, verbose=False)
 
     def get_license_number_tesseract(self, frame):
         return pytesseract.image_to_string(image=frame, lang='eng', config='--psm 10 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')
@@ -42,13 +42,11 @@ class AIController:
     def get_license_number_cnocr(self, frame):
         return self.cnocr.ocr(img_fp=frame)
 
-classNames = ["car", "motorbike"]
-
-def bounding_box(frame, box):
+def bounding_box(frame, box, color, classNames):
     x1, y1, x2, y2 = box.xyxy[0]
     x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
 
-    cv2.rectangle(frame, (x1, y1), (x2, y2), (200, 50, 50), 2)
+    cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
 
     confidence = math.ceil((box.conf[0] * 100)) / 100
 
@@ -57,10 +55,9 @@ def bounding_box(frame, box):
     org = [x1, y1]
     font = cv2.FONT_HERSHEY_PLAIN
     fontScale = 2
-    color = (255, 255, 255)
     thickness = 2
 
-    cv2.putText(frame, classNames[cls] + ' ' + str(confidence), org, font, fontScale, color, thickness)
+    cv2.putText(frame, classNames[cls] + ' ' + str(confidence), org, font, fontScale, (255, 255, 255), thickness)
 
 def generate_revenue_report():
     curr_date = datetime.date.today().strftime('%Y-%m-%d')
