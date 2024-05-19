@@ -32,10 +32,10 @@ class AIController:
         self.cnocr = CnOcr(det_model_name='en_PP-OCRv3_det', rec_model_name='en_PP-OCRv3')
 
     def detect_vehicle(self, frame):
-        return self.vehicle_detection_model.predict(source=frame, verbose=False)
+        return self.vehicle_detection_model.track(source=frame, verbose=False, persist=True, device=0, workers=0)
 
     def detect_license_plate(self, frame):
-        return self.lp_detection_model.predict(source=frame, verbose=False)
+        return self.lp_detection_model.predict(source=frame, verbose=False, device=0, workers=0)
 
     def get_license_number_tesseract(self, frame):
         return pytesseract.image_to_string(image=frame, lang='eng', config='--psm 10 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')

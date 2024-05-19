@@ -251,6 +251,34 @@ class DashboardPage(tk.Frame):
         settingsButton.bind("<Leave>", lambda event: settingsButton.configure(text_color="#48BFE3", fg_color = "#090E18")) 
 
         '''
+        For demo only, will be used for camera implementation.
+        '''
+        def start_video():
+            video_path = "https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/highway_videoplayback.mp4"
+            cap = cv2.VideoCapture(video_path)
+
+            def show_frame():
+                success, frame = cap.read()
+
+                if success:
+                    results = self.ai.detect_vehicle(frame)
+                    annotated_frame = results[0].plot()
+
+                    frame_rgb = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
+                    img = Image.fromarray(frame_rgb)
+                    img = img.resize((720, 540))
+                    img_tk = ImageTk.PhotoImage(image=img)
+
+                    placeholder_delete_this_label.configure(image=img_tk)
+                    placeholder_delete_this_label.after(2, show_frame)
+                else:
+                    cap.release()
+
+            show_frame()
+
+        #start_video()
+
+        '''
         @Mendoza
         topLeftMainFrame is the Frame where the camera should be setup and visualized.
         How you'll do this is using frames and continuously displaying each frame.
