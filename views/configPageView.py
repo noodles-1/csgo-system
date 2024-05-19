@@ -1,13 +1,15 @@
 import os
 import sys
 import tkinter as tk
-from customtkinter import *
-from tkinter import ttk
-from PIL import Image
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
+
+from customtkinter import *
+from tkinter import ttk
+from PIL import Image
+from controllers.controller import AIController
 
 class ConfigPage(tk.Frame):
     # Close Application
@@ -37,6 +39,9 @@ class ConfigPage(tk.Frame):
     # Function that applies the settings currently set to with delay
     def scheduleApplyButton_callback(self):
         print("Schedule Apply Button Pressed")
+
+    def radioButtonCallback(self, id, value):
+        AIController.setVehicleClasses(id, value == 1)
         
     # Function that add rows to the Schedule of the Algorithm
     def add_row(self):
@@ -232,24 +237,24 @@ class ConfigPage(tk.Frame):
         
         # -- First Row --
         self.carVar = IntVar(value = 1)
-        carTrueRadioButton = CTkRadioButton(carFrame, variable = self.carVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
-        carFalseRadioButton = CTkRadioButton(carFrame, variable = self.carVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        carTrueRadioButton = CTkRadioButton(carFrame, variable = self.carVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(0, self.carVar.get()))
+        carFalseRadioButton = CTkRadioButton(carFrame, variable = self.carVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(0, self.carVar.get()))
         carRadioLabel = CTkLabel(carFrame, text = "Car", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
         carRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
         carTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
         carFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
         
         self.truckVar = IntVar(value = 1)
-        truckTrueRadioButton = CTkRadioButton(truckFrame, variable = self.truckVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
-        truckFalseRadioButton = CTkRadioButton(truckFrame, variable = self.truckVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        truckTrueRadioButton = CTkRadioButton(truckFrame, variable = self.truckVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(6, self.truckVar.get()))
+        truckFalseRadioButton = CTkRadioButton(truckFrame, variable = self.truckVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(6, self.truckVar.get()))
         truckRadioLabel = CTkLabel(truckFrame, text = "Truck", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
         truckRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
         truckTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
         truckFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
         
         self.jeepneyVar = IntVar(value = 1)
-        jeepneyTrueRadioButton = CTkRadioButton(jeepneyFrame, variable = self.jeepneyVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
-        jeepneyFalseRadioButton = CTkRadioButton(jeepneyFrame, variable = self.jeepneyVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        jeepneyTrueRadioButton = CTkRadioButton(jeepneyFrame, variable = self.jeepneyVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(2, self.jeepneyVar.get()))
+        jeepneyFalseRadioButton = CTkRadioButton(jeepneyFrame, variable = self.jeepneyVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(2, self.jeepneyVar.get()))
         jeepneyRadioLabel = CTkLabel(jeepneyFrame, text = "Jeepney", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
         jeepneyRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
         jeepneyTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
@@ -257,24 +262,24 @@ class ConfigPage(tk.Frame):
         
         # -- Second Row --
         self.busVar = IntVar(value = 1)
-        busTrueRadioButton = CTkRadioButton(busFrame, variable = self.busVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
-        busFalseRadioButton = CTkRadioButton(busFrame, variable = self.busVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        busTrueRadioButton = CTkRadioButton(busFrame, variable = self.busVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(3, self.busVar.get()))
+        busFalseRadioButton = CTkRadioButton(busFrame, variable = self.busVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(3, self.busVar.get()))
         busRadioLabel = CTkLabel(busFrame, text = "Bus", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
         busRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
         busTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
         busFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
         
         self.motorVar = IntVar(value = 1)
-        motorTrueRadioButton = CTkRadioButton(motorcycleFrame, variable = self.motorVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
-        motorFalseRadioButton = CTkRadioButton(motorcycleFrame, variable = self.motorVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        motorTrueRadioButton = CTkRadioButton(motorcycleFrame, variable = self.motorVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(1, self.motorVar.get()))
+        motorFalseRadioButton = CTkRadioButton(motorcycleFrame, variable = self.motorVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(1, self.motorVar.get()))
         motorRadioLabel = CTkLabel(motorcycleFrame, text = "Motorcycle", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
         motorRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
         motorTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
         motorFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
         
         self.tricycleVar = IntVar(value = 1)
-        tricycleTrueRadioButton = CTkRadioButton(tricycleFrame, variable = self.tricycleVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
-        tricycleFalseRadioButton = CTkRadioButton(tricycleFrame, variable = self.tricycleVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        tricycleTrueRadioButton = CTkRadioButton(tricycleFrame, variable = self.tricycleVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(4, self.tricycleVar.get()))
+        tricycleFalseRadioButton = CTkRadioButton(tricycleFrame, variable = self.tricycleVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(4, self.tricycleVar.get()))
         tryclceRadioLabel = CTkLabel(tricycleFrame, text = "Tricycle", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
         tryclceRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
         tricycleTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
@@ -282,24 +287,24 @@ class ConfigPage(tk.Frame):
         
         # -- Third Row -- 
         self.vanVar = IntVar(value = 1)
-        vanTrueRadioButton = CTkRadioButton(vanFrame, variable = self.vanVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
-        vanFalseRadioButton = CTkRadioButton(vanFrame, variable = self.vanVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        vanTrueRadioButton = CTkRadioButton(vanFrame, variable = self.vanVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(5, self.vanVar.get()))
+        vanFalseRadioButton = CTkRadioButton(vanFrame, variable = self.vanVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(5, self.vanVar.get()))
         vanRadioLabel = CTkLabel(vanFrame, text = "Van", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
         vanRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
         vanTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
         vanFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
         
         self.taxiVar = IntVar(value = 1)
-        taxiTrueRadioButton = CTkRadioButton(taxiFrame, variable = self.taxiVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
-        taxiFalseRadioButton = CTkRadioButton(taxiFrame, variable = self.taxiVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        taxiTrueRadioButton = CTkRadioButton(taxiFrame, variable = self.taxiVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(7, self.taxiVar.get()))
+        taxiFalseRadioButton = CTkRadioButton(taxiFrame, variable = self.taxiVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(7, self.taxiVar.get()))
         taxiRadioLabel = CTkLabel(taxiFrame, text = "Taxi", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
         taxiRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
         taxiTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
         taxiFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
         
         self.mJeepneyVar = IntVar(value = 1)
-        mJeepneyTrueRadioButton = CTkRadioButton(mJeepneyFrame, variable = self.mJeepneyVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
-        mJeepneyFalseRadioButton = CTkRadioButton(mJeepneyFrame, variable = self.mJeepneyVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        mJeepneyTrueRadioButton = CTkRadioButton(mJeepneyFrame, variable = self.mJeepneyVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(8, self.mJeepneyVar.get()))
+        mJeepneyFalseRadioButton = CTkRadioButton(mJeepneyFrame, variable = self.mJeepneyVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(8, self.mJeepneyVar.get()))
         mJeepneyRadioLabel = CTkLabel(mJeepneyFrame, text = "Modern Jeepney", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
         mJeepneyRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
         mJeepneyTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")

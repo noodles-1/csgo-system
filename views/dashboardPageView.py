@@ -14,7 +14,7 @@ sys.path.append(parent)
 from customtkinter import *
 from tkinter import ttk
 from PIL import Image, ImageTk
-from controllers import controller
+from controllers.controller import AIController
 
 class DashboardPage(tk.Frame):
     # Close Application
@@ -31,8 +31,6 @@ class DashboardPage(tk.Frame):
         print("Change Camera Display callback: ", choice)
 
     def __init__(self, parent):
-        self.ai = controller.AIController()
-
         tk.Frame.__init__(self, parent, bg = "#090E18")
         
         # Style definition. Can be utilized with the Change Theme from Light to Dark
@@ -254,14 +252,14 @@ class DashboardPage(tk.Frame):
         For demo only, will be used for camera implementation.
         '''
         def start_video():
-            video_path = "https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/highway_videoplayback.mp4"
+            video_path = "https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/Back+to+school+traffic+in+Metro+Manila.mp4"
             cap = cv2.VideoCapture(video_path)
 
             def show_frame():
                 success, frame = cap.read()
 
                 if success:
-                    results = self.ai.detect_vehicle(frame)
+                    results = AIController.detect_vehicle(frame)
                     annotated_frame = results[0].plot()
 
                     frame_rgb = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
