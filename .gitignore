@@ -1,6 +1,5 @@
 runs
 test_images
-models
 reports
 prototype/sort
 prototype/sample.mp4
@@ -8,9 +7,11 @@ wandb
 localFolder
 venv
 
+logs.txt
 .pt
 *.jpg
-test_script.py
+**/.env
+**/test_script.py
 **/.mp4
 **/test.py
 **/tempCodeRunnerFile.py

@@ -1,4 +1,3 @@
-import cv2
 import os
 import sys
 import cv2
@@ -9,7 +8,10 @@ root = os.path.dirname(parent)
 sys.path.append(root)
 
 from ultralytics import YOLO
-from controllers import controller
+# from controllers import controller
 
-ai = controller.AIController()
-ai.detect_vehicle(frame=cv2.imread('test_images/8.jpg'))
+# ai = controller.AIController()
+# ai.detect_vehicle(frame=cv2.imread('test_images/8.jpg'))
+
+model = YOLO('yolov8n.pt')
+model.train(data='../datasets/ph-vehicles/data.yaml', pretrained=True, epochs=25, device=0, workers=0)
