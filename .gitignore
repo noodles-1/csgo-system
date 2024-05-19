@@ -11,8 +11,12 @@ venv38
 logs.txt
 .pt
 *.jpg
+**/.env
 **/test_script.py
 **/.mp4
 **/test.py
 **/tempCodeRunnerFile.py
 **/__pycache__
+
+.vscode/settings.json
+tests/unit/test_vehicle_pricing_app.py

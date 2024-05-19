@@ -15,10 +15,14 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import tkinter as tk
 from scipy.interpolate import make_interp_spline
 from scipy.interpolate import interp1d
+<<<<<<< HEAD
 import random
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import smtplib
+=======
+import hashlib
+>>>>>>> origin/staging
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -35,10 +39,10 @@ class AIController:
         self.cnocr = CnOcr(det_model_name='en_PP-OCRv3_det', rec_model_name='en_PP-OCRv3')
 
     def detect_vehicle(self, frame):
-        return self.vehicle_detection_model.predict(source=frame)
+        return self.vehicle_detection_model.predict(source=frame, verbose=False)
 
     def detect_license_plate(self, frame):
-        return self.lp_detection_model.predict(source=frame)
+        return self.lp_detection_model.predict(source=frame, verbose=False)
 
     def get_license_number_tesseract(self, frame):
         return pytesseract.image_to_string(image=frame, lang='eng', config='--psm 10 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')
@@ -46,13 +50,11 @@ class AIController:
     def get_license_number_cnocr(self, frame):
         return self.cnocr.ocr(img_fp=frame)
 
-classNames = ["car", "motorbike"]
-
-def bounding_box(frame, box):
+def bounding_box(frame, box, color, classNames):
     x1, y1, x2, y2 = box.xyxy[0]
     x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
 
-    cv2.rectangle(frame, (x1, y1), (x2, y2), (200, 50, 50), 2)
+    cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
 
     confidence = math.ceil((box.conf[0] * 100)) / 100
 
@@ -61,10 +63,9 @@ def bounding_box(frame, box):
     org = [x1, y1]
     font = cv2.FONT_HERSHEY_PLAIN
     fontScale = 2
-    color = (255, 255, 255)
     thickness = 2
 
-    cv2.putText(frame, classNames[cls] + ' ' + str(confidence), org, font, fontScale, color, thickness)
+    cv2.putText(frame, classNames[cls] + ' ' + str(confidence), org, font, fontScale, (255, 255, 255), thickness)
 
 def generate_revenue_report():
     curr_date = datetime.date.today().strftime('%Y-%m-%d')
@@ -231,6 +232,7 @@ class ReportGenerationController:
         cpu_percent = psutil.cpu_percent(interval=1)
         return [], [cpu_percent]
 
+<<<<<<< HEAD
     def get_memory_usage():
         memory_percent = psutil.virtual_memory().percent
         return [], [memory_percent]
@@ -394,3 +396,29 @@ class EnvironmentController:
     
     def verify_variable():
         pass
+=======
+def get_memory_usage():
+    memory_percent = psutil.virtual_memory().percent
+    return [], [memory_percent]
+
+def updateVehiclePrice(vehicleType, newPrice):
+    global vehiclePrices
+    
+    # vehicleType Jeepney, jeepney, jEepney, etc. != to each other
+    vehicleType = vehicleType.upper() # any input ni user will be all uppercase
+    
+    if vehicleType not in vehiclePrices:
+        print("Error: Vehicle type not found.")
+        return
+    
+    if not isinstance(newPrice, float):
+        print("Error: Price should be a whole number") # 0 - Infinity
+        return
+    
+    if newPrice < 0:
+        print("Error: Price should be non-negative.")
+        return
+    
+    vehiclePrices[vehicleType] = newPrice # Simple assignment to the dictionary
+    print(f"Price for {vehicleType} updated to {newPrice}.")
+>>>>>>> origin/staging

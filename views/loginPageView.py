@@ -1,13 +1,18 @@
 import os
 import sys
 import tkinter as tk
+
 from customtkinter import *
-from tkinter import ttk
-from PIL import Image, ImageTk
+from PIL import Image
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
+
+from customtkinter import *
+from tkinter import ttk
+from PIL import Image, ImageTk
+from controllers.dbController import DBController as db
 
 class LoginPage(tk.Frame):
     # Close Application
@@ -19,12 +24,8 @@ class LoginPage(tk.Frame):
         self.master.iconify()
 
     # Function that is called when the credentials are incorrect.
-    def incorrectCredentials(self, incorrectLabel, passwordEntry, usernameEntry):
+    def incorrectCredentials(self, incorrectLabel: CTkLabel):
         incorrectLabel.configure(text_color = "#d62828")
-        
-        passwordEntry.delete(0, "end")
-        usernameEntry.delete(0, "end")
-        
         self.after(2000, lambda: incorrectLabel.configure(text_color="#000000"))
     
     # Function that is called to go to the Forgot Password Page (Unfinished)
@@ -32,33 +33,37 @@ class LoginPage(tk.Frame):
         pass
     
     # Function that is called when clicking Login
-    def verifyCredentials(self):
-        # The logic for verifying the login credentials should be here
-        print("verify credentials called")
-        # End
+    def verifyCredentials(self, usernameEntry: CTkEntry, passwordEntry: CTkEntry, incorrectLabel: CTkLabel):
+        username, password = usernameEntry.get(), passwordEntry.get()
+        print("verify credentials called", username, password)
         
-        # Only continue to this line, when the verification returns True
-        self.master.show_frame(self.master.dashboardFrame)
-        
-        # Call the function incorrectCredentials, when the verification returns False
+        response = db.loginUser(password=password, username=username)
+        if response.ok:
+            self.master.show_frame(self.master.dashboardFrame)
+        else:
+            incorrectLabel.configure(text=(response.messages['username'] or response.messages['password']))
+            self.incorrectCredentials(incorrectLabel)
+
+        passwordEntry.delete(0, "end")
+        usernameEntry.delete(0, "end")
     
     def __init__(self, parent):
         tk.Frame.__init__(self, parent, bg = "blue")
         
         # Cover Image (The Eye)
-        coverImage = Image.open("views/assets/blue-iris-updated.png")
-        coverImage = coverImage.resize((838, 479))
-        coverPhoto = ImageTk.PhotoImage(coverImage)
+        coverPhoto = CTkImage(light_image = Image.open("views/assets/blue-iris-updated.png"),
+                              dark_image = Image.open("views/assets/blue-iris-updated.png"),
+                              size = (838, 479))
 
         # Close Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
-        closeImage = Image.open("views/icons/icon_close_darkmode.png")
-        closeImage = closeImage.resize((20, 20))
-        closePhoto = ImageTk.PhotoImage(closeImage)
+        closePhoto = CTkImage(light_image = Image.open("views/icons/icon_close_lightmode.png"),
+                              dark_image = Image.open("views/icons/icon_close_darkmode.png"),
+                              size = (20, 20))
 
         # Minimize Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
-        minimizeImage = Image.open("views/icons/icon_minimize_darkmode.png")
-        minimizeImage = minimizeImage.resize((20, 20))
-        minimizePhoto = ImageTk.PhotoImage(minimizeImage)
+        minimizePhoto = CTkImage(light_image = Image.open("views/icons/icon_minimize_lightmode.png"),
+                              dark_image = Image.open("views/icons/icon_minimize_darkmode.png"),
+                              size = (20, 20))
 
         # Top-most Frame that holds the Close and Minimize buttons.
         toolbarFrame = tk.Frame(self, bg = "#000000", height = 30)
@@ -100,7 +105,7 @@ class LoginPage(tk.Frame):
         mainFrameRight.pack(fill = "both", side = "left")
 
         labelImageCover = CTkLabel(mainFrameLeft, image = coverPhoto, text = "")
-        labelImageCover.pack(side = "top", fill = "both", expand = "yes")
+        labelImageCover.pack(side = "top", fill = "both", expand = True)
         
         # This is the Frame where the login form is rooted to.
         loginFormFrame = tk.Frame(mainFrameRight, bg = "#000000")
@@ -129,7 +134,7 @@ class LoginPage(tk.Frame):
                                 height = 32,
                                 width = 148,
                                 text_color = '#48BFE3',
-                                command = self.verifyCredentials,
+                                command = lambda: self.verifyCredentials(usernameEntry, passwordEntry, incorrectLabel),
                                 border_color = '#48BFE3',
                                 fg_color = '#000000', 
                                 border_width = 2,

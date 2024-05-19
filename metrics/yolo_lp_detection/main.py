@@ -2,18 +2,24 @@ import cv2
 import os
 import sys
 
-from ultralytics import YOLO
-
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 root = os.path.dirname(parent)
 sys.path.append(root)
 
+from ultralytics import YOLO
 from controllers import controller
+from controllers import s3controller
 
 ai = controller.AIController()
-img = cv2.imread('test_images/13.jpg')
-ai.detect_license_plate(frame=img)
+s3 = s3controller.S3Controller()
+img = cv2.imread('test_images/1.jpg')
+vehicle_results = ai.detect_vehicle(frame=img)
+
+x1, y1, x2, y2 = vehicle_results[0].boxes[0].xyxy[0]
+cropped_vehicle = img[int(y1.item()):int(y2.item()), int(x1.item()):int(x2.item())]
+url = s3.uploadImage(image=cropped_vehicle, image_name='cropped')
+print(url)
 
 """
 img = cv2.imread('test_images/13.jpg')

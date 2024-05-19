@@ -1,27 +1,31 @@
 import os
 import sys
 import tkinter as tk
+
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
+
 from customtkinter import *
-from tkinter import ttk
-from PIL import Image, ImageTk
 from loginPageView import LoginPage
 from dashboardPageView import DashboardPage
 from configPageView import ConfigPage
 from analyticsPageView import AnalyticsPage
 from adminPageView import AdminPage
-
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-sys.path.append(parent)
+from models.connect import Connection as connection
 
 # view.py is the starting point of the GUI. This is where each Pages are defined. (Parent Class)
 
 class MainWindow(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Frame Switching Example")
+        self.title("Toll-less Toll by CSGO")
         self.attributes('-fullscreen', True)
         self.tk.call('source', 'views/assets/theme/forest-dark.tcl')
+        
+        icon = tk.PhotoImage(file = 'views/assets/app-icon.png')
+        
+        self.iconphoto(True, icon)
         
         self.loginFrame = LoginPage(self)
         self.dashboardFrame = DashboardPage(self)
@@ -45,5 +49,6 @@ class MainWindow(tk.Tk):
         cont.tkraise()
 
 if __name__ == "__main__":
+    connection.connect('database/test.db')
     app = MainWindow()
     app.mainloop()
