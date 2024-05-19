@@ -15,6 +15,10 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import tkinter as tk
 from scipy.interpolate import make_interp_spline
 from scipy.interpolate import interp1d
+import random
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import smtplib
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -231,7 +235,61 @@ class ReportGenerationController:
         memory_percent = psutil.virtual_memory().percent
         return [], [memory_percent]
 
-class AccessController:
-    def userRestriction():
+class AccountController:
+    def dashboard_page_restriction(adminButton, userType):
+        if userType == "admin":
+            adminButton.config(state = 'normal')
+        else:
+            adminButton.config(state = 'disabled')
+    
+    def analytics_page_restriction():
         pass
     
+    def config_page_restriction():
+        pass
+    
+    def generate_OTP():
+        return str(random.randint(100000, 999999))
+    
+    def verify_OTP(otp, user_input_otp):
+        return otp == user_input_otp
+    
+    def send_OTP(receiver_email, otp):
+        sender_email = os.getenv('CSGO_OTP_USER')
+        password = os.getenv("CSGO_OTP_PASS")
+        
+        if not sender_email or not password:
+            raise ValueError("Email credentials are not set in Environment Variables")
+        
+        message = MIMEMultipart()
+        message["From"] = sender_email
+        message["To"] = receiver_email
+        message["Subject"] = "CSGO Verification Code"
+        
+        body = f"""\
+        <html>
+            <body>
+                <p>We have received a request to access the account {receiver_email}.</p>
+                <p>Your Security code is:</p>
+                <br>
+                <p style = "text-align:center; font-size:20px; font-weight:bold;">{otp}</p>
+                <br>
+                <p>If you did not request this code, it is possible that someone is trying to access your acccount registered with {receiver_email}.</p>
+                <p>Contact your administrator and secure your account as soon as possible.</p>
+                <p style = "font-weight:bold">Do not forward or give this code to anyone</p>
+                <br>
+                <p>Sincerely yours,</p>
+                <p>The CSGO Accounts Team</p>
+            </body>
+        </html>
+        """
+        message.attach(MIMEText(body, "html"))
+        
+        try:
+            with smtplib.SMTP("smtp.gmail.com", 587) as server:
+                server.starttls()
+                server.login(sender_email, password)
+                server.sendmail(sender_email, receiver_email, message.as_string())
+            print("OTP sent successfully")
+        except Exception as e:
+            print(f"Failed to send OTP: {e}")
