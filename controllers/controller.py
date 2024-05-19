@@ -15,6 +15,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import tkinter as tk
 from scipy.interpolate import make_interp_spline
 from scipy.interpolate import interp1d
+import hashlib
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -248,4 +249,3 @@ def updateVehiclePrice(vehicleType, newPrice):
     
     vehiclePrices[vehicleType] = newPrice # Simple assignment to the dictionary
     print(f"Price for {vehicleType} updated to {newPrice}.")
-
