@@ -105,20 +105,62 @@ class ConfigPage(tk.Frame):
         addButton.pack(side="left", padx=5)
 
     # Saves the Password Changes
-    def passwordChangeSaveButton_callback(self, incorrectLabel: CTkLabel, currentPassword: CTkEntry, newPassword: CTkEntry, confirmPassword: CTkEntry):
+    def passwordChangeSaveButton_callback(self, statusLabel: CTkLabel, currentPassword: CTkEntry, newPassword: CTkEntry, confirmPassword: CTkEntry):
         userSession = UserSession.loadUserSession()
         response = DBController.changePassword(email=userSession.email, currPassword=currentPassword.get(), newPassword=newPassword.get(), confirmPassword=confirmPassword.get())
 
         if response.ok:
-            incorrectLabel.configure(text='Password successfully changed.', text_color="#25be8e")
-            self.after(3000, lambda: incorrectLabel.configure(text_color="#1B2431"))
+            statusLabel.configure(text='Password successfully changed.', text_color="#25be8e")
+            self.after(3000, lambda: statusLabel.configure(text_color="#1B2431"))
         else:
-            incorrectLabel.configure(text=(response.messages['password'] or response.messages['error']), text_color="#d62828")
-            self.after(2000, lambda: incorrectLabel.configure(text_color="#1B2431"))
+            statusLabel.configure(text=(response.messages['password'] or response.messages['error']), text_color="#d62828")
+            self.after(2000, lambda: statusLabel.configure(text_color="#1B2431"))
 
         currentPassword.delete(0, "end")
         newPassword.delete(0, "end")
         confirmPassword.delete(0, "end")
+
+    def changePrices(self, statusLabel: CTkLabel, vehicleEntries: list[CTkEntry]):
+        def isFloat(s: str) -> bool:
+            try:
+                float(s)
+                return True
+            except:
+                return False
+            
+        response = DBController.Response()
+
+        for i, entry in enumerate(vehicleEntries):
+            price = entry.get()
+            if not price:
+                continue
+            if not isFloat(price):
+                response.ok = False
+                response.messages['error'] = 'Input is not a valid number.'
+                break
+            response = DBController.editVehiclePrice(id=i, newPrice=float(price))
+            if not response.ok:
+                break
+
+        if response.ok is None:
+            statusLabel.configure(text='Nothing changed.', text_color="#eee")
+            self.after(2000, lambda: statusLabel.configure(text_color="#1B2431"))
+        elif response.ok:
+            statusLabel.configure(text='Prices updated.', text_color="#25be8e")
+            self.after(3000, lambda: statusLabel.configure(text_color="#1B2431"))
+        else:
+            statusLabel.configure(text=response.messages['error'], text_color="#d62828")
+            self.after(2000, lambda: statusLabel.configure(text_color="#1B2431"))
+
+        for entry in vehicleEntries:
+            entry.delete(0, "end")
+
+        self.loadPrices(vehicleEntries)
+
+    def loadPrices(self, vehicleEntries: list[CTkEntry]):
+        for i, entry in enumerate(vehicleEntries):
+            vehicle = DBController.getVehiclePrice(id=i)
+            entry.configure(placeholder_text=vehicle.price)
     
     def __init__(self, parent):
         tk.Frame.__init__(self, parent, bg = "#090E18")
@@ -404,11 +446,12 @@ class ConfigPage(tk.Frame):
                                     border_color = "#FFFFFF",
                                     fg_color = "#FFFFFF",
                                     text_color = "#000000")
-        mjpeeneyEntry = CTkEntry(mJeepneyFrame,
+        mjeepneyEntry = CTkEntry(mJeepneyFrame,
                                     corner_radius = 20,
                                     border_color = "#FFFFFF",
                                     fg_color = "#FFFFFF",
                                     text_color = "#000000")
+        
         
         carEntry.pack(side = "left", padx = 10)
         truckEntry.pack(side = "left", padx = 10)
@@ -420,7 +463,7 @@ class ConfigPage(tk.Frame):
         
         vanEntry.pack(side = "left", padx = 10)
         taxiEntry.pack(side = "left", padx = 10)
-        mjpeeneyEntry.pack(side = "left", padx = 10)
+        mjeepneyEntry.pack(side = "left", padx = 10)
         
         carlabel = CTkLabel(carFrame,
                             text = "Car",
@@ -439,25 +482,43 @@ class ConfigPage(tk.Frame):
                             text_color = "#FFFFFF",
                             font = ('Montserrat', 15))
         motorcycleLabel = CTkLabel(motorcycleFrame,
-                                    text = "Motorcycle",
+                                    text = "Motorbike",
                                     text_color = "#FFFFFF",
                                     font = ('Montserrat', 15))
         tricycleLabel = CTkLabel(tricycleFrame,
-                                    text = "Motorcycle",
+                                    text = "Tricycle",
                                     text_color = "#FFFFFF",
                                     font = ('Montserrat', 15))
         vanlabel = CTkLabel(vanFrame,
-                                    text = "Motorcycle",
+                                    text = "Van",
                                     text_color = "#FFFFFF",
                                     font = ('Montserrat', 15))
         taxiLabel = CTkLabel(taxiFrame,
-                                    text = "Motorcycle",
+                                    text = "Taxi",
                                     text_color = "#FFFFFF",
                                     font = ('Montserrat', 15))
         mjeepneyLabel = CTkLabel(mJeepneyFrame,
-                                    text = "Motorcycle",
+                                    text = "Modern Jeepney",
                                     text_color = "#FFFFFF",
                                     font = ('Montserrat', 15))
+        
+        changePricesStatusLabel = CTkLabel(allvehiclesFirstRowFrame, font = ('Monteserrat', 13, 'italic'), text = "Incorrect Username or Password", anchor = "w", text_color = "#1B2431")
+        changePricesStatusLabel.pack(padx=(20, 0), expand = True, fill = "x", side='right')
+
+        vehicleEntries = [carEntry, motorcycleEntry, jeepneyEntry, busEntry, tricycleEntry, vanEntry, truckEntry, taxiEntry, mjeepneyEntry]
+        changeSaveButton = CTkButton(allvehiclesThirdRowFrame,
+                                            text = "Save",
+                                            text_color = "#000000",
+                                            font = ('Montserrat', 15),
+                                            fg_color = "#48BFE3",
+                                            corner_radius = 15,
+                                            command=lambda: self.changePrices(changePricesStatusLabel, vehicleEntries),
+                                            border_color = "#48BFE3",
+                                            border_width = 2)
+
+
+        changeSaveButton.bind("<Enter>", lambda e: changeSaveButton.configure(text_color="#48BFE3", fg_color = "#1B2431", border_color = "#48BFE3")) 
+        changeSaveButton.bind("<Leave>", lambda e: changeSaveButton.configure(text_color="#1B2431", fg_color = "#48BFE3", border_color = "#48BFE3")) 
         
         carlabel.pack(side = "left")
         truckLabel.pack(side = "left")
@@ -470,6 +531,9 @@ class ConfigPage(tk.Frame):
         vanlabel.pack(side = "left")
         taxiLabel.pack(side = "left")
         mjeepneyLabel.pack(side = "left")
+
+        changeSaveButton.pack(padx = 10, side = "right")
+        self.loadPrices(vehicleEntries)
         # End of Congestion Price Frame
         
         # Change Theme Frame
@@ -577,7 +641,7 @@ class ConfigPage(tk.Frame):
                                             corner_radius = 15,
                                             border_color = "#FFFFFF")
         
-        incorrectLabel = CTkLabel(changePasswordEntryFrame, font = ('Monteserrat', 13, 'italic'), text = "Incorrect Username or Password", anchor = "w", text_color = "#1B2431")
+        changePasswordStatusLabel = CTkLabel(changePasswordEntryFrame, font = ('Monteserrat', 13, 'italic'), text = "Incorrect Username or Password", anchor = "w", text_color = "#1B2431")
         
         confirmButton = CTkButton(changePasswordEntryFrame,
                                             text = "Save",
@@ -585,7 +649,7 @@ class ConfigPage(tk.Frame):
                                             font = ('Montserrat', 15),
                                             fg_color = "#48BFE3",
                                             corner_radius = 15,
-                                            command = lambda: self.passwordChangeSaveButton_callback(incorrectLabel, currentPasswordEntry, newPasswordEntry, confirmPasswordEntry),
+                                            command = lambda: self.passwordChangeSaveButton_callback(changePasswordStatusLabel, currentPasswordEntry, newPasswordEntry, confirmPasswordEntry),
                                             border_color = "#48BFE3",
                                             border_width = 2)
 
@@ -593,7 +657,7 @@ class ConfigPage(tk.Frame):
         confirmButton.bind("<Enter>", lambda event: confirmButton.configure(text_color="#48BFE3", fg_color = "#1B2431", border_color = "#48BFE3")) 
         confirmButton.bind("<Leave>", lambda event: confirmButton.configure(text_color="#1B2431", fg_color = "#48BFE3", border_color = "#48BFE3"))  
         
-        incorrectLabel.pack(padx=10, pady = 10, expand = True, fill = "x")
+        changePasswordStatusLabel.pack(padx=10, pady = 10, expand = True, fill = "x")
         currentPasswordEntry.pack(padx = (10, 40), pady = 10, side = "left")
         newPasswordEntry.pack(padx = 10, pady = 10, side = "left")
         confirmPasswordEntry.pack(padx = 10, pady = 10, side = "left")

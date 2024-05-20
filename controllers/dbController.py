@@ -189,6 +189,29 @@ class DBController:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/dbController.py licensePlateExists() - {repr(e)}\n')
             return False
+        
+    @staticmethod
+    def getVehiclePrice(id: int) -> Response:
+        '''
+        Retrieves the row from the Price table that matches with the ID.
+
+        params:
+        - id (Optional): str => the id which will be checked in the database
+
+        returns:
+        - result => the result containing the Price data that matched with the ID
+        - None => if the query encountered an exception
+        '''
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(Price).where(Price.id == id)
+                result = session.scalar(stmt)
+                return result
+        except Exception as e:
+            with open('logs.txt', 'a') as file:
+                now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py getVehiclePrice() - {repr(e)}\n')
+            return None
     
     '''
     Database transaction methods
@@ -398,9 +421,9 @@ class DBController:
             response.messages['error'] = repr(e)
 
         return response
-    
+
     @staticmethod
-    def editVehiclePrice(id: int, newPrice: int) -> Response:
+    def editVehiclePrice(id: int, newPrice: float) -> Response:
         '''
         Edits the associated price of the vehicle type.
 
@@ -416,7 +439,7 @@ class DBController:
         try:
             if newPrice <= 0:
                 response.ok = False
-                response.messages['error'] = 'New price should be a positive number.'
+                response.messages['error'] = 'New price should be a positive.'
             else:
                 with Session(Connection.engine) as session:
                     stmt = update(Price).where(Price.id == id).values(price=newPrice)
@@ -428,6 +451,7 @@ class DBController:
             response.messages['error'] = repr(e)
 
         return response
+    
 
     @staticmethod
     def changePassword(email: str, newPassword: str, confirmPassword: str, currPassword=None) -> Response:
