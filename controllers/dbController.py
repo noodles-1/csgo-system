@@ -430,36 +430,49 @@ class DBController:
         return response
 
     @staticmethod
-    def changePassword(email: str, newPassword: str, confirmPassword: str) -> Response:
+    def changePassword(email: str, newPassword: str, confirmPassword: str, currPassword=None) -> Response:
         '''
-        Changes the password of the account associated with the email in which the OTP verification
-        has been sent liable for password change.
+        Changes the password of the account associated with the email.
 
         params:
         - email: str => the email of the associated account
         - newPassword: str => the new password of the account
         - confirmPassword: str => verification of the new password
+        - currPassword (Optional): str => the current password of the user
 
         returns:
         - response: Response => contains the response status and error messages if any
         '''
         credentials = {'newPassword': newPassword, 'confirmPassword': confirmPassword}
+        if currPassword:
+            credentials['currPassword'] = currPassword
         response = DBController.validateMissing(credentials)
 
         if not response.ok:
             return response
         
         try:
+            user = DBController.getUser(email=email)
+            if currPassword and user.password != currPassword:
+                response.ok = False
+                response.messages['error'] = 'Password error.'
+                response.messages['password'] = 'Current password is incorrect.'
+                return response
             if newPassword != confirmPassword:
                 response.ok = False
                 response.messages['error'] = 'Password error.'
                 response.messages['password'] = 'Passwords do not match.'
-            else:
-                with Session(Connection.engine) as session:
-                    stmt = update(User).where(User.email == email).values(password=newPassword)
-                    session.execute(stmt)
-                    session.commit()
-                    response.ok = True
+                return response
+            if currPassword and currPassword == newPassword:
+                response.ok = False
+                response.messages['error'] = 'Password error.'
+                response.messages['password'] = "New password can't be the current password."
+                return response
+            with Session(Connection.engine) as session:
+                stmt = update(User).where(User.email == email).values(password=newPassword)
+                session.execute(stmt)
+                session.commit()
+                response.ok = True
         except Exception as e:
             response.ok = False
             response.messages['error'] = repr(e)

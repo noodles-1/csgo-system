@@ -6,6 +6,7 @@ prototype/sample.mp4
 wandb
 localFolder
 venv
+userSession
 
 logs.txt
 .pt

@@ -10,6 +10,8 @@ from customtkinter import *
 from tkinter import ttk
 from PIL import Image
 from controllers.controller import AIController
+from controllers.dbController import DBController
+from sessions.userSession import UserSession
 
 class ConfigPage(tk.Frame):
     # Close Application
@@ -103,12 +105,20 @@ class ConfigPage(tk.Frame):
         addButton.pack(side="left", padx=5)
 
     # Saves the Password Changes
-    def passwordChangeSaveButton_callback(self):
-        print("Save Button Pressed")
-        # Note that you should first verify if the current password matches the saved password of the user.
-        # This function is excempted from the Scheduled Apply and Apply Buttons.
-        # This Change Password should be realtime updated, and not affected by the said buttons.
-    
+    def passwordChangeSaveButton_callback(self, incorrectLabel: CTkLabel, currentPassword: CTkEntry, newPassword: CTkEntry, confirmPassword: CTkEntry):
+        userSession = UserSession.loadUserSession()
+        response = DBController.changePassword(email=userSession.email, currPassword=currentPassword.get(), newPassword=newPassword.get(), confirmPassword=confirmPassword.get())
+
+        if response.ok:
+            incorrectLabel.configure(text='Password successfully changed.', text_color="#25be8e")
+            self.after(3000, lambda: incorrectLabel.configure(text_color="#1B2431"))
+        else:
+            incorrectLabel.configure(text=(response.messages['password'] or response.messages['error']), text_color="#d62828")
+            self.after(2000, lambda: incorrectLabel.configure(text_color="#1B2431"))
+
+        currentPassword.delete(0, "end")
+        newPassword.delete(0, "end")
+        confirmPassword.delete(0, "end")
     
     def __init__(self, parent):
         tk.Frame.__init__(self, parent, bg = "#090E18")
@@ -326,20 +336,34 @@ class ConfigPage(tk.Frame):
         
         allvehiclesFirstRowFrame = tk.Frame(allVehiclesFrame, bg = "#1B2431")
         allvehiclesSecondRowFrame = tk.Frame(allVehiclesFrame, bg = "#1B2431")
+        allvehiclesThirdRowFrame = tk.Frame(allVehiclesFrame, bg = "#1B2431")
         allvehiclesFirstRowFrame.pack(side = "top", expand = True, fill = "both")
         allvehiclesSecondRowFrame.pack(side = "top", expand = True, fill = "both")
+        allvehiclesThirdRowFrame.pack(side = "top", expand = True, fill = "both")
         
         carFrame = tk.Frame(allvehiclesFirstRowFrame, bg = "#1B2431")
         truckFrame = tk.Frame(allvehiclesFirstRowFrame, bg = "#1B2431")
         jeepneyFrame = tk.Frame(allvehiclesFirstRowFrame, bg = "#1B2431")
+        
         busFrame = tk.Frame(allvehiclesSecondRowFrame, bg = "#1B2431")
         motorcycleFrame = tk.Frame(allvehiclesSecondRowFrame, bg = "#1B2431")
+        tricycleFrame = tk.Frame(allvehiclesSecondRowFrame, bg = "#1B2431")
+        
+        vanFrame = tk.Frame(allvehiclesThirdRowFrame, bg = "#1B2431")
+        taxiFrame = tk.Frame(allvehiclesThirdRowFrame, bg = "#1B2431")
+        mJeepneyFrame = tk.Frame(allvehiclesThirdRowFrame, bg = "#1B2431")
         
         carFrame.pack(side = "left", padx = 20)
         truckFrame.pack(side = "left", padx = 20)
         jeepneyFrame.pack(side = "left", padx = 20)
+        
         busFrame.pack(side = "left", padx = 20)
         motorcycleFrame.pack(side = "left", padx = 20)
+        tricycleFrame.pack(side = "left", padx = 20)
+        
+        vanFrame.pack(side = "left", padx = 20)
+        taxiFrame.pack(side = "left", padx = 20)
+        mJeepneyFrame.pack(side = "left", padx = 20)
         
         carEntry = CTkEntry(carFrame, corner_radius = 20,
                             border_color = "#FFFFFF",
@@ -365,12 +389,38 @@ class ConfigPage(tk.Frame):
                                     border_color = "#FFFFFF",
                                     fg_color = "#FFFFFF",
                                     text_color = "#000000")
+        tricycleEntry = CTkEntry(tricycleFrame,
+                                    corner_radius = 20,
+                                    border_color = "#FFFFFF",
+                                    fg_color = "#FFFFFF",
+                                    text_color = "#000000")
+        vanEntry = CTkEntry(vanFrame,
+                                    corner_radius = 20,
+                                    border_color = "#FFFFFF",
+                                    fg_color = "#FFFFFF",
+                                    text_color = "#000000")
+        taxiEntry = CTkEntry(taxiFrame,
+                                    corner_radius = 20,
+                                    border_color = "#FFFFFF",
+                                    fg_color = "#FFFFFF",
+                                    text_color = "#000000")
+        mjpeeneyEntry = CTkEntry(mJeepneyFrame,
+                                    corner_radius = 20,
+                                    border_color = "#FFFFFF",
+                                    fg_color = "#FFFFFF",
+                                    text_color = "#000000")
         
         carEntry.pack(side = "left", padx = 10)
         truckEntry.pack(side = "left", padx = 10)
         jeepneyEntry.pack(side = "left", padx = 10)
+        
         busEntry.pack(side = "left", padx = 10)
         motorcycleEntry.pack(side = "left", padx = 10)
+        tricycleEntry.pack(side = "left", padx = 10)
+        
+        vanEntry.pack(side = "left", padx = 10)
+        taxiEntry.pack(side = "left", padx = 10)
+        mjpeeneyEntry.pack(side = "left", padx = 10)
         
         carlabel = CTkLabel(carFrame,
                             text = "Car",
@@ -392,12 +442,34 @@ class ConfigPage(tk.Frame):
                                     text = "Motorcycle",
                                     text_color = "#FFFFFF",
                                     font = ('Montserrat', 15))
+        tricycleLabel = CTkLabel(tricycleFrame,
+                                    text = "Motorcycle",
+                                    text_color = "#FFFFFF",
+                                    font = ('Montserrat', 15))
+        vanlabel = CTkLabel(vanFrame,
+                                    text = "Motorcycle",
+                                    text_color = "#FFFFFF",
+                                    font = ('Montserrat', 15))
+        taxiLabel = CTkLabel(taxiFrame,
+                                    text = "Motorcycle",
+                                    text_color = "#FFFFFF",
+                                    font = ('Montserrat', 15))
+        mjeepneyLabel = CTkLabel(mJeepneyFrame,
+                                    text = "Motorcycle",
+                                    text_color = "#FFFFFF",
+                                    font = ('Montserrat', 15))
         
         carlabel.pack(side = "left")
         truckLabel.pack(side = "left")
         jeepneyLabel.pack(side = "left")
+        
         busLabel.pack(side = "left")
         motorcycleLabel.pack(side = "left")
+        tricycleLabel.pack(side = "left")
+        
+        vanlabel.pack(side = "left")
+        taxiLabel.pack(side = "left")
+        mjeepneyLabel.pack(side = "left")
         # End of Congestion Price Frame
         
         # Change Theme Frame
@@ -505,19 +577,23 @@ class ConfigPage(tk.Frame):
                                             corner_radius = 15,
                                             border_color = "#FFFFFF")
         
+        incorrectLabel = CTkLabel(changePasswordEntryFrame, font = ('Monteserrat', 13, 'italic'), text = "Incorrect Username or Password", anchor = "w", text_color = "#1B2431")
+        
         confirmButton = CTkButton(changePasswordEntryFrame,
                                             text = "Save",
                                             text_color = "#000000",
                                             font = ('Montserrat', 15),
                                             fg_color = "#48BFE3",
                                             corner_radius = 15,
-                                            command = self.passwordChangeSaveButton_callback,
+                                            command = lambda: self.passwordChangeSaveButton_callback(incorrectLabel, currentPasswordEntry, newPasswordEntry, confirmPasswordEntry),
                                             border_color = "#48BFE3",
                                             border_width = 2)
+
 
         confirmButton.bind("<Enter>", lambda event: confirmButton.configure(text_color="#48BFE3", fg_color = "#1B2431", border_color = "#48BFE3")) 
         confirmButton.bind("<Leave>", lambda event: confirmButton.configure(text_color="#1B2431", fg_color = "#48BFE3", border_color = "#48BFE3"))  
         
+        incorrectLabel.pack(padx=10, pady = 10, expand = True, fill = "x")
         currentPasswordEntry.pack(padx = (10, 40), pady = 10, side = "left")
         newPasswordEntry.pack(padx = 10, pady = 10, side = "left")
         confirmPasswordEntry.pack(padx = 10, pady = 10, side = "left")
