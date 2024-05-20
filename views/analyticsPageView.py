@@ -14,9 +14,6 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
-'''
-Still missing the download to CSV button.
-'''
 class AnalyticsPage(tk.Frame):
     # Close Application
     def closeApplication(self):
@@ -25,7 +22,10 @@ class AnalyticsPage(tk.Frame):
     # Minimize or Iconify the Application
     def minimizeApplicaiton(self):
         self.master.iconify()
-        
+    
+    def downloadCSV(self):
+        pass
+    
     def __init__(self, parent):
         tk.Frame.__init__(self, parent, bg = "#090E18")
         
@@ -177,6 +177,23 @@ class AnalyticsPage(tk.Frame):
                                 fg_color = '#090E18',
                                 height = 30,
                                 width = 140)
-        dashboardButton.bind("<Enter>", lambda event: dashboardButton.configure(text_color="#090E18", fg_color = "#5E60CE")) 
-        dashboardButton.bind("<Leave>", lambda event: dashboardButton.configure(text_color="#5E60CE", fg_color = "#090E18")) 
+        dashboardButton.bind("<Enter>", lambda event: dashboardButton.configure(text_color="#5E60CE", fg_color = "#090E18")) 
+        dashboardButton.bind("<Leave>", lambda event: dashboardButton.configure(text_color="#090E18", fg_color = "#5E60CE")) 
         dashboardButton.pack(side = 'right', padx = 5, pady = 1)
+        
+        # Scheduled Apply Buttom, function placeholder is print. For the assignee, update the "command"
+        downloadCSVButton = CTkButton(navigationFrame,
+                                text = 'Download CSV',
+                                command = self.downloadCSV, 
+                                font = ('Montserrat', 12),
+                                border_width = 2,
+                                corner_radius = 15,
+                                border_color = '#5E60CE',
+                                text_color = '#5E60CE',
+                                fg_color = '#090E18',
+                                height = 30,
+                                width = 140)
+        
+        downloadCSVButton.bind("<Enter>", lambda event: downloadCSVButton.configure(text_color="#090E18", fg_color = "#5E60CE"))
+        downloadCSVButton.bind("<Leave>", lambda event: downloadCSVButton.configure(text_color="#5E60CE", fg_color = "#090E18"))
+        downloadCSVButton.pack(side = 'right', padx = 5, pady = 1)
