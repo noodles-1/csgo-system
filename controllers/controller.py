@@ -14,7 +14,14 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import tkinter as tk
 from scipy.interpolate import make_interp_spline
 from scipy.interpolate import interp1d
+<<<<<<< HEAD
+import random
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import smtplib
+=======
 import hashlib
+>>>>>>> origin/staging
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -231,10 +238,175 @@ class ReportGenerationController:
             print(f"Error: {e}")
             return False, None
         
-def get_cpu_usage():
-    cpu_percent = psutil.cpu_percent(interval=1)
-    return [], [cpu_percent]
+    def get_cpu_usage():
+        cpu_percent = psutil.cpu_percent(interval=1)
+        return [], [cpu_percent]
 
+<<<<<<< HEAD
+    def get_memory_usage():
+        memory_percent = psutil.virtual_memory().percent
+        return [], [memory_percent]
+
+class AccountController:
+    '''
+        With the restrictions functions, I can make some of it shorter, but I still dont know how to retrieve the user's restriction
+        or how they are stored/saved in the system.
+        
+        Once that is known, the functions may change in the future, but the logic would still remain the same.
+        
+        If a user ID that's currently in session has a 1 restriction for n widgets, n widgets' state = normal.
+        If a user ID that's currently in session has a 0 restriction for n widgets, n widget's state = disabled.
+        
+        Functions are called in the __init__ method of the pages(config, dashboard, and analytics)
+    '''
+    def dashboard_page_restriction(adminButton, userType):
+        if userType == "admin":
+            adminButton.config(state = 'normal')
+        else:
+            adminButton.config(state = 'disabled')
+    
+    def analytics_page_restriction(downloadButton, userType):
+        if userType == "admin":
+            downloadButton.config(state = 'normal')
+        else:
+            downloadButton.config(state = 'disabled')
+    
+    def config_page_restriction(carTrueRadioButton, carFalseRadioButton, truckTrueRadioButton,
+                                truckFalseRadioButton, jeepneyTrueRadioButton, jeepneyFalseRadioButton,
+                                busTrueRadioButton, busFalseRadioButton, motorTrueRadioButton,
+                                motorFalseRadioButton, tricycleTrueRadioButton, tricycleFalseRadioButton,
+                                vanTrueRadioButton, vanFalseRadioButton, taxiTrueRadioButton,
+                                taxiFalseRadioButton, mJeepneyTrueRadioButton, mJeepneyFalseRadioButton,
+                                carEntry, truckEntry, jeepneyEntry,
+                                busEntry, motorcycleEntry, tricycleEntry,
+                                vanEntry, taxiEntry, mjeepneyEntry,
+                                fromComboBox, toComboBox, everyComboBox,
+                                addButton, userType):
+        
+        if userType == "admin":
+            carTrueRadioButton.config(state='normal')
+            carFalseRadioButton.config(state='normal')
+            truckTrueRadioButton.config(state='normal')
+            truckFalseRadioButton.config(state='normal')
+            jeepneyTrueRadioButton.config(state='normal')
+            jeepneyFalseRadioButton.config(state='normal')
+            busTrueRadioButton.config(state='normal')
+            busFalseRadioButton.config(state='normal')
+            motorTrueRadioButton.config(state='normal')
+            motorFalseRadioButton.config(state='normal')
+            tricycleTrueRadioButton.config(state='normal')
+            tricycleFalseRadioButton.config(state='normal')
+            vanTrueRadioButton.config(state='normal')
+            vanFalseRadioButton.config(state='normal')
+            taxiTrueRadioButton.config(state='normal')
+            taxiFalseRadioButton.config(state='normal')
+            mJeepneyTrueRadioButton.config(state='normal')
+            mJeepneyFalseRadioButton.config(state='normal')
+            carEntry.config(state='normal')
+            truckEntry.config(state='normal')
+            jeepneyEntry.config(state='normal')
+            busEntry.config(state='normal')
+            motorcycleEntry.config(state='normal')
+            tricycleEntry.config(state='normal')
+            vanEntry.config(state='normal')
+            taxiEntry.config(state='normal')
+            mjeepneyEntry.config(state='normal')
+            fromComboBox.config(state='normal')
+            toComboBox.config(state='normal')
+            everyComboBox.config(state='normal')
+            addButton.config(state='normal')
+        else:
+            carTrueRadioButton.config(state='disabled')
+            carFalseRadioButton.config(state='disabled')
+            truckTrueRadioButton.config(state='disabled')
+            truckFalseRadioButton.config(state='disabled')
+            jeepneyTrueRadioButton.config(state='disabled')
+            jeepneyFalseRadioButton.config(state='disabled')
+            busTrueRadioButton.config(state='disabled')
+            busFalseRadioButton.config(state='disabled')
+            motorTrueRadioButton.config(state='disabled')
+            motorFalseRadioButton.config(state='disabled')
+            tricycleTrueRadioButton.config(state='disabled')
+            tricycleFalseRadioButton.config(state='disabled')
+            vanTrueRadioButton.config(state='disabled')
+            vanFalseRadioButton.config(state='disabled')
+            taxiTrueRadioButton.config(state='disabled')
+            taxiFalseRadioButton.config(state='disabled')
+            mJeepneyTrueRadioButton.config(state='disabled')
+            mJeepneyFalseRadioButton.config(state='disabled')
+            carEntry.config(state='disabled')
+            truckEntry.config(state='disabled')
+            jeepneyEntry.config(state='disabled')
+            busEntry.config(state='disabled')
+            motorcycleEntry.config(state='disabled')
+            tricycleEntry.config(state='disabled')
+            vanEntry.config(state='disabled')
+            taxiEntry.config(state='disabled')
+            mjeepneyEntry.config(state='disabled')
+            fromComboBox.config(state='disabled')
+            toComboBox.config(state='disabled')
+            everyComboBox.config(state='disabled')
+            addButton.config(state='disabled')
+    
+    def generate_OTP():
+        return str(random.randint(100000, 999999))
+    
+    def verify_OTP(otp, user_input_otp):
+        return otp == user_input_otp
+    
+    def send_OTP(receiver_email, otp):
+        sender_email = os.getenv('CSGO_OTP_USER')
+        password = os.getenv("CSGO_OTP_PASS")
+        
+        if not sender_email or not password:
+            raise ValueError("Email credentials are not set in Environment Variables")
+        
+        message = MIMEMultipart()
+        message["From"] = sender_email
+        message["To"] = receiver_email
+        message["Subject"] = "CSGO Verification Code"
+        
+        body = f"""\
+        <html>
+            <body>
+                <p>We have received a request to access the account {receiver_email}.</p>
+                <p>Your Security code is:</p>
+                <br>
+                <p style = "text-align:center; font-size:20px; font-weight:bold;">{otp}</p>
+                <br>
+                <p>If you did not request this code, it is possible that someone is trying to access your acccount registered with {receiver_email}.</p>
+                <p>Contact your administrator and secure your account as soon as possible.</p>
+                <p style = "font-weight:bold">Do not forward or give this code to anyone</p>
+                <br>
+                <p>Sincerely yours,</p>
+                <p>The CSGO Accounts Team</p>
+            </body>
+        </html>
+        """
+        message.attach(MIMEText(body, "html"))
+        
+        try:
+            with smtplib.SMTP("smtp.gmail.com", 587) as server:
+                server.starttls()
+                server.login(sender_email, password)
+                server.sendmail(sender_email, receiver_email, message.as_string())
+            print("OTP sent successfully")
+        except Exception as e:
+            print(f"Failed to send OTP: {e}")
+    
+    def update_user_credentials():
+        pass
+            
+class EnvironmentController:
+    def encrypt_variable():
+        pass
+    
+    def decrypt_variable():
+        pass
+    
+    def verify_variable():
+        pass
+=======
 def get_memory_usage():
     memory_percent = psutil.virtual_memory().percent
     return [], [memory_percent]
@@ -259,3 +431,4 @@ def updateVehiclePrice(vehicleType, newPrice):
     
     vehiclePrices[vehicleType] = newPrice # Simple assignment to the dictionary
     print(f"Price for {vehicleType} updated to {newPrice}.")
+>>>>>>> origin/staging
