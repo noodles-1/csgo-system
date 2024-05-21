@@ -1,13 +1,17 @@
 import os
 import sys
 import tkinter as tk
-from customtkinter import *
-from tkinter import ttk
-from PIL import Image
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
+
+from customtkinter import *
+from tkinter import ttk
+from PIL import Image
+from controllers.controller import AIController
+from controllers.dbController import DBController
+from sessions.userSession import UserSession
 
 class ConfigPage(tk.Frame):
     # Close Application
@@ -37,6 +41,9 @@ class ConfigPage(tk.Frame):
     # Function that applies the settings currently set to with delay
     def scheduleApplyButton_callback(self):
         print("Schedule Apply Button Pressed")
+
+    def radioButtonCallback(self, id, value):
+        AIController.setVehicleClasses(id, value == 1)
         
     # Function that add rows to the Schedule of the Algorithm
     def add_row(self):
@@ -98,12 +105,62 @@ class ConfigPage(tk.Frame):
         addButton.pack(side="left", padx=5)
 
     # Saves the Password Changes
-    def passwordChangeSaveButton_callback(self):
-        print("Save Button Pressed")
-        # Note that you should first verify if the current password matches the saved password of the user.
-        # This function is excempted from the Scheduled Apply and Apply Buttons.
-        # This Change Password should be realtime updated, and not affected by the said buttons.
-    
+    def passwordChangeSaveButton_callback(self, statusLabel: CTkLabel, currentPassword: CTkEntry, newPassword: CTkEntry, confirmPassword: CTkEntry):
+        userSession = UserSession.loadUserSession()
+        response = DBController.changePassword(email=userSession.email, currPassword=currentPassword.get(), newPassword=newPassword.get(), confirmPassword=confirmPassword.get())
+
+        if response.ok:
+            statusLabel.configure(text='Password successfully changed.', text_color="#25be8e")
+            self.after(3000, lambda: statusLabel.configure(text_color="#1B2431"))
+        else:
+            statusLabel.configure(text=(response.messages['password'] or response.messages['error']), text_color="#d62828")
+            self.after(2000, lambda: statusLabel.configure(text_color="#1B2431"))
+
+        currentPassword.delete(0, "end")
+        newPassword.delete(0, "end")
+        confirmPassword.delete(0, "end")
+
+    def changePrices(self, statusLabel: CTkLabel, vehicleEntries: list[CTkEntry]):
+        def isFloat(s: str) -> bool:
+            try:
+                float(s)
+                return True
+            except:
+                return False
+            
+        response = DBController.Response()
+
+        for i, entry in enumerate(vehicleEntries):
+            price = entry.get()
+            if not price:
+                continue
+            if not isFloat(price):
+                response.ok = False
+                response.messages['error'] = 'Input is not a valid number.'
+                break
+            response = DBController.editVehiclePrice(id=i, newPrice=float(price))
+            if not response.ok:
+                break
+
+        if response.ok is None:
+            statusLabel.configure(text='Nothing changed.', text_color="#eee")
+            self.after(2000, lambda: statusLabel.configure(text_color="#1B2431"))
+        elif response.ok:
+            statusLabel.configure(text='Prices updated.', text_color="#25be8e")
+            self.after(3000, lambda: statusLabel.configure(text_color="#1B2431"))
+        else:
+            statusLabel.configure(text=response.messages['error'], text_color="#d62828")
+            self.after(2000, lambda: statusLabel.configure(text_color="#1B2431"))
+
+        for entry in vehicleEntries:
+            entry.delete(0, "end")
+
+        self.loadPrices(vehicleEntries)
+
+    def loadPrices(self, vehicleEntries: list[CTkEntry]):
+        for i, entry in enumerate(vehicleEntries):
+            vehicle = DBController.getVehiclePrice(id=i)
+            entry.configure(placeholder_text=vehicle.price)
     
     def __init__(self, parent):
         tk.Frame.__init__(self, parent, bg = "#090E18")
@@ -232,24 +289,24 @@ class ConfigPage(tk.Frame):
         
         # -- First Row --
         self.carVar = IntVar(value = 1)
-        carTrueRadioButton = CTkRadioButton(carFrame, variable = self.carVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
-        carFalseRadioButton = CTkRadioButton(carFrame, variable = self.carVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        carTrueRadioButton = CTkRadioButton(carFrame, variable = self.carVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(0, self.carVar.get()))
+        carFalseRadioButton = CTkRadioButton(carFrame, variable = self.carVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(0, self.carVar.get()))
         carRadioLabel = CTkLabel(carFrame, text = "Car", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
         carRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
         carTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
         carFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
         
         self.truckVar = IntVar(value = 1)
-        truckTrueRadioButton = CTkRadioButton(truckFrame, variable = self.truckVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
-        truckFalseRadioButton = CTkRadioButton(truckFrame, variable = self.truckVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        truckTrueRadioButton = CTkRadioButton(truckFrame, variable = self.truckVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(6, self.truckVar.get()))
+        truckFalseRadioButton = CTkRadioButton(truckFrame, variable = self.truckVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(6, self.truckVar.get()))
         truckRadioLabel = CTkLabel(truckFrame, text = "Truck", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
         truckRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
         truckTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
         truckFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
         
         self.jeepneyVar = IntVar(value = 1)
-        jeepneyTrueRadioButton = CTkRadioButton(jeepneyFrame, variable = self.jeepneyVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
-        jeepneyFalseRadioButton = CTkRadioButton(jeepneyFrame, variable = self.jeepneyVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        jeepneyTrueRadioButton = CTkRadioButton(jeepneyFrame, variable = self.jeepneyVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(2, self.jeepneyVar.get()))
+        jeepneyFalseRadioButton = CTkRadioButton(jeepneyFrame, variable = self.jeepneyVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(2, self.jeepneyVar.get()))
         jeepneyRadioLabel = CTkLabel(jeepneyFrame, text = "Jeepney", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
         jeepneyRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
         jeepneyTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
@@ -257,24 +314,24 @@ class ConfigPage(tk.Frame):
         
         # -- Second Row --
         self.busVar = IntVar(value = 1)
-        busTrueRadioButton = CTkRadioButton(busFrame, variable = self.busVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
-        busFalseRadioButton = CTkRadioButton(busFrame, variable = self.busVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        busTrueRadioButton = CTkRadioButton(busFrame, variable = self.busVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(3, self.busVar.get()))
+        busFalseRadioButton = CTkRadioButton(busFrame, variable = self.busVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(3, self.busVar.get()))
         busRadioLabel = CTkLabel(busFrame, text = "Bus", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
         busRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
         busTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
         busFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
         
         self.motorVar = IntVar(value = 1)
-        motorTrueRadioButton = CTkRadioButton(motorcycleFrame, variable = self.motorVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
-        motorFalseRadioButton = CTkRadioButton(motorcycleFrame, variable = self.motorVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        motorTrueRadioButton = CTkRadioButton(motorcycleFrame, variable = self.motorVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(1, self.motorVar.get()))
+        motorFalseRadioButton = CTkRadioButton(motorcycleFrame, variable = self.motorVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(1, self.motorVar.get()))
         motorRadioLabel = CTkLabel(motorcycleFrame, text = "Motorcycle", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
         motorRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
         motorTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
         motorFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
         
         self.tricycleVar = IntVar(value = 1)
-        tricycleTrueRadioButton = CTkRadioButton(tricycleFrame, variable = self.tricycleVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
-        tricycleFalseRadioButton = CTkRadioButton(tricycleFrame, variable = self.tricycleVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        tricycleTrueRadioButton = CTkRadioButton(tricycleFrame, variable = self.tricycleVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(4, self.tricycleVar.get()))
+        tricycleFalseRadioButton = CTkRadioButton(tricycleFrame, variable = self.tricycleVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(4, self.tricycleVar.get()))
         tryclceRadioLabel = CTkLabel(tricycleFrame, text = "Tricycle", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
         tryclceRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
         tricycleTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
@@ -282,24 +339,24 @@ class ConfigPage(tk.Frame):
         
         # -- Third Row -- 
         self.vanVar = IntVar(value = 1)
-        vanTrueRadioButton = CTkRadioButton(vanFrame, variable = self.vanVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
-        vanFalseRadioButton = CTkRadioButton(vanFrame, variable = self.vanVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        vanTrueRadioButton = CTkRadioButton(vanFrame, variable = self.vanVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(5, self.vanVar.get()))
+        vanFalseRadioButton = CTkRadioButton(vanFrame, variable = self.vanVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(5, self.vanVar.get()))
         vanRadioLabel = CTkLabel(vanFrame, text = "Van", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
         vanRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
         vanTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
         vanFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
         
         self.taxiVar = IntVar(value = 1)
-        taxiTrueRadioButton = CTkRadioButton(taxiFrame, variable = self.taxiVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
-        taxiFalseRadioButton = CTkRadioButton(taxiFrame, variable = self.taxiVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        taxiTrueRadioButton = CTkRadioButton(taxiFrame, variable = self.taxiVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(7, self.taxiVar.get()))
+        taxiFalseRadioButton = CTkRadioButton(taxiFrame, variable = self.taxiVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(7, self.taxiVar.get()))
         taxiRadioLabel = CTkLabel(taxiFrame, text = "Taxi", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
         taxiRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
         taxiTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
         taxiFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
         
         self.mJeepneyVar = IntVar(value = 1)
-        mJeepneyTrueRadioButton = CTkRadioButton(mJeepneyFrame, variable = self.mJeepneyVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
-        mJeepneyFalseRadioButton = CTkRadioButton(mJeepneyFrame, variable = self.mJeepneyVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF")
+        mJeepneyTrueRadioButton = CTkRadioButton(mJeepneyFrame, variable = self.mJeepneyVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(8, self.mJeepneyVar.get()))
+        mJeepneyFalseRadioButton = CTkRadioButton(mJeepneyFrame, variable = self.mJeepneyVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(8, self.mJeepneyVar.get()))
         mJeepneyRadioLabel = CTkLabel(mJeepneyFrame, text = "Modern Jeepney", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
         mJeepneyRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
         mJeepneyTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
@@ -321,20 +378,34 @@ class ConfigPage(tk.Frame):
         
         allvehiclesFirstRowFrame = tk.Frame(allVehiclesFrame, bg = "#1B2431")
         allvehiclesSecondRowFrame = tk.Frame(allVehiclesFrame, bg = "#1B2431")
+        allvehiclesThirdRowFrame = tk.Frame(allVehiclesFrame, bg = "#1B2431")
         allvehiclesFirstRowFrame.pack(side = "top", expand = True, fill = "both")
         allvehiclesSecondRowFrame.pack(side = "top", expand = True, fill = "both")
+        allvehiclesThirdRowFrame.pack(side = "top", expand = True, fill = "both")
         
         carFrame = tk.Frame(allvehiclesFirstRowFrame, bg = "#1B2431")
         truckFrame = tk.Frame(allvehiclesFirstRowFrame, bg = "#1B2431")
         jeepneyFrame = tk.Frame(allvehiclesFirstRowFrame, bg = "#1B2431")
+        
         busFrame = tk.Frame(allvehiclesSecondRowFrame, bg = "#1B2431")
         motorcycleFrame = tk.Frame(allvehiclesSecondRowFrame, bg = "#1B2431")
+        tricycleFrame = tk.Frame(allvehiclesSecondRowFrame, bg = "#1B2431")
+        
+        vanFrame = tk.Frame(allvehiclesThirdRowFrame, bg = "#1B2431")
+        taxiFrame = tk.Frame(allvehiclesThirdRowFrame, bg = "#1B2431")
+        mJeepneyFrame = tk.Frame(allvehiclesThirdRowFrame, bg = "#1B2431")
         
         carFrame.pack(side = "left", padx = 20)
         truckFrame.pack(side = "left", padx = 20)
         jeepneyFrame.pack(side = "left", padx = 20)
+        
         busFrame.pack(side = "left", padx = 20)
         motorcycleFrame.pack(side = "left", padx = 20)
+        tricycleFrame.pack(side = "left", padx = 20)
+        
+        vanFrame.pack(side = "left", padx = 20)
+        taxiFrame.pack(side = "left", padx = 20)
+        mJeepneyFrame.pack(side = "left", padx = 20)
         
         carEntry = CTkEntry(carFrame, corner_radius = 20,
                             border_color = "#FFFFFF",
@@ -360,12 +431,39 @@ class ConfigPage(tk.Frame):
                                     border_color = "#FFFFFF",
                                     fg_color = "#FFFFFF",
                                     text_color = "#000000")
+        tricycleEntry = CTkEntry(tricycleFrame,
+                                    corner_radius = 20,
+                                    border_color = "#FFFFFF",
+                                    fg_color = "#FFFFFF",
+                                    text_color = "#000000")
+        vanEntry = CTkEntry(vanFrame,
+                                    corner_radius = 20,
+                                    border_color = "#FFFFFF",
+                                    fg_color = "#FFFFFF",
+                                    text_color = "#000000")
+        taxiEntry = CTkEntry(taxiFrame,
+                                    corner_radius = 20,
+                                    border_color = "#FFFFFF",
+                                    fg_color = "#FFFFFF",
+                                    text_color = "#000000")
+        mjeepneyEntry = CTkEntry(mJeepneyFrame,
+                                    corner_radius = 20,
+                                    border_color = "#FFFFFF",
+                                    fg_color = "#FFFFFF",
+                                    text_color = "#000000")
+        
         
         carEntry.pack(side = "left", padx = 10)
         truckEntry.pack(side = "left", padx = 10)
         jeepneyEntry.pack(side = "left", padx = 10)
+        
         busEntry.pack(side = "left", padx = 10)
         motorcycleEntry.pack(side = "left", padx = 10)
+        tricycleEntry.pack(side = "left", padx = 10)
+        
+        vanEntry.pack(side = "left", padx = 10)
+        taxiEntry.pack(side = "left", padx = 10)
+        mjeepneyEntry.pack(side = "left", padx = 10)
         
         carlabel = CTkLabel(carFrame,
                             text = "Car",
@@ -384,15 +482,58 @@ class ConfigPage(tk.Frame):
                             text_color = "#FFFFFF",
                             font = ('Montserrat', 15))
         motorcycleLabel = CTkLabel(motorcycleFrame,
-                                    text = "Motorcycle",
+                                    text = "Motorbike",
                                     text_color = "#FFFFFF",
                                     font = ('Montserrat', 15))
+        tricycleLabel = CTkLabel(tricycleFrame,
+                                    text = "Tricycle",
+                                    text_color = "#FFFFFF",
+                                    font = ('Montserrat', 15))
+        vanlabel = CTkLabel(vanFrame,
+                                    text = "Van",
+                                    text_color = "#FFFFFF",
+                                    font = ('Montserrat', 15))
+        taxiLabel = CTkLabel(taxiFrame,
+                                    text = "Taxi",
+                                    text_color = "#FFFFFF",
+                                    font = ('Montserrat', 15))
+        mjeepneyLabel = CTkLabel(mJeepneyFrame,
+                                    text = "Modern Jeepney",
+                                    text_color = "#FFFFFF",
+                                    font = ('Montserrat', 15))
+        
+        changePricesStatusLabel = CTkLabel(allvehiclesFirstRowFrame, font = ('Monteserrat', 13, 'italic'), text = "Incorrect Username or Password", anchor = "w", text_color = "#1B2431")
+        changePricesStatusLabel.pack(padx=(20, 0), expand = True, fill = "x", side='right')
+
+        vehicleEntries = [carEntry, motorcycleEntry, jeepneyEntry, busEntry, tricycleEntry, vanEntry, truckEntry, taxiEntry, mjeepneyEntry]
+        changeSaveButton = CTkButton(allvehiclesThirdRowFrame,
+                                            text = "Save",
+                                            text_color = "#000000",
+                                            font = ('Montserrat', 15),
+                                            fg_color = "#48BFE3",
+                                            corner_radius = 15,
+                                            command=lambda: self.changePrices(changePricesStatusLabel, vehicleEntries),
+                                            border_color = "#48BFE3",
+                                            border_width = 2)
+
+
+        changeSaveButton.bind("<Enter>", lambda e: changeSaveButton.configure(text_color="#48BFE3", fg_color = "#1B2431", border_color = "#48BFE3")) 
+        changeSaveButton.bind("<Leave>", lambda e: changeSaveButton.configure(text_color="#1B2431", fg_color = "#48BFE3", border_color = "#48BFE3")) 
         
         carlabel.pack(side = "left")
         truckLabel.pack(side = "left")
         jeepneyLabel.pack(side = "left")
+        
         busLabel.pack(side = "left")
         motorcycleLabel.pack(side = "left")
+        tricycleLabel.pack(side = "left")
+        
+        vanlabel.pack(side = "left")
+        taxiLabel.pack(side = "left")
+        mjeepneyLabel.pack(side = "left")
+
+        changeSaveButton.pack(padx = 10, side = "right")
+        self.loadPrices(vehicleEntries)
         # End of Congestion Price Frame
         
         # Change Theme Frame
@@ -500,19 +641,23 @@ class ConfigPage(tk.Frame):
                                             corner_radius = 15,
                                             border_color = "#FFFFFF")
         
+        changePasswordStatusLabel = CTkLabel(changePasswordEntryFrame, font = ('Monteserrat', 13, 'italic'), text = "Incorrect Username or Password", anchor = "w", text_color = "#1B2431")
+        
         confirmButton = CTkButton(changePasswordEntryFrame,
                                             text = "Save",
                                             text_color = "#000000",
                                             font = ('Montserrat', 15),
                                             fg_color = "#48BFE3",
                                             corner_radius = 15,
-                                            command = self.passwordChangeSaveButton_callback,
+                                            command = lambda: self.passwordChangeSaveButton_callback(changePasswordStatusLabel, currentPasswordEntry, newPasswordEntry, confirmPasswordEntry),
                                             border_color = "#48BFE3",
                                             border_width = 2)
+
 
         confirmButton.bind("<Enter>", lambda event: confirmButton.configure(text_color="#48BFE3", fg_color = "#1B2431", border_color = "#48BFE3")) 
         confirmButton.bind("<Leave>", lambda event: confirmButton.configure(text_color="#1B2431", fg_color = "#48BFE3", border_color = "#48BFE3"))  
         
+        changePasswordStatusLabel.pack(padx=10, pady = 10, expand = True, fill = "x")
         currentPasswordEntry.pack(padx = (10, 40), pady = 10, side = "left")
         newPasswordEntry.pack(padx = 10, pady = 10, side = "left")
         confirmPasswordEntry.pack(padx = 10, pady = 10, side = "left")

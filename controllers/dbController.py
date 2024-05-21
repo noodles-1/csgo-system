@@ -189,6 +189,29 @@ class DBController:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/dbController.py licensePlateExists() - {repr(e)}\n')
             return False
+        
+    @staticmethod
+    def getVehiclePrice(id: int) -> Response:
+        '''
+        Retrieves the row from the Price table that matches with the ID.
+
+        params:
+        - id (Optional): str => the id which will be checked in the database
+
+        returns:
+        - result => the result containing the Price data that matched with the ID
+        - None => if the query encountered an exception
+        '''
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(Price).where(Price.id == id)
+                result = session.scalar(stmt)
+                return result
+        except Exception as e:
+            with open('logs.txt', 'a') as file:
+                now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py getVehiclePrice() - {repr(e)}\n')
+            return None
     
     '''
     Database transaction methods
@@ -398,9 +421,9 @@ class DBController:
             response.messages['error'] = repr(e)
 
         return response
-    
+
     @staticmethod
-    def editVehiclePrice(id: int, newPrice: int) -> Response:
+    def editVehiclePrice(id: int, newPrice: float) -> Response:
         '''
         Edits the associated price of the vehicle type.
 
@@ -416,7 +439,7 @@ class DBController:
         try:
             if newPrice <= 0:
                 response.ok = False
-                response.messages['error'] = 'New price should be a positive number.'
+                response.messages['error'] = 'New price should be a positive.'
             else:
                 with Session(Connection.engine) as session:
                     stmt = update(Price).where(Price.id == id).values(price=newPrice)
@@ -428,38 +451,52 @@ class DBController:
             response.messages['error'] = repr(e)
 
         return response
+    
 
     @staticmethod
-    def changePassword(email: str, newPassword: str, confirmPassword: str) -> Response:
+    def changePassword(email: str, newPassword: str, confirmPassword: str, currPassword=None) -> Response:
         '''
-        Changes the password of the account associated with the email in which the OTP verification
-        has been sent liable for password change.
+        Changes the password of the account associated with the email.
 
         params:
         - email: str => the email of the associated account
         - newPassword: str => the new password of the account
         - confirmPassword: str => verification of the new password
+        - currPassword (Optional): str => the current password of the user
 
         returns:
         - response: Response => contains the response status and error messages if any
         '''
         credentials = {'newPassword': newPassword, 'confirmPassword': confirmPassword}
+        if currPassword:
+            credentials['currPassword'] = currPassword
         response = DBController.validateMissing(credentials)
 
         if not response.ok:
             return response
         
         try:
+            user = DBController.getUser(email=email)
+            if currPassword and user.password != currPassword:
+                response.ok = False
+                response.messages['error'] = 'Password error.'
+                response.messages['password'] = 'Current password is incorrect.'
+                return response
             if newPassword != confirmPassword:
                 response.ok = False
                 response.messages['error'] = 'Password error.'
                 response.messages['password'] = 'Passwords do not match.'
-            else:
-                with Session(Connection.engine) as session:
-                    stmt = update(User).where(User.email == email).values(password=newPassword)
-                    session.execute(stmt)
-                    session.commit()
-                    response.ok = True
+                return response
+            if currPassword and currPassword == newPassword:
+                response.ok = False
+                response.messages['error'] = 'Password error.'
+                response.messages['password'] = "New password can't be the current password."
+                return response
+            with Session(Connection.engine) as session:
+                stmt = update(User).where(User.email == email).values(password=newPassword)
+                session.execute(stmt)
+                session.commit()
+                response.ok = True
         except Exception as e:
             response.ok = False
             response.messages['error'] = repr(e)

@@ -6,7 +6,6 @@ import math
 import datetime
 from datetime import datetime as datetime_module
 import csv
-import pytesseract
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -32,23 +31,34 @@ from ultralytics import YOLO
 from cnocr import CnOcr
 
 class AIController:
-    def __init__(self):
-        pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-        self.vehicle_detection_model = YOLO('trained_models/vehicle_detection/trained_yolov8n_2.pt')
-        self.lp_detection_model = YOLO('trained_models/lp_detection/trained_yolov8n_3.pt')
-        self.cnocr = CnOcr(det_model_name='en_PP-OCRv3_det', rec_model_name='en_PP-OCRv3')
+    vehicleClasses = set([i for i in range(9)])
+    vehicle_detection_model = YOLO('trained_models/vehicle_detection/trained_yolov8n_2.pt')
+    lp_detection_model = YOLO('trained_models/lp_detection/trained_yolov8n_3.pt')
+    cnocr = CnOcr(det_model_name='en_PP-OCRv3_det', rec_model_name='en_PP-OCRv3')
 
-    def detect_vehicle(self, frame):
-        return self.vehicle_detection_model.predict(source=frame, verbose=False)
+    @staticmethod
+    def detect_vehicle(frame):
+        return AIController.vehicle_detection_model.track(source=frame, verbose=False, persist=True, device=0, workers=0, classes=list(AIController.vehicleClasses))
 
-    def detect_license_plate(self, frame):
-        return self.lp_detection_model.predict(source=frame, verbose=False)
-
-    def get_license_number_tesseract(self, frame):
-        return pytesseract.image_to_string(image=frame, lang='eng', config='--psm 10 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+    @staticmethod
+    def detect_license_plate(frame):
+        return AIController.lp_detection_model.predict(source=frame, verbose=False, device=0, workers=0)
     
-    def get_license_number_cnocr(self, frame):
-        return self.cnocr.ocr(img_fp=frame)
+    @staticmethod
+    def get_license_number_cnocr(frame):
+        return AIController.cnocr.ocr(img_fp=frame)
+    
+    @staticmethod
+    def setVehicleClasses(id: int, isEnabled: bool):
+        '''
+        Adds or removes a vehicle ID from the vehicleClasses set. ID will be added
+        if the isEnabled parameter is True, and removed otherwise.
+        '''
+        if isEnabled:
+            AIController.vehicleClasses.add(id)
+        else:
+            if id in AIController.vehicleClasses:
+                AIController.vehicleClasses.remove(id)
 
 def bounding_box(frame, box, color, classNames):
     x1, y1, x2, y2 = box.xyxy[0]
@@ -67,7 +77,7 @@ def bounding_box(frame, box, color, classNames):
 
     cv2.putText(frame, classNames[cls] + ' ' + str(confidence), org, font, fontScale, (255, 255, 255), thickness)
 
-def generate_revenue_report():
+def generateRevenueReport():
     curr_date = datetime.date.today().strftime('%Y-%m-%d')
     df = pd.read_csv('dummy_data/data.csv')
     curr_date_revenue = df.loc[df['Date'] == curr_date]['Price'].sum()
@@ -83,7 +93,7 @@ def generate_revenue_report():
         writer.writerow([f'Revenue today ({curr_date})', f'Revenue this month ({curr_month})', f'Revenue this year ({curr_year})'])
         writer.writerow([curr_date_revenue, curr_month_revenue, curr_year_revenue])
 
-def generate_busiest_time_report():
+def generateBusiestTimeReport():
     df = pd.read_csv('dummy_data/data.csv')
     times = [int(time.split(':')[0]) for time in df['Time'].tolist()]
     _, ax = plt.subplots()
