@@ -255,18 +255,21 @@ class AccountController:
         
         Functions are called in the __init__ method of the pages(config, dashboard, and analytics)
     '''
-    def dashboard_page_restriction(adminButton, userType):
+    @staticmethod
+    def admin_page_restriction(adminButton, userType):
         if userType == "admin":
             adminButton.config(state = 'normal')
         else:
             adminButton.config(state = 'disabled')
     
+    @staticmethod
     def analytics_page_restriction(downloadButton, userType):
         if userType == "admin":
             downloadButton.config(state = 'normal')
         else:
             downloadButton.config(state = 'disabled')
     
+    @staticmethod
     def config_page_restriction(carTrueRadioButton, carFalseRadioButton, truckTrueRadioButton,
                                 truckFalseRadioButton, jeepneyTrueRadioButton, jeepneyFalseRadioButton,
                                 busTrueRadioButton, busFalseRadioButton, motorTrueRadioButton,

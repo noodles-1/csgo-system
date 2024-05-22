@@ -267,6 +267,10 @@ class DBController:
                         username=username,
                         fullName=fullName,
                         isAdmin=isAdmin,
+                        canChangeDetect=isAdmin,
+                        canChangePrice=isAdmin,
+                        canEditHours=isAdmin,
+                        canDownload=isAdmin,
                         password=password
                     )
                     session.add(user)

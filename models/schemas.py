@@ -13,7 +13,8 @@ class Base(DeclarativeBase):
 
 class User(Base):
     '''
-    User table with columns ID (PK), email, username, full name, is admin, and password.
+    User table with columns ID (PK), email, username, full name, is admin, and privilege
+    to change vehicles to detect, congestion prices, edit hours, and download CSV.
     '''
     __tablename__ = 'user'
 
@@ -22,6 +23,10 @@ class User(Base):
     username: Mapped[str] = mapped_column(String(50))
     fullName: Mapped[str] = mapped_column(String(80))
     isAdmin: Mapped[bool]
+    canChangeDetect: Mapped[bool]
+    canChangePrice: Mapped[bool]
+    canEditHours: Mapped[bool]
+    canDownload: Mapped[bool]
     password: Mapped[str]
 
     def __repr__(self) -> str:
