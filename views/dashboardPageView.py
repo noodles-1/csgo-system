@@ -11,6 +11,9 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
+import controllers.controller as cont
+import views.switchView as switch
+
 from customtkinter import *
 from tkinter import ttk
 from PIL import Image, ImageTk
@@ -89,7 +92,7 @@ class DashboardPage(tk.Frame):
         # Goes to the Analytics Page
         analyticsButton = CTkButton(bottomFrame,
                                     text = 'Analytics',
-                                    command = lambda: parent.show_frame(parent.analyticsFrame),
+                                    command = lambda: switch.showAnalyticsPage(parent),
                                     font = ('Montserrat', 15),
                                     border_width = 2,
                                     corner_radius = 15,
@@ -102,7 +105,7 @@ class DashboardPage(tk.Frame):
         # Goes to the Admin Page (Should be disabled unless the user logged in is an Admin)
         adminButton = CTkButton(bottomFrame,
                                 text = 'Admin',
-                                command = lambda: parent.show_frame(parent.adminFrame), 
+                                command = lambda: switch.showAdminPage(parent), 
                                 font = ('Montserrat', 15),
                                 border_width = 2,
                                 corner_radius = 15,
@@ -235,7 +238,7 @@ class DashboardPage(tk.Frame):
                                     height = 32,
                                     width = 148,
                                     text_color = '#48BFE3',
-                                    command = lambda: parent.show_frame(parent.configFrame), 
+                                    command = lambda: switch.showSettingsPage(parent), 
                                     border_color = '#48BFE3', 
                                     fg_color = '#090E18', 
                                     border_width = 2,
@@ -259,22 +262,24 @@ class DashboardPage(tk.Frame):
                 success, frame = cap.read()
 
                 if success:
-                    results = AIController.detect_vehicle(frame)
-                    annotated_frame = results[0].plot()
+                    if cont.loggedIn:
+                        results = AIController.detect_vehicle(frame)
+                        annotated_frame = results[0].plot()
 
-                    frame_rgb = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
-                    img = Image.fromarray(frame_rgb)
-                    img = img.resize((720, 540))
-                    img_tk = ImageTk.PhotoImage(image=img)
+                        frame_rgb = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
+                        img = Image.fromarray(frame_rgb)
+                        img = img.resize((720, 540))
+                        img_tk = ImageTk.PhotoImage(image=img)
 
-                    placeholder_delete_this_label.configure(image=img_tk)
-                    placeholder_delete_this_label.after(2, show_frame)
+                        if cont.cameraEnabled:
+                            placeholder_delete_this_label.configure(image=img_tk)
+                    placeholder_delete_this_label.after(2 if cont.cameraEnabled else 500, show_frame)
                 else:
                     cap.release()
 
             show_frame()
 
-        #start_video()
+        start_video()
 
         '''
         @Mendoza

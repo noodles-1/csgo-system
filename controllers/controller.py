@@ -29,13 +29,13 @@ from cnocr import CnOcr
 
 class AIController:
     vehicleClasses = set([i for i in range(9)])
-    vehicle_detection_model = YOLO('trained_models/vehicle_detection/trained_yolov8n_2.pt')
+    vehicle_detection_model = YOLO('trained_models/vehicle_detection/trained_yolov8n_3.pt')
     lp_detection_model = YOLO('trained_models/lp_detection/trained_yolov8n_3.pt')
     cnocr = CnOcr(det_model_name='en_PP-OCRv3_det', rec_model_name='en_PP-OCRv3')
 
     @staticmethod
     def detect_vehicle(frame):
-        return AIController.vehicle_detection_model.track(source=frame, verbose=False, persist=True, device=0, workers=0, classes=list(AIController.vehicleClasses))
+        return AIController.vehicle_detection_model.track(source=frame, persist=True, device=0, workers=0, classes=list(AIController.vehicleClasses))
 
     @staticmethod
     def detect_license_plate(frame):
@@ -56,6 +56,9 @@ class AIController:
         else:
             if id in AIController.vehicleClasses:
                 AIController.vehicleClasses.remove(id)
+
+cameraEnabled = False
+loggedIn = False
 
 def bounding_box(frame, box, color, classNames):
     x1, y1, x2, y2 = box.xyxy[0]

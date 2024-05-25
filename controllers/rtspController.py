@@ -5,17 +5,17 @@ from scapy.sendrecv import srp
 
 class RTSPController:
     @staticmethod
-    def scanNetwork(ip_range: str) -> list[tuple]:
+    def scanNetwork() -> list[tuple]:
         '''
-        Identifies all devices on the provided ip_range.
-
-        params:
-        - ip_range: str => the IP range on CIDR notation
+        Identifies all devices on the IP range of the current device.
 
         returns:
         - devices: list(tuple) => a list containing a 2-element tuple having the IP and MAC address of
         the detected device
         '''
+        hostname = socket.gethostname()
+        ip_addr = socket.gethostbyname(hostname)
+        ip_range = f'{ip_addr}/24'
         arp = ARP(pdst=ip_range)
         ether = Ether(dst='ff:ff:ff:ff:ff:ff')
         packet = ether/arp

@@ -6,6 +6,9 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
+import controllers.controller as cont
+import views.switchView as switch
+
 from customtkinter import *
 from tkinter import ttk
 from PIL import Image
@@ -704,7 +707,7 @@ class ConfigPage(tk.Frame):
         # Navigate back to Dashboard
         dashboardButton = CTkButton(bottomFrame,
                                 text = 'Dashboard',
-                                command = lambda: parent.show_frame(parent.dashboardFrame), 
+                                command = lambda: switch.showDashboardPage(parent), 
                                 font = ('Montserrat', 15),
                                 border_width = 2,
                                 corner_radius = 15,

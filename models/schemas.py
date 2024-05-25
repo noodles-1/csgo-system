@@ -34,11 +34,11 @@ class User(Base):
     
 class Camera(Base):
     '''
-    Camera table with columns ID (PK) and the camera name.
+    Camera table with columns ID containing the IP address (PK) and the camera name.
     '''
     __tablename__ = 'camera'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[str] = mapped_column(primary_key=True)
     name: Mapped[str]
 
     def __repr__(self) -> str:

@@ -89,6 +89,19 @@ class DBController:
             return False
         
     @staticmethod
+    def cameraExists(ip_addr: str) -> bool:
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(Camera).where(Camera.id == ip_addr)
+                result = session.scalar(stmt)
+                return result is not None
+        except Exception as e:
+            with open('logs.txt', 'a') as file:
+                now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py cameraExists() - {repr(e)}\n')
+            return False
+        
+    @staticmethod
     def getUser(email='', username=''):
         '''
         Retrieves the row from the User table that matches with the email or username.
