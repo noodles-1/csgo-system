@@ -24,7 +24,7 @@ class RTSPController:
         return devices
     
     @staticmethod
-    def checkRtsp(ip: str, port=554, timeout=0.5) -> bool:
+    def checkRtsp(ip: str, port=554, timeout=1) -> bool:
         '''
         Establishes a socket connection and tests for the handshake to verify
         whether the RTSP server is available for the specified IP address.

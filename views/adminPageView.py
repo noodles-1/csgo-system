@@ -223,46 +223,108 @@ class AdminPage(tk.Frame):
                 self.priceEntry.insert(0, values[5])
         
     def discoverCameras_callback(self):
-        # This function discovers cameras from the system using ONVIF or SSDP
-        # Calls self.discoveredCamerasDrop.configure to config the values of the dropdown
-        '''
-            Sample for this code:
-                self.discoveredCamerasDrop.configure(values = [str1, str2 , str3...])
-        '''
         self.discoverCameraButton.configure(state='disabled', text='Discovering Cameras...')
         self.discoveredCamerasDrop.configure(state='disabled', values=[''])
         self.addCameraButton.configure(state='disabled')
 
-        ip_cameras = []
         for ip, _ in RTSPController.scanNetwork():
             if RTSPController.checkRtsp(ip=ip) and RTSPController.validateRtsp(ip=ip) and not DBController.cameraExists(ip_addr=ip):
-                ip_cameras.append(ip)
+                self.ip_cameras.add(ip)
 
         self.discoverCameraButton.configure(state='normal', text='Discover Cameras')
-        self.discoveredCamerasDrop.configure(state='readonly', values=ip_cameras)
+        self.discoveredCamerasDrop.set('')
+        self.discoveredCamerasDrop.configure(state='readonly', values=list(self.ip_cameras))
         self.addCameraButton.configure(state='normal')
 
     def addCamera_callback(self):
-        # This function gets the Assign ID Entry and the current value of the discoveredCamerasDrop
-        '''
-            Sample for this code:
-                self.assignID.get()
-                self.discoveredCamerasDrop.get()
-        '''
-        print(self.discoveredCamerasDrop.get())
-        pass
-    
-    def deleteSavedCamera_callback(self):
-        self.savedCameraID.configure(text = "")
-        # This function retrieves the values of savedCameraId and savedCamerasDrop and deletes them from the saved cameras.
-        # Then configs the drop down with the updated list of the saved cameras
-        print("Delete Saved Camera Button Pressed")
+        cameraIpAddr = self.discoveredCamerasDrop.get()
+        cameraName = self.assignID.get()
+
+        if not cameraIpAddr or not cameraName:
+            self.addCameraStatusLabel.configure(text='Incomplete fields.', text_color="#d62828")
+            self.after(2000, lambda: self.addCameraStatusLabel.configure(text_color="#1B2431"))
+            return
+
+        response = DBController.registerCamera(ip_addr=cameraIpAddr, name=cameraName)
+
+        if response.ok:
+            self.addCameraStatusLabel.configure(text='Camera successfully added.', text_color="#25be8e")
+            self.after(3000, lambda: self.addCameraStatusLabel.configure(text_color="#1B2431"))
+            cameras = DBController.getCameras()
+            values = [camera[0].name for camera in cameras.data]
+            self.savedCamerasDrop.set('')
+            self.savedCamerasDrop.configure(values=values)
+            self.ip_cameras.remove(cameraIpAddr)
+            self.discoveredCamerasDrop.set('')
+            self.discoveredCamerasDrop.configure(values=list(self.ip_cameras))
+            self.changeCameraDisplay.set('(NONE)')
+            self.changeCameraDisplay.configure(values=values)
+            if self.cap:
+                self.cap.release()
+                self.placeholder_label.configure(text='(Change cameras below)')
+        else:
+            self.addCameraStatusLabel.configure(text=response.messages['error'], text_color="#d62828")
+            self.after(2000, lambda: self.addCameraStatusLabel.configure(text_color="#1B2431"))
+
+        self.assignID.delete(0, 'end')
     
     def updateSavedCamera_callback(self):
-        print("Update Saved Camera Button Pressed")
-        print("Saved Camera ID: ", self.savedCameraID.get())
-        print("Saved Camera Drop Item: ",self.savedCamerasDrop.get())
+        cameraOldName = self.savedCamerasDrop.get()
+        cameraNewName = self.savedCameraID.get()
+
+        if not cameraOldName or not cameraNewName:
+            self.secondRowStatusLabel.configure(text='Incomplete fields.', text_color="#d62828")
+            self.after(2000, lambda: self.secondRowStatusLabel.configure(text_color="#1B2431"))
+            return
         
+        response = DBController.editCamera(oldName=cameraOldName, newName=cameraNewName)
+
+        if response.ok:
+            self.secondRowStatusLabel.configure(text='Camera successfully updated.', text_color='#25be8e')
+            self.after(3000, lambda: self.secondRowStatusLabel.configure(text_color='#1b2431'))
+            cameras = DBController.getCameras()
+            values = [camera[0].name for camera in cameras.data]
+            self.savedCamerasDrop.set('')
+            self.savedCamerasDrop.configure(values=values)
+            self.changeCameraDisplay.set('(NONE)')
+            self.changeCameraDisplay.configure(values=values)
+            if self.cap:
+                self.cap.release()
+                self.placeholder_label.configure(text='(Change cameras below)')
+        else:
+            self.secondRowStatusLabel.configure(text=response.messages['error'], text_color="#d62828")
+            self.after(2000, lambda: self.secondRowStatusLabel.configure(text_color="#1B2431"))
+
+        self.savedCameraID.delete(0, 'end')
+
+    def deleteSavedCamera_callback(self):
+        cameraToDelete = self.savedCamerasDrop.get()
+
+        if not cameraToDelete:
+            self.secondRowStatusLabel.configure(text='No camera chosen.', text_color='#d62828')
+            self.after(2000, lambda: self.secondRowStatusLabel.configure(text_color='#1b2431'))
+            return
+        
+        response = DBController.deleteCamera(name=cameraToDelete)
+
+        if response.ok:
+            self.secondRowStatusLabel.configure(text='Camera successfully deleted.', text_color='#25be8e')
+            self.after(3000, lambda: self.secondRowStatusLabel.configure(text_color='#1b2431'))
+            cameras = DBController.getCameras()
+            values = [camera[0].name for camera in cameras.data]
+            self.savedCamerasDrop.set('')
+            self.savedCamerasDrop.configure(values=values)
+            self.changeCameraDisplay.set('(NONE)')
+            self.changeCameraDisplay.configure(values=values)
+            if self.cap:
+                self.cap.release()
+                self.placeholder_label.configure(text='(Change cameras below)')
+        else:
+            self.secondRowStatusLabel.configure(text=response.messages['error'], text_color="#d62828")
+            self.after(2000, lambda: self.secondRowStatusLabel.configure(text_color="#1B2431"))
+
+        self.savedCameraID.delete(0, 'end')
+    
     def updateTable_callback(self):
         inputLicensePlate = self.licensePlateEntry.get()
         inputVehicleType = self.vehicleTypeEntry.get()
@@ -275,9 +337,18 @@ class AdminPage(tk.Frame):
         '''
             call update row
         '''
-        
+    
+    def setCameraDisplay(self, changeCameraDisplay, cap, placeholder_label):
+        self.changeCameraDisplay = changeCameraDisplay
+        self.placeholder_label = placeholder_label
+        self.cap = cap
         
     def __init__(self, parent):
+        self.ip_cameras = set()
+        self.changeCameraDisplay = None
+        self.placeholder_label = None
+        self.cap = None
+
         tk.Frame.__init__(self, parent, bg = "#090E18")
         
         style = ttk.Style()
@@ -354,18 +425,26 @@ class AdminPage(tk.Frame):
         
         manageCamerasFirstRow = tk.Frame(upperLeftContent, bg = "#1B2431")
         self.discoverCameraButton = CTkButton(manageCamerasFirstRow, text = "Discover Cameras", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5, command = self.discoverCameras_callback)
-        self.discoveredCamerasDrop = CTkComboBox(manageCamerasFirstRow, values = [''], font = ('Montserrat', 12), fg_color = "#FFFFFF", dropdown_fg_color = "#FFFFFF", dropdown_text_color = "#000000", border_color = "#FFFFFF", button_color = "#FFFFFF", text_color = "#000000", state='readonly')
+        self.discoveredCamerasDrop = CTkComboBox(manageCamerasFirstRow, values = [], font = ('Montserrat', 12), fg_color = "#FFFFFF", dropdown_fg_color = "#FFFFFF", dropdown_text_color = "#000000", border_color = "#FFFFFF", button_color = "#FFFFFF", text_color = "#000000", state='readonly')
         self.assignID = CTkEntry(manageCamerasFirstRow, placeholder_text = "Assign Name", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
         self.addCameraButton = CTkButton(manageCamerasFirstRow, text = "Add Camera", fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5, font = ('Montserrat', 12, 'bold'), command = self.addCamera_callback)
         
+        manageCamerasFirstRowStatus = tk.Frame(upperLeftContent, bg="#1B2431")
+        self.addCameraStatusLabel = CTkLabel(manageCamerasFirstRowStatus, text='Camera successfully added.', font = ('Monteserrat', 13, 'italic'), anchor = "w", text_color = "#1B2431")
+
         manageCamerasLabel = CTkLabel(upperLeftContent, text = "Manage Cameras", font = ('Montserrat', 12, 'bold'), anchor = "w", text_color = "#FFFFFF")
         
+        cameras = DBController.getCameras()
+
         manageCamerasSecondRow = tk.Frame(upperLeftContent, bg = "#1B2431")
-        self.savedCamerasDrop = CTkComboBox(manageCamerasSecondRow, values = ["Camera 1", "Camera 2", "Camera 3"], font = ('Montserrat', 12), fg_color = "#FFFFFF", dropdown_fg_color = "#FFFFFF", dropdown_text_color = "#000000", border_color = "#FFFFFF", button_color = "#FFFFFF", text_color = "#000000", state='readonly')
-        self.savedCameraID = CTkEntry(manageCamerasSecondRow, placeholder_text = "Assigned ID", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        self.savedCamerasDrop = CTkComboBox(manageCamerasSecondRow, values=[camera[0].name for camera in cameras.data], font = ('Montserrat', 12), fg_color = "#FFFFFF", dropdown_fg_color = "#FFFFFF", dropdown_text_color = "#000000", border_color = "#FFFFFF", button_color = "#FFFFFF", text_color = "#000000", state='readonly')
+        self.savedCameraID = CTkEntry(manageCamerasSecondRow, placeholder_text = "Change Name", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
         updateSavedCameraButton = CTkButton(manageCamerasSecondRow, text = "Update Camera", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5, command = self.updateSavedCamera_callback)
         deleteSavedCameraButton = CTkButton(manageCamerasSecondRow, text = "Delete Camera", font = ('Montserrat', 12, 'bold'), fg_color = "#D62828", text_color = "#FFFFFF", corner_radius = 5, command = self.deleteSavedCamera_callback)
         
+        manageCamerasSecondRowStatus = tk.Frame(upperLeftContent, bg="#1B2431")
+        self.secondRowStatusLabel = CTkLabel(manageCamerasSecondRowStatus, text='Camera successfully added.', font = ('Monteserrat', 13, 'italic'), anchor = "w", text_color = "#1B2431")
+
         lowerLeftContent = CTkFrame(leftContentFrame, fg_color = "#1B2431", corner_radius = 5)
         upperLowerLeft = tk.Frame(lowerLeftContent, bg = "#1B2431")
         # Label for context
@@ -599,19 +678,25 @@ class AdminPage(tk.Frame):
         addCamerasLabel.pack(side = "top", fill = "x", padx = 10, pady = (5,0))
         
         manageCamerasFirstRow.pack(side = "top", fill = "x", padx = 10, pady = (2, 10))
+        manageCamerasFirstRowStatus.pack(side = "top", fill = "x", padx = 15, pady = (2))
         self.discoverCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
         self.discoveredCamerasDrop.pack(side = "left", fill = "x", expand = True, padx = 15)
         self.assignID.pack(side = "left", fill = "x", expand = True, padx = 15)
         self.addCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
+
+        self.addCameraStatusLabel.pack(side='left', pady = 10, expand = True, fill = "x")
         
         manageCamerasLabel.pack(side = "top", fill = "x", padx = 10, pady = (5,0))
         
         manageCamerasSecondRow.pack(side = "top", fill = "x", padx = 10, pady = (2, 10))
+        manageCamerasSecondRowStatus.pack(side = "top", fill = "x", padx = 15, pady = (2))
         self.savedCamerasDrop.pack(side = "left", fill = "x", expand = True, padx = 15)
         self.savedCameraID.pack(side = "left", fill = "x", expand = True, padx = 15)
         updateSavedCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
         deleteSavedCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
         
+        self.secondRowStatusLabel.pack(side='left', pady = 10, expand = True, fill = "x")
+
         lowerLeftContent.pack(side = "top", expand = True, fill = "both", padx = 10, pady = 10, ipadx = 10, ipady = 10)
         
         upperLowerLeft.pack(side = "top", fill = "both", padx = 10, pady = 10)

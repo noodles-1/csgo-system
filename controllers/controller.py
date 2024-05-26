@@ -35,7 +35,7 @@ class AIController:
 
     @staticmethod
     def detect_vehicle(frame):
-        return AIController.vehicle_detection_model.track(source=frame, persist=True, device=0, workers=0, classes=list(AIController.vehicleClasses))
+        return AIController.vehicle_detection_model.track(source=frame, verbose=False, persist=True, device=0, workers=0, classes=list(AIController.vehicleClasses))
 
     @staticmethod
     def detect_license_plate(frame):

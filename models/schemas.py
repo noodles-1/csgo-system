@@ -40,9 +40,10 @@ class Camera(Base):
 
     id: Mapped[str] = mapped_column(primary_key=True)
     name: Mapped[str]
+    location: Mapped[str]
 
     def __repr__(self) -> str:
-        return f'Camera(cameraId={self.id}, name={self.name})'
+        return f'Camera(cameraId={self.id}, name={self.name}, location={self.location})'
     
 class Price(Base):
     '''

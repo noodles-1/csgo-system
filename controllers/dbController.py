@@ -89,10 +89,13 @@ class DBController:
             return False
         
     @staticmethod
-    def cameraExists(ip_addr: str) -> bool:
+    def cameraExists(ip_addr='', name='') -> bool:
         try:
             with Session(Connection.engine) as session:
-                stmt = select(Camera).where(Camera.id == ip_addr)
+                if name:
+                    stmt = select(Camera).where(or_(Camera.id == ip_addr, Camera.name == name))
+                else:
+                    stmt = select(Camera).where(Camera.id == ip_addr)
                 result = session.scalar(stmt)
                 return result is not None
         except Exception as e:
@@ -123,6 +126,19 @@ class DBController:
             with open('logs.txt', 'a') as file:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/dbController.py getUser() - {repr(e)}\n')
+            return None
+        
+    @staticmethod
+    def getCamera(name: str) -> Response:
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(Camera).where(Camera.name == name)
+                result = session.scalar(stmt)
+                return result
+        except Exception as e:
+            with open('logs.txt', 'a') as file:
+                now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py getCamera() - {repr(e)}\n')
             return None
         
     @staticmethod
@@ -512,6 +528,83 @@ class DBController:
             with Session(Connection.engine) as session:
                 stmt = update(User).where(User.email == email).values(password=newPassword)
                 session.execute(stmt)
+                session.commit()
+                response.ok = True
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+        
+        return response
+    
+    @staticmethod
+    def registerCamera(ip_addr: str, name='', location='') -> Response:
+        response = DBController.Response()
+
+        try:
+            if DBController.cameraExists(name=name):
+                response.ok = False
+                response.messages['error'] = 'Camera name already exists.'
+            else:
+                with Session(Connection.engine) as session:
+                    camera = Camera(
+                        id=ip_addr,
+                        name=name,
+                        location=location
+                    )
+                    session.add(camera)
+                    session.commit()
+                    response.ok = True
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+        
+        return response
+    
+    @staticmethod
+    def editCamera(oldName: str, newName: str) -> Response:
+        response = DBController.Response()
+
+        try:
+            if DBController.cameraExists(name=newName):
+                response.ok = False
+                response.messages['error'] = 'Camera name already exists.'
+            else:
+                with Session(Connection.engine) as session:
+                    stmt = update(Camera).where(Camera.name == oldName).values(name=newName)
+                    session.execute(stmt)
+                    session.commit()
+                    response.ok = True
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+
+        return response
+
+    @staticmethod
+    def getCameras() -> Response:
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(Camera)
+                res = session.execute(stmt).all()
+                response.ok = True
+                response.data = res
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+        
+        return response
+    
+    @staticmethod
+    def deleteCamera(name: str) -> Response:
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(Camera).where(Camera.name == name)
+                result = session.scalar(stmt)
+                session.delete(result)
                 session.commit()
                 response.ok = True
         except Exception as e:
