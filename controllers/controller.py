@@ -402,3 +402,28 @@ class EnvironmentController:
     
     def verify_variable():
         pass
+      
+def get_memory_usage():
+    memory_percent = psutil.virtual_memory().percent
+    return [], [memory_percent]
+
+def updateVehiclePrice(vehicleType, newPrice):
+    global vehiclePrices
+    
+    # vehicleType Jeepney, jeepney, jEepney, etc. != to each other
+    vehicleType = vehicleType.upper() # any input ni user will be all uppercase
+    
+    if vehicleType not in vehiclePrices:
+        print("Error: Vehicle type not found.")
+        return
+    
+    if not isinstance(newPrice, float):
+        print("Error: Price should be a whole number") # 0 - Infinity
+        return
+    
+    if newPrice < 0:
+        print("Error: Price should be non-negative.")
+        return
+    
+    vehiclePrices[vehicleType] = newPrice # Simple assignment to the dictionary
+    print(f"Price for {vehicleType} updated to {newPrice}.")

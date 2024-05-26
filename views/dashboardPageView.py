@@ -38,12 +38,12 @@ class DashboardPage(tk.Frame):
         style.theme_use('forest-dark')
         
         # Close Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
-        closePhoto = CTkImage(light_image = Image.open("views/icons/icon_close_lightmode.png"),
+        closePhoto = CTkImage(light_image = Image.open("views/icons/icon_close_darkmode.png"),
                               dark_image = Image.open("views/icons/icon_close_darkmode.png"),
                               size = (20, 20))
 
         # Minimize Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
-        minimizePhoto = CTkImage(light_image = Image.open("views/icons/icon_minimize_lightmode.png"),
+        minimizePhoto = CTkImage(light_image = Image.open("views/icons/icon_minimize_darkmode.png"),
                               dark_image = Image.open("views/icons/icon_minimize_darkmode.png"),
                               size = (20, 20))
 

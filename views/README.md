@@ -1,7 +1,7 @@
 # Structure of the GUI
 For Reference click the [GUI flow](https://drive.google.com/file/d/1-EQPn6qUzVsC2B4StnYKVexv7ps9LH9F/view?usp=sharing)
 
-## Branch Current Version is 1.3.6
+## Branch Current Version is 1.7.2
 
 ### Doing
 > 1. None
@@ -12,7 +12,7 @@ General To Do:
 > 1. Integrate The functions from Controller.py to GUI.
 > 2. Database Connection.
 > 3. Forget Password Page
-> 4. Change Global Theme
+> 4. Feedback Popup to user when incorrect/invalid input exists
 
 Specific To Do **(Login)**:
 > 1. Input Validation.

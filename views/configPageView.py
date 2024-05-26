@@ -9,700 +9,591 @@ sys.path.append(parent)
 from customtkinter import *
 from tkinter import ttk
 from PIL import Image
+from tkcalendar import Calendar
 from controllers.controller import AIController
 from controllers.dbController import DBController
 from sessions.userSession import UserSession
 
+# Mock Data
+data1 = [("12 AM", "1 AM", "Mondays"),
+            ("1 AM", "2 AM", "Tuesdays"),
+            ("2 AM", "3 AM", "Wednesdays"),
+            ("3 AM", "4 AM", "Thursdays"),
+            ("4 AM", "5 AM", "Fridays"),
+            ("5 AM", "6 AM", "Saturdays"),
+            ("6 AM", "7 AM", "Sundays"),
+            ("7 AM", "8 AM", "Mondays"),
+            ("8 AM", "9 AM", "Tuesdays"),
+            ("9 AM", "10 AM", "Wednesdays"),
+            ("10 AM", "11 AM", "Thursdays"),
+            ("11 AM", "12 PM", "Fridays"),
+            ("12 PM", "1 PM", "Saturdays"),
+            ("1 PM", "2 PM", "Sundays"),
+            ("2 PM", "3 PM", "Mondays"),
+            ("3 PM", "4 PM", "Tuesdays"),
+            ("4 PM", "5 PM", "Wednesdays"),
+            ("5 PM", "6 PM", "Thursdays"),
+            ("6 PM", "7 PM", "Fridays"),
+            ("7 PM", "8 PM", "Saturdays"),
+            ("8 PM", "9 PM", "Sundays"),
+            ("9 PM", "10 PM", "Mondays"),
+            ("10 PM", "11 PM", "Tuesdays"),
+            ("11 PM", "12 AM", "Wednesdays")]
+data2 = [("12 AM", "1 AM", "Mondays", "01/01/2023"),
+            ("1 AM", "2 AM", "Tuesdays", "02/01/2023"),
+            ("2 AM", "3 AM", "Wednesdays", "03/01/2023"),
+            ("3 AM", "4 AM", "Thursdays", "04/01/2023"),
+            ("4 AM", "5 AM", "Fridays", "05/01/2023"),
+            ("5 AM", "6 AM", "Saturdays", "06/01/2023"),
+            ("6 AM", "7 AM", "Sundays", "07/01/2023"),
+            ("7 AM", "8 AM", "Mondays", "08/01/2023"),
+            ("8 AM", "9 AM", "Tuesdays", "09/01/2023"),
+            ("9 AM", "10 AM", "Wednesdays", "10/01/2023"),
+            ("10 AM", "11 AM", "Thursdays", "11/01/2023"),
+            ("11 AM", "12 PM", "Fridays", "12/01/2023"),
+            ("12 PM", "1 PM", "Saturdays", "13/01/2023"),
+            ("1 PM", "2 PM", "Sundays", "14/01/2023"),
+            ("2 PM", "3 PM", "Mondays", "15/01/2023"),
+            ("3 PM", "4 PM", "Tuesdays", "16/01/2023"),
+            ("4 PM", "5 PM", "Wednesdays", "17/01/2023"),
+            ("5 PM", "6 PM", "Thursdays", "18/01/2023"),
+            ("6 PM", "7 PM", "Fridays", "19/01/2023"),
+            ("7 PM", "8 PM", "Saturdays", "20/01/2023"),
+            ("8 PM", "9 PM", "Sundays", "21/01/2023"),
+            ("9 PM", "10 PM", "Mondays", "22/01/2023"),
+            ("10 PM", "11 PM", "Tuesdays", "23/01/2023"),
+            ("11 PM", "12 AM", "Wednesdays", "24/01/2023")]
+
 class ConfigPage(tk.Frame):
-    # Close Application
     def closeApplication(self):
         self.master.destroy()
-    
-    # Minimize or Iconify the Application
-    def minimizeApplicaiton(self):
+        
+    def minimizeApplication(self):
         self.master.iconify()
-    
-    # Function that handles the logic for the FROM input.
-    def fromComboBox_callback(self, choice):
-        print("From Combobox callback: ", choice)
-
-    # Function that handles the logic for the TO input.
-    def toComboBox_callback(self, choice):
-        print("From Combobox callback: ", choice)
-    
-    # Function that handles the changing of theme
-    def themeRadioButton_callback(self):
-        print("Radio Button Theme callback: ", self.themeVar.get())
         
-    # Function that applies the settings currently set to.
-    def applyButton_callback(self):
-        print("Apply Button Pressed")
+    def addNew_callback(self):
+        self.rightDatabaseTable.selection_remove(self.rightDatabaseTable.selection())
+        self.leftDatabaseTable.selection_remove(self.leftDatabaseTable.selection())
+        
+        # Config Form 
+        self.fromComboBox.set('')
+        self.toComboBox.set('')
+        self.everyComboBox.set('')
+        
+        # Config Form 2
+        self.dateEntry.delete(0, tk.END)
+        self.timeEntry.delete(0, tk.END)
+        
+        # Price Form
+        self.truckEntry.delete(0, tk.END)
+        self.busEntry.delete(0, tk.END)
+        self.motorcycleEntry.delete(0, tk.END)
+        self.carEntry.delete(0, tk.END)
+        
+        # Detectables Form
+        self.truckComboBox.set('')
+        self.busComboBox.set('')
+        self.motorcycleComboBox.set('')
+        self.carComboBox.set('')
+        
+    def deleteDataFromTable(self, event):
+        caller = event.widget
+        
+        if tk.messagebox.askyesno("Confirm Delete", "Are you sure you want to delete the selected items?"):                
+            if caller == self.leftDatabaseTable:
+                for i in self.leftDatabaseTable.selection():
+                    self.leftDatabaseTable.delete(i)
+                    
+            elif caller == self.rightDatabaseTable:
+                for i in self.rightDatabaseTable.selection():
+                    self.rightDatabaseTable.delete(i)
     
-    # Function that applies the settings currently set to with delay
-    def scheduleApplyButton_callback(self):
-        print("Schedule Apply Button Pressed")
+    def fromComboBox_callback(self):
+        pass
+    
+    def toComboBox_callback(self):
+        pass
+    
+    def everyComboBox__callback(self):
+        pass
+    
+    def cancelButton_callback(self):
+        pass
+    
+    def addUpdateButton_callback(self):
+        pass
+    
+    def selectDate_callback(self):
+        top = tk.Toplevel(bg="#090E18")
+        top.title("Select Date/Time")
 
-    def radioButtonCallback(self, id, value):
-        AIController.setVehicleClasses(id, value == 1)
+        # Calendar for date selection
+        calendarFrame = tk.Frame(top, bg="#1B2431")
+        calendarFrame.pack(padx=10, pady=(10, 2), ipadx=5, ipady=5, expand=True, fill="both")
+        cal = Calendar(calendarFrame, selectmode='day', date_pattern='dd/mm/y', foreground="#FFFFFF", background="#1B2431", bordercolor="#1B2431")
+        cal.pack(padx=5, pady=5)
+
+        # Frame for time selection
+        frame_time = tk.Frame(top, bg="#1B2431")
+        frame_time.pack(padx=10, pady=(2, 10), expand=True, fill="x")
+
+        # Spinbox for hours selection
+        label_hours = tk.Label(frame_time, text="Hours:", foreground="#FFFFFF", background="#090E18")
+        label_hours.grid(row=0, column=0, padx=5, pady=5, sticky = "w")
+        spinbox_hours = ttk.Spinbox(frame_time, from_=0, to=23, foreground="#FFFFFF", background="#FFFFFF")
+        spinbox_hours.grid(row=0, column=1, padx=5, pady=5, sticky = "ew")
+
+        # Spinbox for minutes selection
+        label_minutes = tk.Label(frame_time, text="Minutes:", foreground="#FFFFFF", background="#090E18")
+        label_minutes.grid(row=1, column=0, padx=5, pady=5, sticky="w")
+        spinbox_minutes = ttk.Spinbox(frame_time, from_=0, to=59, increment=5, foreground="#000000", background="#FFFFFF")
+        spinbox_minutes.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
         
-    # Function that add rows to the Schedule of the Algorithm
-    def add_row(self):
-        addImage = Image.open("views/icons/icons_add.png")
-        addImage = addImage.resize((25, 25))
-        addPhoto = CTkImage(addImage)
+        def getSelectedDateTime():
+            global selected_date, selected_time
         
-        newRowFrame = tk.Frame(self.scheduleLineFrame, bg="#1B2431")
-        newRowFrame.pack(fill="x", side="top", padx=5, pady=5, expand = True)
+            selected_date = cal.get_date()
+            selected_hour = spinbox_hours.get().zfill(2)
+            selected_minute = spinbox_minutes.get().zfill(2)
+            
+            selected_time = f"{selected_hour}:{selected_minute}"
 
-        fromLabel = CTkLabel(newRowFrame, text="From", font=('Montserrat', 15), text_color="#FFFFFF", anchor="w")
-        fromLabel.pack(side="left", padx=5)
+            top.destroy()
+            self.selected_date = selected_date
+            self.selected_time = selected_time
+            self.dateEntry.delete(0, tk.END)
+            self.dateEntry.insert(0, f"{self.selected_date}")
+            self.timeEntry.delete(0, tk.END)
+            self.timeEntry.insert(0, f"{self.selected_time}")
 
-        fromComboBox = CTkComboBox(newRowFrame, values=["1 AM", "2 AM", "3 AM", "4 AM",
+        # Button for confirming selection
+        button_confirm = tk.Button(top, text="Confirm", command=getSelectedDateTime, foreground="#FFFFFF", background="#090E18")
+        button_confirm.pack(pady=10)
+    
+    def selectDataFromTable(self, event):
+        caller = event.widget
+        
+        # Event handler that unselects the selection from the other table if the user selects from the other table to prevent multiple selection.
+        if caller == self.leftDatabaseTable and bool(self.rightDatabaseTable.selection()):
+            self.rightDatabaseTable.selection_remove(self.rightDatabaseTable.selection())
+            
+        elif caller == self.rightDatabaseTable and bool(self.leftDatabaseTable.selection()):
+            self.leftDatabaseTable.selection_remove(self.leftDatabaseTable.selection())
+        
+        selected_items = caller.selection()
+        
+        if not selected_items or len(selected_items) != 1:
+            # Config Form0
+            self.fromComboBox.set('')
+            self.toComboBox.set('')
+            self.everyComboBox.set('')
+            
+            # Config Form 2
+            self.dateEntry.delete(0, tk.END)
+            self.timeEntry.delete(0, tk.END)
+            
+            # Price Form
+            self.truckEntry.delete(0, tk.END)
+            self.busEntry.delete(0, tk.END)
+            self.motorcycleEntry.delete(0, tk.END)
+            self.carEntry.delete(0, tk.END)
+            
+            # Detectables Form
+            self.truckComboBox.set('')
+            self.busComboBox.set('')
+            self.motorcycleComboBox.set('')
+            self.carComboBox.set('')
+            return
+        
+        # These are all the widgets that updates whenever there is a row selection from either table.
+        # Config Form
+        self.fromComboBox.set('')
+        self.toComboBox.set('')
+        self.everyComboBox.set('')
+        
+        # Config Form 2
+        self.dateEntry.delete(0, tk.END)
+        self.timeEntry.delete(0, tk.END)
+        
+        # Price Form
+        self.truckEntry.delete(0, tk.END)
+        self.busEntry.delete(0, tk.END)
+        self.motorcycleEntry.delete(0, tk.END)
+        self.carEntry.delete(0, tk.END)
+        
+        # Detectables Form
+        self.truckComboBox.set('')
+        self.busComboBox.set('')
+        self.motorcycleComboBox.set('')
+        self.carComboBox.set('')
+        
+        for item in selected_items:
+            values = caller.item(item)['values']
+            
+            if caller == self.leftDatabaseTable and len(values) >= 3:
+                self.fromComboBox.set(values[0])
+                self.toComboBox.set(values[1])
+                self.everyComboBox.set(values[2])
+                # Insert to other entries/combobox just like the above
+                # All combobox and entries that updates everytime there is a row selection from the table is above
+                
+            if caller == self.rightDatabaseTable and len(values) >= 4:
+                self.fromComboBox.set(values[0])
+                self.toComboBox.set(values[1])
+                self.everyComboBox.set(values[2])
+                self.dateEntry.insert(0, values[3])
+                # Insert to other entries/combobox just like the above
+                # All combobox and entries that updates everytime there is a row selection from the table is above
+    
+    def __init__(self, parent):
+            tk.Frame.__init__(self, parent, bg = "#090E18")
+            
+            # Style definition. Can be utilized with the Change Theme from Light to Dark
+            style = ttk.Style()
+            style.theme_use('forest-dark')
+            
+            # Close Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
+            closePhoto = CTkImage(light_image = Image.open("views/icons/icon_close_lightmode.png"),
+                                dark_image = Image.open("views/icons/icon_close_darkmode.png"),
+                                size = (20, 20))
+
+            # Minimize Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
+            minimizePhoto = CTkImage(light_image = Image.open("views/icons/icon_minimize_lightmode.png"),
+                                dark_image = Image.open("views/icons/icon_minimize_darkmode.png"),
+                                size = (20, 20))
+            
+            # Top-most Frame that holds the Close and Minimize buttons.
+            toolbarFrame = tk.Frame(self, bg = "#090E18", height = 30)
+            toolbarFrame.pack(fill = "both", side = "top")
+
+            closeButton = CTkButton(toolbarFrame, 
+                                    image = closePhoto,
+                                    text = "",
+                                    width = 20,
+                                    height = 20,
+                                    fg_color = "#090E18",
+                                    bg_color = "#000000",
+                                    hover = True,
+                                    hover_color = "#48BFE3",
+                                    command = self.closeApplication)
+            closeButton.pack(side = "right", padx = 10, pady = 10)
+
+            minimizeButton = CTkButton(toolbarFrame, 
+                                    image = minimizePhoto,
+                                    text = "",
+                                    width = 20,
+                                    height = 20,
+                                    fg_color = "#090E18",
+                                    bg_color = "#000000",
+                                    hover = True,
+                                    hover_color = "#48BFE3",
+                                    command = self.minimizeApplication)
+            minimizeButton.pack(side = "right", padx = 0, pady = 10)
+            
+            # Start of Main Content Frame
+            mainContentFrame = CTkScrollableFrame(self, fg_color = "#090E18")
+            mainContentFrame.pack(fill = 'both', expand = True, side = 'top')
+            
+            mainTableFrame = tk.Frame(mainContentFrame, bg = '#090E18')
+            mainTableFrame.pack(expand = True, fill = 'both', side = 'top', pady = (0, 0))
+            
+            leftMainTableFrame = CTkFrame(mainTableFrame, fg_color = '#1B2431', corner_radius = 15)
+            rightMainTableFrame = CTkFrame(mainTableFrame, fg_color = '#1B2431', corner_radius = 15)
+            
+            leftMainTableFrame.pack(expand = True, fill = 'both', side = 'left', pady = 10, padx = 5)
+            rightMainTableFrame.pack(expand = True, fill = 'both', side = 'left', pady = 10, padx = 5)
+            
+            leftMainTableLabelFrame = tk.Frame(leftMainTableFrame, bg = '#1B2431')
+            leftMainTableLabelFrame.pack(side = 'top', expand = False, fill = 'x', pady = (10, 0))
+            
+            leftMainTableLabel = CTkLabel(leftMainTableLabelFrame, text = 'Current Settings', font = ('Montserrat', 12), text_color = '#FFFFFF', anchor = 'w')
+            leftMainTableLabel.pack(side = 'left', padx = 10, pady = 5)
+            
+            leftDatabaseTableFrame = tk.Frame(leftMainTableFrame, bg = '#1B2431')
+            leftDatabaseTableFrame.pack(side = 'top', expand = True, fill = 'both', pady = (0, 0), padx = 10)
+            
+            self.leftDatabaseTable = ttk.Treeview(leftDatabaseTableFrame, columns = ('from', 'to', 'day'), show = "headings", style = 'Custom.Treeview')
+            self.leftDatabaseTable.bind('<<TreeviewSelect>>', self.selectDataFromTable)
+            self.leftDatabaseTable.bind('<Delete>', self.deleteDataFromTable)
+            
+            self.leftDatabaseTable.tag_configure('even', background='#2A2D2E', foreground='#FFFFFF')
+            self.leftDatabaseTable.tag_configure('odd', background='#343638', foreground='#FFFFFF')
+            
+            self.leftDatabaseTable.heading('from', text="From", anchor='center')
+            self.leftDatabaseTable.heading('to', text="To", anchor='center')
+            self.leftDatabaseTable.heading('day', text="Every", anchor='center')
+            
+            self.leftDatabaseTable.column('from', width=150, anchor='center')
+            self.leftDatabaseTable.column('to', width=150, anchor='center')
+            self.leftDatabaseTable.column('day', width=120, anchor='center')
+            
+            for entry in data1:
+                self.leftDatabaseTable.insert('', 'end', values = entry)
+            
+            yscrollbar = ttk.Scrollbar(leftDatabaseTableFrame, orient='vertical', command=self.leftDatabaseTable.yview)
+            self.leftDatabaseTable.configure(yscrollcommand=yscrollbar.set)
+            
+            self.leftDatabaseTable.pack(expand=True, fill='both', padx=0, pady=0, side = "left")
+            yscrollbar.pack(side='left', fill='both', padx=0, pady=0)
+            
+            xscrollbar = ttk.Scrollbar(leftMainTableFrame, orient='horizontal', command=self.leftDatabaseTable.xview)
+            self.leftDatabaseTable.configure(xscrollcommand=xscrollbar.set)
+            xscrollbar.pack(side='top', fill='both', padx=10, pady=(0, 10))
+                
+            rightMainTableLabelFrame = tk.Frame(rightMainTableFrame, bg = '#1B2431')
+            rightMainTableLabelFrame.pack(side = 'top', expand = False, fill = 'x', pady = (10, 0))
+            
+            rightMainTableLabel = CTkLabel(rightMainTableLabelFrame, text = 'Scheduled To Be Added Settings', font = ('Montserrat', 12), text_color = '#FFFFFF', anchor = 'w')
+            rightMainTableLabel.pack(side = 'left', padx = 10, pady = 5)
+            
+            rightDatabaseTableFrame = tk.Frame(rightMainTableFrame, bg = '#1B2431')
+            rightDatabaseTableFrame.pack(side = 'top', expand = True, fill = 'both', pady = (0, 0), padx = 10)
+            
+            self.rightDatabaseTable = ttk.Treeview(rightDatabaseTableFrame, columns = ('from', 'to', 'day', 'startDate'), show = "headings", style = 'Custom.Treeview')
+            self.rightDatabaseTable.bind('<<TreeviewSelect>>', self.selectDataFromTable)
+            self.rightDatabaseTable.bind('<Delete>', self.deleteDataFromTable)
+            
+            self.rightDatabaseTable.tag_configure('even', background='#2A2D2E', foreground='#FFFFFF')
+            self.rightDatabaseTable.tag_configure('odd', background='#343638', foreground='#FFFFFF')
+            
+            self.rightDatabaseTable.heading('from', text="From", anchor='center')
+            self.rightDatabaseTable.heading('to', text="To", anchor='center')
+            self.rightDatabaseTable.heading('day', text="Every", anchor='center')
+            self.rightDatabaseTable.heading('startDate', text="Start Date", anchor='center')
+            
+            self.rightDatabaseTable.column('from', width=150, anchor='center')
+            self.rightDatabaseTable.column('to', width=150, anchor='center')
+            self.rightDatabaseTable.column('day', width=120, anchor='center')
+            self.rightDatabaseTable.column('startDate', width=120, anchor='center')
+            
+            for entry in data2:
+                self.rightDatabaseTable.insert('', 'end', values = entry)
+            
+            yscrollbar = ttk.Scrollbar(rightDatabaseTableFrame, orient='vertical', command=self.rightDatabaseTable.yview)
+            self.rightDatabaseTable.configure(yscrollcommand=yscrollbar.set)
+            
+            self.rightDatabaseTable.pack(expand=True, fill='both', padx=0, pady=0, side = "left")
+            yscrollbar.pack(side='left', fill='both', padx=0, pady=0)
+            
+            xscrollbar = ttk.Scrollbar(rightMainTableFrame, orient='horizontal', command=self.rightDatabaseTable.xview)
+            self.rightDatabaseTable.configure(xscrollcommand=xscrollbar.set)
+            xscrollbar.pack(side='top', fill='both', padx=10, pady=(0, 10))
+            
+            addNewFrame = tk.Frame(mainContentFrame, bg = '#090E18')
+            addNewFrame.pack(expand = False, fill = 'x', side = 'top', pady = (0, 10))
+            
+            addNewButton = CTkButton(addNewFrame,
+                                     text = 'Add New',
+                                     command = self.addNew_callback,
+                                     text_color = "#000000",
+                                     font = ('Montserrat', 12),
+                                     fg_color = "#FFFFFF",
+                                     corner_radius = 15,
+                                     border_color = "#FFFFFF",
+                                     border_width = 2)
+            addNewButton.bind("<Enter>", lambda event: addNewButton.configure(text_color="#FFFFFF", fg_color = "#090E18", border_color = "#FFFFFF")) 
+            addNewButton.bind("<Leave>", lambda event: addNewButton.configure(text_color="#000000", fg_color = "#FFFFFF", border_color = "#FFFFFF"))  
+            addNewButton.pack(expand = False, side = 'right', padx = 10, pady = 0)
+            
+            selectRowLabel = CTkLabel(addNewFrame,
+                                      text = 'Select a row above to edit a setting or',
+                                      font = ('Montserrat', 12),
+                                      text_color = '#FFFFFF')
+            selectRowLabel.pack(expand = False, side = 'right', padx = 5, pady = 0)
+            
+            delLabel = CTkLabel(addNewFrame,
+                                      text = 'Press Del to delete',
+                                      font = ('Montserrat', 12),
+                                      text_color = '#FFFFFF')
+            delLabel.pack(expand = False, side = 'left', padx = 10, pady = 0)
+            
+            detectablesFrame = CTkFrame(mainContentFrame, fg_color = '#1B2431', corner_radius = 15)
+            detectablesFrame.pack(expand = False, fill = 'x', side = 'top', pady = 10)
+            
+            detectablesLabelFrame = tk.Frame(detectablesFrame, bg = '#1B2431')
+            detectablesLabelFrame.pack(expand = False, fill = 'x', side = 'top', padx = 5, pady = 5)
+            
+            detectablesLabel = CTkLabel(detectablesLabelFrame, text = 'Detectables Vehicles', anchor = 'w', font = ('Montserrat', 12), text_color = '#FFFFFF')
+            detectablesLabel.pack(expand = False, fill = 'x', side = 'left', padx = 10, pady = 5)
+            
+            detectablesContentFrame = tk.Frame(detectablesFrame, bg = '#1B2431')
+            detectablesContentFrame.pack(expand = False, fill = 'both', side = 'top', padx = 5, pady = 5)
+            
+            self.carComboBox = CTkComboBox(detectablesContentFrame, values = ['Enabled', 'Disabled'], width = 200, fg_color = '#e5e5e5', dropdown_fg_color = '#e5e5e5', text_color = '#000000', dropdown_text_color = '#000000', border_color = '#FFFFFF', button_color = '#FFFFFF')
+            self.carComboBox.pack(side = 'right', padx = (0, 20), pady = 5)
+            carLabel = CTkLabel(detectablesContentFrame, text = 'Car', anchor = 'w', font = ('Montserrat', 12), text_color = '#FFFFFF')
+            carLabel.pack(side = 'right', padx = 10)
+            
+            self.motorcycleComboBox = CTkComboBox(detectablesContentFrame, values = ['Enabled', 'Disabled'], width = 200, fg_color = '#e5e5e5', dropdown_fg_color = '#e5e5e5', text_color = '#000000', dropdown_text_color = '#000000', border_color = '#FFFFFF', button_color = '#FFFFFF')
+            self.motorcycleComboBox.pack(side = 'right', padx = (0, 20), pady = 5)
+            motorcycleLabel = CTkLabel(detectablesContentFrame, text = 'Motorcycle', anchor = 'w', font = ('Montserrat', 12), text_color = '#FFFFFF')
+            motorcycleLabel.pack(side = 'right', padx = 10)
+            
+            self.busComboBox = CTkComboBox(detectablesContentFrame, values = ['Enabled', 'Disabled'], width = 200, fg_color = '#e5e5e5', dropdown_fg_color = '#e5e5e5', text_color = '#000000', dropdown_text_color = '#000000', border_color = '#FFFFFF', button_color = '#FFFFFF')
+            self.busComboBox.pack(side = 'right', padx = (0, 20), pady = 5)
+            busLabel = CTkLabel(detectablesContentFrame, text = 'Bus', anchor = 'w', font = ('Montserrat', 12), text_color = '#FFFFFF')
+            busLabel.pack(side = 'right', padx = 10)
+            
+            self.truckComboBox = CTkComboBox(detectablesContentFrame, values = ['Enabled', 'Disabled'], width = 200, fg_color = '#e5e5e5', dropdown_fg_color = '#e5e5e5', text_color = '#000000', dropdown_text_color = '#000000', border_color = '#FFFFFF', button_color = '#FFFFFF')
+            self.truckComboBox.pack(side = 'right', padx = (0, 20), pady = 5)
+            truckLabel = CTkLabel(detectablesContentFrame, text = 'Truck', anchor = 'w', font = ('Montserrat', 12), text_color = '#FFFFFF')
+            truckLabel.pack(side = 'right', padx = 10)
+            
+            pricePerVehicleFrame = CTkFrame(mainContentFrame, corner_radius = 15, fg_color = '#1B2431')
+            pricePerVehicleFrame.pack(expand = False, fill = 'x', side = 'top', pady = 10)
+            
+            priceLabelFrame = tk.Frame(pricePerVehicleFrame, bg = '#1B2431')
+            priceLabelFrame.pack(expand = False, fill = 'x', side = 'top', padx = 5, pady = 5)
+            
+            priceLabel = CTkLabel(priceLabelFrame, text = 'Price Per Vehicles Type', anchor = 'w', font = ('Montserrat', 12), text_color = '#FFFFFF')
+            priceLabel.pack(expand = False, fill = 'x', side = 'left', padx = 10, pady = 5)
+            
+            priceContentFrame = tk.Frame(pricePerVehicleFrame, bg = '#1B2431')
+            priceContentFrame.pack(expand = False, fill = 'both', side = 'top', padx = 5, pady = 5)
+            
+            self.carEntry = CTkEntry(priceContentFrame, placeholder_text = '0.0', font = ('Montserrat', 12), text_color = '#000000', corner_radius = 15, border_color = '#FFFFFF', fg_color = '#FFFFFF')
+            self.carEntry.pack(side = 'right', padx = (0, 20), pady = 5)
+            carLabel = CTkLabel(priceContentFrame, text = 'Car', anchor = 'w', font = ('Montserrat', 12), text_color = '#FFFFFF')
+            carLabel.pack(side = 'right', padx = 10)
+            
+            self.motorcycleEntry = CTkEntry(priceContentFrame, placeholder_text = '0.0', font = ('Montserrat', 12), text_color = '#000000', corner_radius = 15, border_color = '#FFFFFF', fg_color = '#FFFFFF')
+            self.motorcycleEntry.pack(side = 'right', padx = (0, 20), pady = 5)
+            motorcycleLabel = CTkLabel(priceContentFrame, text = 'Motorcycle', anchor = 'w', font = ('Montserrat', 12), text_color = '#FFFFFF')
+            motorcycleLabel.pack(side = 'right', padx = 10)
+            
+            self.busEntry = CTkEntry(priceContentFrame, placeholder_text = '0.0', font = ('Montserrat', 12), text_color = '#000000', corner_radius = 15, border_color = '#FFFFFF', fg_color = '#FFFFFF')
+            self.busEntry.pack(side = 'right', padx = (0, 20), pady = 5)
+            busLabel = CTkLabel(priceContentFrame, text = 'Bus', anchor = 'w', font = ('Montserrat', 12), text_color = '#FFFFFF')
+            busLabel.pack(side = 'right', padx = 10)
+            
+            self.truckEntry = CTkEntry(priceContentFrame, placeholder_text = '0.0', font = ('Montserrat', 12), text_color = '#000000', corner_radius = 15, border_color = '#FFFFFF', fg_color = '#FFFFFF')
+            self.truckEntry.pack(side = 'right', padx = (0, 20), pady = 5)
+            truckLabel = CTkLabel(priceContentFrame, text = 'Truck', anchor = 'w', font = ('Montserrat', 12), text_color = '#FFFFFF')
+            truckLabel.pack(side = 'right', padx = 10)
+            
+            configFrame = CTkFrame(mainContentFrame, fg_color = '#1B2431', corner_radius = 15)
+            configFrame.pack(expand = False, fill = 'x', side = 'top', pady = 10)
+            
+            configScheduleLabelFrame = tk.Frame(configFrame, bg = '#1B2431')
+            configScheduleLabelFrame.pack(expand = False, fill = 'x', side = 'top', padx = 5, pady = 5)
+            
+            configScheduleLabel = CTkLabel(configScheduleLabelFrame, text = 'Config Schedule', anchor = 'w', font = ('Montserrat', 12), text_color = '#FFFFFF')
+            configScheduleLabel.pack(expand = False, fill = 'x', side = 'left', padx = 10, pady = 5)
+            
+            configContentFrame = tk.Frame(configFrame, bg = '#1B2431')
+            configContentFrame.pack(side = 'top', expand = False, fill = 'both', padx = 5, pady = 5)
+            
+            configLeftContent = tk.Frame(configContentFrame, bg = '#1B2431')
+            configLeftContent.pack(side = 'left', expand = False, fill = 'both', padx = 10)
+            
+            fromLabel = CTkLabel(configLeftContent, text = 'From', font = ('Montserrat', 12), anchor = 'w', text_color = '#FFFFFF')
+            fromLabel.pack(side = 'left', padx = (10, 5), pady = 10)
+            
+            self.fromComboBox = CTkComboBox(configLeftContent, values=["12 AM","1 AM", "2 AM", "3 AM", "4 AM",
                                                              "5 AM", "6 AM", "7 AM", "8 AM",
                                                              "9 AM", "10 AM", "11 AM", "12 PM",
                                                              "1 PM", "2 PM", "3 PM", "4 PM",
                                                              "5 PM", "6 PM", "7 PM", "8 PM",
-                                                             "9 PM", "10 PM", "11 PM", "12 AM"],
+                                                             "9 PM", "10 PM", "11 PM"],
                                       command=self.fromComboBox_callback,
-                                      width = 80)
-        fromComboBox.set("1 AM")
-        fromComboBox.pack(side="left", padx=5)
-
-        toLabel = CTkLabel(newRowFrame, text="To", font=('Montserrat', 15), text_color="#FFFFFF", anchor="w")
-        toLabel.pack(side="left", padx=5)
-
-        toComboBox = CTkComboBox(newRowFrame, values=["1 AM", "2 AM", "3 AM", "4 AM",
-                                                           "5 AM", "6 AM", "7 AM", "8 AM",
-                                                           "9 AM", "10 AM", "11 AM", "12 PM",
-                                                           "1 PM", "2 PM", "3 PM", "4 PM",
-                                                           "5 PM", "6 PM", "7 PM", "8 PM",
-                                                           "9 PM", "10 PM", "11 PM", "12 AM"],
-                                    command=self.toComboBox_callback,
-                                    width = 80)
-        toComboBox.set("1 AM")
-        toComboBox.pack(side="left", padx=5)
-
-        everyLabel = CTkLabel(newRowFrame, text="Every", font=('Montserrat', 15), text_color="#FFFFFF", anchor="w")
-        everyLabel.pack(side="left", padx=5)
-
-        everyComboBox = CTkComboBox(newRowFrame,
+                                      width = 80,
+                                      fg_color = '#e5e5e5', dropdown_fg_color = '#e5e5e5', text_color = '#000000', dropdown_text_color = '#000000', border_color = '#FFFFFF', button_color = '#FFFFFF')
+            self.fromComboBox.pack(side = 'left', padx = (0, 10))
+            
+            toLabel = CTkLabel(configLeftContent, text = 'To', font = ('Montserrat', 12), anchor = 'w', text_color = '#FFFFFF')
+            toLabel.pack(side = 'left', padx = (10, 5), pady = 10)
+            
+            self.toComboBox = CTkComboBox(configLeftContent, values=["12 AM","1 AM", "2 AM", "3 AM", "4 AM",
+                                                             "5 AM", "6 AM", "7 AM", "8 AM",
+                                                             "9 AM", "10 AM", "11 AM", "12 PM",
+                                                             "1 PM", "2 PM", "3 PM", "4 PM",
+                                                             "5 PM", "6 PM", "7 PM", "8 PM",
+                                                             "9 PM", "10 PM", "11 PM"],
+                                      command=self.toComboBox_callback,
+                                      width = 80,
+                                      fg_color = '#e5e5e5', dropdown_fg_color = '#e5e5e5', text_color = '#000000', dropdown_text_color = '#000000', border_color = '#FFFFFF', button_color = '#FFFFFF')
+            self.toComboBox.pack(side = 'left', padx = (0, 10))
+            
+            everyLabel = CTkLabel(configLeftContent, text = 'Every', font = ('Montserrat', 12), anchor = 'w', text_color = '#FFFFFF')
+            everyLabel.pack(side = 'left', padx = (10, 5), pady = 10)
+            
+            self.everyComboBox = CTkComboBox(configLeftContent,
                                        values=["Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays",
                                                "Saturdays", "Sundays"],
                                        command=self.toComboBox_callback,
-                                       width = 100)
-        everyComboBox.set("Mondays")
-        everyComboBox.pack(side="left", padx=5)
-
-        addButton = CTkButton(newRowFrame,
-                                text = "",
-                                command=lambda: self.add_row(),
-                                image=addPhoto,
-                                width=10,
-                                height=10,
-                                fg_color="#1B2431",
-                                bg_color="#1B2431",
-                                corner_radius=150)
-        addButton.pack(side="left", padx=5)
-
-    # Saves the Password Changes
-    def passwordChangeSaveButton_callback(self, statusLabel: CTkLabel, currentPassword: CTkEntry, newPassword: CTkEntry, confirmPassword: CTkEntry):
-        userSession = UserSession.loadUserSession()
-        response = DBController.changePassword(email=userSession.email, currPassword=currentPassword.get(), newPassword=newPassword.get(), confirmPassword=confirmPassword.get())
-
-        if response.ok:
-            statusLabel.configure(text='Password successfully changed.', text_color="#25be8e")
-            self.after(3000, lambda: statusLabel.configure(text_color="#1B2431"))
-        else:
-            statusLabel.configure(text=(response.messages['password'] or response.messages['error']), text_color="#d62828")
-            self.after(2000, lambda: statusLabel.configure(text_color="#1B2431"))
-
-        currentPassword.delete(0, "end")
-        newPassword.delete(0, "end")
-        confirmPassword.delete(0, "end")
-
-    def changePrices(self, statusLabel: CTkLabel, vehicleEntries: list[CTkEntry]):
-        def isFloat(s: str) -> bool:
-            try:
-                float(s)
-                return True
-            except:
-                return False
+                                       width = 200,
+                                       fg_color = '#e5e5e5', dropdown_fg_color = '#e5e5e5', text_color = '#000000', dropdown_text_color = '#000000', border_color = '#FFFFFF', button_color = '#FFFFFF')
+            self.everyComboBox.pack(side = 'left', padx = (0, 10))
             
-        response = DBController.Response()
-
-        for i, entry in enumerate(vehicleEntries):
-            price = entry.get()
-            if not price:
-                continue
-            if not isFloat(price):
-                response.ok = False
-                response.messages['error'] = 'Input is not a valid number.'
-                break
-            response = DBController.editVehiclePrice(id=i, newPrice=float(price))
-            if not response.ok:
-                break
-
-        if response.ok is None:
-            statusLabel.configure(text='Nothing changed.', text_color="#eee")
-            self.after(2000, lambda: statusLabel.configure(text_color="#1B2431"))
-        elif response.ok:
-            statusLabel.configure(text='Prices updated.', text_color="#25be8e")
-            self.after(3000, lambda: statusLabel.configure(text_color="#1B2431"))
-        else:
-            statusLabel.configure(text=response.messages['error'], text_color="#d62828")
-            self.after(2000, lambda: statusLabel.configure(text_color="#1B2431"))
-
-        for entry in vehicleEntries:
-            entry.delete(0, "end")
-
-        self.loadPrices(vehicleEntries)
-
-    def loadPrices(self, vehicleEntries: list[CTkEntry]):
-        for i, entry in enumerate(vehicleEntries):
-            vehicle = DBController.getVehiclePrice(id=i)
-            entry.configure(placeholder_text=vehicle.price)
-    
-    def __init__(self, parent):
-        tk.Frame.__init__(self, parent, bg = "#090E18")
-        
-        # Style definition. Can be utilized with the Change Theme from Light to Dark
-        style = ttk.Style()
-        style.theme_use('forest-dark')
-        
-        # Close Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
-        closePhoto = CTkImage(light_image = Image.open("views/icons/icon_close_lightmode.png"),
-                              dark_image = Image.open("views/icons/icon_close_darkmode.png"),
-                              size = (20, 20))
-
-        # Minimize Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
-        minimizePhoto = CTkImage(light_image = Image.open("views/icons/icon_minimize_lightmode.png"),
-                              dark_image = Image.open("views/icons/icon_minimize_darkmode.png"),
-                              size = (20, 20))
-        
-        # Top-most Frame that holds the Close and Minimize buttons.
-        toolbarFrame = tk.Frame(self, bg = "#090E18", height = 30)
-        toolbarFrame.pack(fill = "both", side = "top")
-
-        closeButton = CTkButton(toolbarFrame, 
-                                image = closePhoto,
-                                text = "",
-                                width = 20,
-                                height = 20,
-                                fg_color = "#090E18",
-                                bg_color = "#000000",
-                                hover = True,
-                                hover_color = "#48BFE3",
-                                command = self.closeApplication)
-        closeButton.pack(side = "right", padx = 10, pady = 10)
-
-        minimizeButton = CTkButton(toolbarFrame, 
-                                image = minimizePhoto,
-                                text = "",
-                                width = 20,
-                                height = 20,
-                                fg_color = "#090E18",
-                                bg_color = "#000000",
-                                hover = True,
-                                hover_color = "#48BFE3",
-                                command = self.minimizeApplicaiton)
-        minimizeButton.pack(side = "right", padx = 0, pady = 10)
-
-        # Main Frame (Where the contents of the main page is)
-        # mainFrame = tk.Frame(self, bg = "#090E18")
-        
-        mainFrame = CTkFrame(self, bg_color = "#090E18")
-        mainFrame.pack(expand = True, fill = "both", side = "top")
-        
-        # Again, separates the page into two Frame (Left and Right)
-        mainFrameLeft = tk.Frame(mainFrame, bg = "#090E18")
-        mainFrameRight = tk.Frame(mainFrame, bg = "#090E18")
-        
-        mainFrameLeft.pack(expand = True, fill = "both", side = "left")
-        mainFrameRight.pack(expand = True, fill = "both", side = "left")
-        
-        # Left side of the panel
-        addScheduleFrame = CTkScrollableFrame(mainFrameLeft, bg_color = "#1B2431",
-                                              label_text = "Active Hours", label_font = ('Montserrat', 15),
-                                              label_text_color = "#FFFFFF",
-                                              label_anchor = "w",
-                                              label_fg_color = "#1B2431",
-                                              fg_color = "#1b2431",
-                                              width = 500)
-        addScheduleFrame.pack(expand = True, fill = "both", side = "top", padx = 10)
-
-        lineSeparator = tk.Frame(addScheduleFrame, height = 2, bg = "#FFFFFF")
-        lineSeparator.pack(fill = "x", side = "top", pady = 5)
-
-        self.scheduleLineFrame = tk.Frame(addScheduleFrame, bg = "#1B2431")
-        self.scheduleLineFrame.pack(fill = "x", side = "top", padx = 5)
-    
-        self.add_row()
-        
-        reservedFrame = tk.Frame(mainFrameLeft, bg = "#090E18") # This is just a styling frame, unused, and can be used in the future.
-        reservedFrame.pack(expand = True, fill = "both", side = "top")
-        # End of Left Side of the Panel
-
-        # Right Side of the Panel
-        # Detectable Vehicles Frame
-        detectableVehiclesFrame = tk.Frame(mainFrameRight, bg = "#1B2431")
-        detectableVehiclesFrame.pack(expand = True, fill = "both", side = "top", padx = 10)
-        
-        detectableVehiclesLabel = CTkLabel(detectableVehiclesFrame, text = "Detectable Vehicles Type", text_color = "#FFFFFF", font = ('Montserrat', 15), anchor = "w")
-        detectableVehiclesLabel.pack(fill = "x", padx = 5)
-        
-        lineSeparator = tk.Frame(detectableVehiclesFrame, height = 2, bg = "#FFFFFF")
-        lineSeparator.pack(fill = "x", side = "top", pady = 5)
-        
-        VehiclesFrame = tk.Frame(detectableVehiclesFrame, bg = "#1B2431")
-        VehiclesFrame.pack(fill = "both", padx = 10, side = "top", expand = True)
-        
-        VehiclesFrameFirstRow = tk.Frame(VehiclesFrame, bg = "#1B2431")
-        VehiclesFrameSecondRow = tk.Frame(VehiclesFrame, bg = "#1B2431")
-        VehiclesFrameThirdRow = tk.Frame(VehiclesFrame, bg = "#1B2431")
-        VehiclesFrameFirstRow.pack(side = "top", fill = "both", expand = True)
-        VehiclesFrameSecondRow.pack(side = "top", fill = "both", expand = True)
-        VehiclesFrameThirdRow.pack(side = "top", fill = "both", expand = True)
-        
-        carFrame = tk.Frame(VehiclesFrameFirstRow, bg = "#1B2431", highlightthickness = 2, highlightbackground = "#FFFFFF")
-        truckFrame = tk.Frame(VehiclesFrameFirstRow, bg = "#1B2431", highlightthickness = 2, highlightbackground = "#FFFFFF")
-        jeepneyFrame = tk.Frame(VehiclesFrameFirstRow, bg = "#1B2431", highlightthickness = 2, highlightbackground = "#FFFFFF")
-        
-        busFrame = tk.Frame(VehiclesFrameSecondRow, bg = "#1B2431", highlightthickness = 2, highlightbackground = "#FFFFFF")
-        motorcycleFrame = tk.Frame(VehiclesFrameSecondRow, bg = "#1B2431", highlightthickness = 2, highlightbackground = "#FFFFFF")
-        tricycleFrame = tk.Frame(VehiclesFrameSecondRow, bg = "#1B2431", highlightthickness = 2, highlightbackground = "#FFFFFF")
-        
-        vanFrame = tk.Frame(VehiclesFrameThirdRow, bg = "#1B2431", highlightthickness = 2, highlightbackground = "#FFFFFF")
-        taxiFrame = tk.Frame(VehiclesFrameThirdRow, bg = "#1B2431", highlightthickness = 2, highlightbackground = "#FFFFFF")
-        mJeepneyFrame = tk.Frame(VehiclesFrameThirdRow, bg = "#1B2431", highlightthickness = 2, highlightbackground = "#FFFFFF")
-        
-        carFrame.pack(side = "left", padx = 5, expand = False, fill = "x")
-        truckFrame.pack(side = "left", padx = 10, expand = False, fill = "x")
-        jeepneyFrame.pack(side = "left", padx = 5, expand = False, fill = "x")
-        
-        busFrame.pack(side = "left", padx = 5, expand = False, fill = "x")
-        motorcycleFrame.pack(side = "left", padx = 10, expand = False, fill = "x")
-        tricycleFrame.pack(side = "left", padx = 5, expand = False, fill = "x")
-        
-        vanFrame.pack(side = "left", padx = 5, expand = False, fill = "x")
-        taxiFrame.pack(side = "left", padx = 10, expand = False, fill = "x")
-        mJeepneyFrame.pack(side = "left", padx = 5, expand = False, fill = "x")
-        
-        # -- First Row --
-        self.carVar = IntVar(value = 1)
-        carTrueRadioButton = CTkRadioButton(carFrame, variable = self.carVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(0, self.carVar.get()))
-        carFalseRadioButton = CTkRadioButton(carFrame, variable = self.carVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(0, self.carVar.get()))
-        carRadioLabel = CTkLabel(carFrame, text = "Car", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
-        carRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
-        carTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
-        carFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
-        
-        self.truckVar = IntVar(value = 1)
-        truckTrueRadioButton = CTkRadioButton(truckFrame, variable = self.truckVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(6, self.truckVar.get()))
-        truckFalseRadioButton = CTkRadioButton(truckFrame, variable = self.truckVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(6, self.truckVar.get()))
-        truckRadioLabel = CTkLabel(truckFrame, text = "Truck", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
-        truckRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
-        truckTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
-        truckFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
-        
-        self.jeepneyVar = IntVar(value = 1)
-        jeepneyTrueRadioButton = CTkRadioButton(jeepneyFrame, variable = self.jeepneyVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(2, self.jeepneyVar.get()))
-        jeepneyFalseRadioButton = CTkRadioButton(jeepneyFrame, variable = self.jeepneyVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(2, self.jeepneyVar.get()))
-        jeepneyRadioLabel = CTkLabel(jeepneyFrame, text = "Jeepney", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
-        jeepneyRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
-        jeepneyTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
-        jeepneyFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
-        
-        # -- Second Row --
-        self.busVar = IntVar(value = 1)
-        busTrueRadioButton = CTkRadioButton(busFrame, variable = self.busVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(3, self.busVar.get()))
-        busFalseRadioButton = CTkRadioButton(busFrame, variable = self.busVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(3, self.busVar.get()))
-        busRadioLabel = CTkLabel(busFrame, text = "Bus", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
-        busRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
-        busTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
-        busFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
-        
-        self.motorVar = IntVar(value = 1)
-        motorTrueRadioButton = CTkRadioButton(motorcycleFrame, variable = self.motorVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(1, self.motorVar.get()))
-        motorFalseRadioButton = CTkRadioButton(motorcycleFrame, variable = self.motorVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(1, self.motorVar.get()))
-        motorRadioLabel = CTkLabel(motorcycleFrame, text = "Motorcycle", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
-        motorRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
-        motorTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
-        motorFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
-        
-        self.tricycleVar = IntVar(value = 1)
-        tricycleTrueRadioButton = CTkRadioButton(tricycleFrame, variable = self.tricycleVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(4, self.tricycleVar.get()))
-        tricycleFalseRadioButton = CTkRadioButton(tricycleFrame, variable = self.tricycleVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(4, self.tricycleVar.get()))
-        tryclceRadioLabel = CTkLabel(tricycleFrame, text = "Tricycle", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
-        tryclceRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
-        tricycleTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
-        tricycleFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
-        
-        # -- Third Row -- 
-        self.vanVar = IntVar(value = 1)
-        vanTrueRadioButton = CTkRadioButton(vanFrame, variable = self.vanVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(5, self.vanVar.get()))
-        vanFalseRadioButton = CTkRadioButton(vanFrame, variable = self.vanVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(5, self.vanVar.get()))
-        vanRadioLabel = CTkLabel(vanFrame, text = "Van", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
-        vanRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
-        vanTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
-        vanFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
-        
-        self.taxiVar = IntVar(value = 1)
-        taxiTrueRadioButton = CTkRadioButton(taxiFrame, variable = self.taxiVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(7, self.taxiVar.get()))
-        taxiFalseRadioButton = CTkRadioButton(taxiFrame, variable = self.taxiVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(7, self.taxiVar.get()))
-        taxiRadioLabel = CTkLabel(taxiFrame, text = "Taxi", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
-        taxiRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
-        taxiTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
-        taxiFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
-        
-        self.mJeepneyVar = IntVar(value = 1)
-        mJeepneyTrueRadioButton = CTkRadioButton(mJeepneyFrame, variable = self.mJeepneyVar, value = 1, text = "Enable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(8, self.mJeepneyVar.get()))
-        mJeepneyFalseRadioButton = CTkRadioButton(mJeepneyFrame, variable = self.mJeepneyVar, value = 0, text = "Disable", font = ('Monteserrat', 13), text_color = "#FFFFFF", command=lambda: self.radioButtonCallback(8, self.mJeepneyVar.get()))
-        mJeepneyRadioLabel = CTkLabel(mJeepneyFrame, text = "Modern Jeepney", font = ('Monteserrat', 13, "bold"), text_color = "#FFFFFF")
-        mJeepneyRadioLabel.pack(side = "top", padx = 10, pady = 5, fill = "x")
-        mJeepneyTrueRadioButton.pack(side = "left", padx = (30,5), pady = 5, fill = "x")
-        mJeepneyFalseRadioButton.pack(side = "right", padx = (5,0), pady = 5, fill = "x")
-        # End of Detectable Vehicles Frame
-        
-        # Conggestion Price Frame
-        congestionPricingFrame = tk.Frame(mainFrameRight, bg = "#1B2431")
-        congestionPricingFrame.pack(expand = True, fill = "both", side = "top", padx = 10, pady = (20, 0))
-        
-        congestionPricingLabel = CTkLabel(congestionPricingFrame, text = "Congestion Price", text_color = "#FFFFFF", font = ('Montserrat', 15), anchor = "w")
-        congestionPricingLabel.pack(fill = "x", padx = 5, side = "top")
-        
-        lineSeparator = tk.Frame(congestionPricingFrame, height = 2, bg = "#FFFFFF")
-        lineSeparator.pack(fill = "x", side = "top", pady = 5)
-        
-        allVehiclesFrame = tk.Frame(congestionPricingFrame, bg = "#1B2431")
-        allVehiclesFrame.pack(fill = 'both', padx = 5, side = "top", expand = True)
-        
-        allvehiclesFirstRowFrame = tk.Frame(allVehiclesFrame, bg = "#1B2431")
-        allvehiclesSecondRowFrame = tk.Frame(allVehiclesFrame, bg = "#1B2431")
-        allvehiclesThirdRowFrame = tk.Frame(allVehiclesFrame, bg = "#1B2431")
-        allvehiclesFirstRowFrame.pack(side = "top", expand = True, fill = "both")
-        allvehiclesSecondRowFrame.pack(side = "top", expand = True, fill = "both")
-        allvehiclesThirdRowFrame.pack(side = "top", expand = True, fill = "both")
-        
-        carFrame = tk.Frame(allvehiclesFirstRowFrame, bg = "#1B2431")
-        truckFrame = tk.Frame(allvehiclesFirstRowFrame, bg = "#1B2431")
-        jeepneyFrame = tk.Frame(allvehiclesFirstRowFrame, bg = "#1B2431")
-        
-        busFrame = tk.Frame(allvehiclesSecondRowFrame, bg = "#1B2431")
-        motorcycleFrame = tk.Frame(allvehiclesSecondRowFrame, bg = "#1B2431")
-        tricycleFrame = tk.Frame(allvehiclesSecondRowFrame, bg = "#1B2431")
-        
-        vanFrame = tk.Frame(allvehiclesThirdRowFrame, bg = "#1B2431")
-        taxiFrame = tk.Frame(allvehiclesThirdRowFrame, bg = "#1B2431")
-        mJeepneyFrame = tk.Frame(allvehiclesThirdRowFrame, bg = "#1B2431")
-        
-        carFrame.pack(side = "left", padx = 20)
-        truckFrame.pack(side = "left", padx = 20)
-        jeepneyFrame.pack(side = "left", padx = 20)
-        
-        busFrame.pack(side = "left", padx = 20)
-        motorcycleFrame.pack(side = "left", padx = 20)
-        tricycleFrame.pack(side = "left", padx = 20)
-        
-        vanFrame.pack(side = "left", padx = 20)
-        taxiFrame.pack(side = "left", padx = 20)
-        mJeepneyFrame.pack(side = "left", padx = 20)
-        
-        carEntry = CTkEntry(carFrame, corner_radius = 20,
-                            border_color = "#FFFFFF",
-                            fg_color = "#FFFFFF",
-                            text_color = "#000000")
-        truckEntry = CTkEntry(truckFrame,
-                            corner_radius = 20,
-                            border_color = "#FFFFFF",
-                            fg_color = "#FFFFFF",
-                            text_color = "#000000")
-        jeepneyEntry = CTkEntry(jeepneyFrame,
-                            corner_radius = 20,
-                            border_color = "#FFFFFF",
-                            fg_color = "#FFFFFF",
-                            text_color = "#000000")
-        busEntry = CTkEntry(busFrame,
-                            corner_radius = 20,
-                            border_color = "#FFFFFF",
-                            fg_color = "#FFFFFF",
-                            text_color = "#000000")
-        motorcycleEntry = CTkEntry(motorcycleFrame,
-                                    corner_radius = 20,
-                                    border_color = "#FFFFFF",
-                                    fg_color = "#FFFFFF",
-                                    text_color = "#000000")
-        tricycleEntry = CTkEntry(tricycleFrame,
-                                    corner_radius = 20,
-                                    border_color = "#FFFFFF",
-                                    fg_color = "#FFFFFF",
-                                    text_color = "#000000")
-        vanEntry = CTkEntry(vanFrame,
-                                    corner_radius = 20,
-                                    border_color = "#FFFFFF",
-                                    fg_color = "#FFFFFF",
-                                    text_color = "#000000")
-        taxiEntry = CTkEntry(taxiFrame,
-                                    corner_radius = 20,
-                                    border_color = "#FFFFFF",
-                                    fg_color = "#FFFFFF",
-                                    text_color = "#000000")
-        mjeepneyEntry = CTkEntry(mJeepneyFrame,
-                                    corner_radius = 20,
-                                    border_color = "#FFFFFF",
-                                    fg_color = "#FFFFFF",
-                                    text_color = "#000000")
-        
-        
-        carEntry.pack(side = "left", padx = 10)
-        truckEntry.pack(side = "left", padx = 10)
-        jeepneyEntry.pack(side = "left", padx = 10)
-        
-        busEntry.pack(side = "left", padx = 10)
-        motorcycleEntry.pack(side = "left", padx = 10)
-        tricycleEntry.pack(side = "left", padx = 10)
-        
-        vanEntry.pack(side = "left", padx = 10)
-        taxiEntry.pack(side = "left", padx = 10)
-        mjeepneyEntry.pack(side = "left", padx = 10)
-        
-        carlabel = CTkLabel(carFrame,
-                            text = "Car",
-                            text_color = "#FFFFFF",
-                            font = ('Montserrat', 15))
-        truckLabel = CTkLabel(truckFrame,
-                              text = "Truck",
-                              text_color = "#FFFFFF",
-                              font = ('Montserrat', 15))
-        jeepneyLabel = CTkLabel(jeepneyFrame,
-                                text = "Jeepney",
-                                text_color = "#FFFFFF",
-                                font = ('Montserrat', 15))
-        busLabel = CTkLabel(busFrame,
-                            text = "Bus",
-                            text_color = "#FFFFFF",
-                            font = ('Montserrat', 15))
-        motorcycleLabel = CTkLabel(motorcycleFrame,
-                                    text = "Motorbike",
-                                    text_color = "#FFFFFF",
-                                    font = ('Montserrat', 15))
-        tricycleLabel = CTkLabel(tricycleFrame,
-                                    text = "Tricycle",
-                                    text_color = "#FFFFFF",
-                                    font = ('Montserrat', 15))
-        vanlabel = CTkLabel(vanFrame,
-                                    text = "Van",
-                                    text_color = "#FFFFFF",
-                                    font = ('Montserrat', 15))
-        taxiLabel = CTkLabel(taxiFrame,
-                                    text = "Taxi",
-                                    text_color = "#FFFFFF",
-                                    font = ('Montserrat', 15))
-        mjeepneyLabel = CTkLabel(mJeepneyFrame,
-                                    text = "Modern Jeepney",
-                                    text_color = "#FFFFFF",
-                                    font = ('Montserrat', 15))
-        
-        changePricesStatusLabel = CTkLabel(allvehiclesFirstRowFrame, font = ('Monteserrat', 13, 'italic'), text = "Incorrect Username or Password", anchor = "w", text_color = "#1B2431")
-        changePricesStatusLabel.pack(padx=(20, 0), expand = True, fill = "x", side='right')
-
-        vehicleEntries = [carEntry, motorcycleEntry, jeepneyEntry, busEntry, tricycleEntry, vanEntry, truckEntry, taxiEntry, mjeepneyEntry]
-        changeSaveButton = CTkButton(allvehiclesThirdRowFrame,
-                                            text = "Save",
-                                            text_color = "#000000",
-                                            font = ('Montserrat', 15),
-                                            fg_color = "#48BFE3",
-                                            corner_radius = 15,
-                                            command=lambda: self.changePrices(changePricesStatusLabel, vehicleEntries),
-                                            border_color = "#48BFE3",
-                                            border_width = 2)
-
-
-        changeSaveButton.bind("<Enter>", lambda e: changeSaveButton.configure(text_color="#48BFE3", fg_color = "#1B2431", border_color = "#48BFE3")) 
-        changeSaveButton.bind("<Leave>", lambda e: changeSaveButton.configure(text_color="#1B2431", fg_color = "#48BFE3", border_color = "#48BFE3")) 
-        
-        carlabel.pack(side = "left")
-        truckLabel.pack(side = "left")
-        jeepneyLabel.pack(side = "left")
-        
-        busLabel.pack(side = "left")
-        motorcycleLabel.pack(side = "left")
-        tricycleLabel.pack(side = "left")
-        
-        vanlabel.pack(side = "left")
-        taxiLabel.pack(side = "left")
-        mjeepneyLabel.pack(side = "left")
-
-        changeSaveButton.pack(padx = 10, side = "right")
-        self.loadPrices(vehicleEntries)
-        # End of Congestion Price Frame
-        
-        # Change Theme Frame
-        changeThemeFrame = tk.Frame(mainFrameRight, bg = "#1B2431")
-        changeThemeFrame.pack(fill = "both", side = "top", padx = 10, pady = (20, 20))
-        
-        changeThemeLabel = CTkLabel(changeThemeFrame, text = "Change Theme", text_color = "#FFFFFF", font = ('Montserrat', 15), anchor = "w")
-        changeThemeLabel.pack(fill = "x", padx = 5)
-        
-        lineSeparator = tk.Frame(changeThemeFrame, height = 2, bg = "#FFFFFF")
-        lineSeparator.pack(fill = "x", side = "top", pady = 5)
-        
-        changeThemeForm = tk.Frame(changeThemeFrame, bg = "#1B2431")
-        changeThemeForm.pack(fill = "both", side = "top", pady = 5, expand = True, padx = 20)
-        
-        self.themeVar = IntVar(value = 2)
-        lightRadioButton = CTkRadioButton(changeThemeForm,
-                                            text = "Light",
-                                            text_color = "#FFFFFF",
-                                            value = 1,
-                                            variable = self.themeVar,
-                                            command = self.themeRadioButton_callback,
-                                            font = ('Montserrat', 13),
-                                            border_color = "#FFFFFF",
-                                            hover_color = "#FFFFFF",
-                                            fg_color = "#80FFDB",
-                                            border_width_checked = 10,
-                                            border_width_unchecked = 2,
-                                            width = 4,
-                                            height = 4)
-        darkRadioButton = CTkRadioButton(changeThemeForm,
-                                            text = "Dark",
-                                            text_color = "#FFFFFF",
-                                            value = 2,
-                                            variable = self.themeVar,
-                                            command = self.themeRadioButton_callback,
-                                            font = ('Montserrat', 13),
-                                            border_color = "#FFFFFF",
-                                            hover_color = "#FFFFFF",
-                                            fg_color = "#80FFDB",
-                                            border_width_checked = 10,
-                                            border_width_unchecked = 2,
-                                            width = 4,
-                                            height = 4)
-        defaultRadioButton = CTkRadioButton(changeThemeForm,
-                                            text = "System Default",
-                                            text_color = "#FFFFFF",
-                                            value = 3,
-                                            variable = self.themeVar,
-                                            command = self.themeRadioButton_callback,
-                                            font = ('Montserrat', 13),
-                                            border_color = "#FFFFFF",
-                                            hover_color = "#FFFFFF",
-                                            fg_color = "#80FFDB",
-                                            border_width_checked = 10,
-                                            border_width_unchecked = 2,
-                                            width = 4,
-                                            height = 4)
-        
-        lightRadioButton.pack(side = "left", pady = 10)
-        darkRadioButton.pack(side = "left", padx = 50, pady = 10)
-        defaultRadioButton.pack(side = "left", pady = 10)
-        # End of Change Theme Frame
-        
-        # Change Password Frame
-        changePasswordFrame = tk.Frame(mainFrameRight, bg = "#1B2431")
-        changePasswordFrame.pack(fill = "both", side = "top", padx = 10)
-        
-        changePasswordLabel = CTkLabel(changePasswordFrame, text = "Change Password", text_color = "#FFFFFF", font = ('Montserrat', 15), anchor = "w")
-        changePasswordLabel.pack(fill = "x", padx = 5)
-        
-        lineSeparator = tk.Frame(changePasswordFrame, height = 2, bg = "#FFFFFF")
-        lineSeparator.pack(fill = "x", side = "top", pady = 5)
-        
-        changePasswordEntryFrame = tk.Frame(changePasswordFrame, bg = "#1B2431")
-        changePasswordEntryFrame.pack(expand = False, fill = "x", padx = 10)
-        
-        currentPasswordEntry = CTkEntry(changePasswordEntryFrame,
-                                            placeholder_text = "Old Password",
-                                            text_color = "#252422",
-                                            show = "*",
-                                            font = ('Montserrat', 15),
-                                            width = 200,
-                                            fg_color = "#FFFFFF",
-                                            corner_radius = 15,
-                                            border_color = "#FFFFFF")
-        
-        newPasswordEntry = CTkEntry(changePasswordEntryFrame,
-                                            placeholder_text = "New Password",
-                                            text_color = "#252422",
-                                            show = "*",
-                                            font = ('Montserrat', 15),
-                                            width = 200,
-                                            fg_color = "#FFFFFF",
-                                            corner_radius = 15,
-                                            border_color = "#FFFFFF")
-        
-        confirmPasswordEntry = CTkEntry(changePasswordEntryFrame,
-                                            placeholder_text = "Confirm Password",
-                                            text_color = "#252422",
-                                            show = "*",
-                                            font = ('Montserrat', 15),
-                                            width = 200,
-                                            fg_color = "#FFFFFF",
-                                            corner_radius = 15,
-                                            border_color = "#FFFFFF")
-        
-        changePasswordStatusLabel = CTkLabel(changePasswordEntryFrame, font = ('Monteserrat', 13, 'italic'), text = "Incorrect Username or Password", anchor = "w", text_color = "#1B2431")
-        
-        confirmButton = CTkButton(changePasswordEntryFrame,
-                                            text = "Save",
-                                            text_color = "#000000",
-                                            font = ('Montserrat', 15),
-                                            fg_color = "#48BFE3",
-                                            corner_radius = 15,
-                                            command = lambda: self.passwordChangeSaveButton_callback(changePasswordStatusLabel, currentPasswordEntry, newPasswordEntry, confirmPasswordEntry),
-                                            border_color = "#48BFE3",
-                                            border_width = 2)
-
-
-        confirmButton.bind("<Enter>", lambda event: confirmButton.configure(text_color="#48BFE3", fg_color = "#1B2431", border_color = "#48BFE3")) 
-        confirmButton.bind("<Leave>", lambda event: confirmButton.configure(text_color="#1B2431", fg_color = "#48BFE3", border_color = "#48BFE3"))  
-        
-        changePasswordStatusLabel.pack(padx=10, pady = 10, expand = True, fill = "x")
-        currentPasswordEntry.pack(padx = (10, 40), pady = 10, side = "left")
-        newPasswordEntry.pack(padx = 10, pady = 10, side = "left")
-        confirmPasswordEntry.pack(padx = 10, pady = 10, side = "left")
-        confirmButton.pack(padx = 10, pady = 10, side = "right")
-        # End of Change Password Frame
-        # End of Right Side of the Panel
-        
-        # Bottom Frame for navigation buttons
-        bottomFrame = tk.Frame(self, bg = "#090E18")
-        bottomFrame.pack(fill = "x", side = "top", padx = 20, pady = 20)
-        
-        # Apply Button, function placeholder is print. For the assignee, update the "command"
-        applyButton = CTkButton(bottomFrame,
-                                    text = 'Apply Now', 
-                                    command = self.applyButton_callback,
-                                    font = ('Montserrat', 15, "bold"),
-                                    border_width = 2,
-                                    corner_radius = 15,
-                                    border_color = '#5E60CE',
-                                    text_color = '#090E18',
-                                    fg_color = '#5E60CE',
-                                    height = 30,
-                                    width = 130)
-        
-        applyButton.bind("<Enter>", lambda event: applyButton.configure(text_color="#5E60CE", fg_color = "#090E18")) 
-        applyButton.bind("<Leave>", lambda event: applyButton.configure(text_color="#090E18", fg_color = "#5E60CE")) 
-        
-        # Scheduled Apply Buttom, function placeholder is print. For the assignee, update the "command"
-        scheduledApplyButton = CTkButton(bottomFrame,
-                                text = 'Scheduled Apply',
-                                command = self.scheduleApplyButton_callback, 
-                                font = ('Montserrat', 12),
-                                border_width = 2,
-                                corner_radius = 15,
-                                border_color = '#5E60CE',
-                                text_color = '#5E60CE',
-                                fg_color = '#090E18',
-                                height = 30,
-                                width = 140)
-        
-        scheduledApplyButton.bind("<Enter>", lambda event: scheduledApplyButton.configure(text_color="#090E18", fg_color = "#5E60CE")) 
-        scheduledApplyButton.bind("<Leave>", lambda event: scheduledApplyButton.configure(text_color="#5E60CE", fg_color = "#090E18")) 
-
-        # Navigate back to Dashboard
-        dashboardButton = CTkButton(bottomFrame,
+            configRightContent = tk.Frame(configContentFrame, bg = '#1B2431')
+            configRightContent.pack(side = 'right', expand = False, fill = 'both', padx = 10)
+            
+            configRightFirst = tk.Frame(configRightContent, bg = '#1B2431')
+            configRightFirst.pack(side = 'top', fill = 'x')
+            
+            selectDateButton = CTkButton(configRightFirst,
+                                     text = 'Select Date & Time',
+                                     command = self.selectDate_callback,
+                                     text_color = "#000000",
+                                     font = ('Montserrat', 12),
+                                     fg_color = "#FFFFFF",
+                                     corner_radius = 15,
+                                     border_color = "#FFFFFF",
+                                     border_width = 2)
+            selectDateButton.bind("<Enter>", lambda event: selectDateButton.configure(text_color="#FFFFFF", fg_color = "#1B2431", border_color = "#FFFFFF")) 
+            selectDateButton.bind("<Leave>", lambda event: selectDateButton.configure(text_color="#000000", fg_color = "#FFFFFF", border_color = "#FFFFFF"))  
+            selectDateButton.pack(expand = False, side = 'right', padx = 10, pady = 10)
+            
+            self.timeEntry = CTkEntry(configRightFirst, placeholder_text = 'HH:MM', corner_radius = 15, border_color = '#FFFFFF', fg_color = '#FFFFFF', text_color = '#000000', font = ('Montserrat', 12))
+            self.timeEntry.pack(side = 'right', padx = 10, pady = 10)
+            
+            self.dateEntry = CTkEntry(configRightFirst, placeholder_text = 'DD/MM/YYYY', corner_radius = 15, border_color = '#FFFFFF', fg_color = '#FFFFFF', text_color = '#000000', font = ('Montserrat', 12))
+            self.dateEntry.pack(side = 'right', padx = 10, pady = 10)
+            
+            startingLabel = CTkLabel(configRightFirst, text = 'Starting', font = ('Montserrat', 12), text_color = '#FFFFFF')
+            startingLabel.pack(side = 'right', padx = 10, pady = 10)
+            
+            configRightSecond = tk.Frame(configRightContent, bg = '#1B2431')
+            configRightSecond.pack(side = 'top', fill = 'x')
+            
+            infoLabel = CTkLabel(configRightSecond, text = 'Leave blank if going to apply immediately', font = ('Montserrat', 10, 'italic'), text_color = '#FFFFFF')
+            infoLabel.pack(side = 'top', fill = 'x', expand = True)
+            
+            applicationFrame = tk.Frame(mainContentFrame, bg = '#090E18')
+            applicationFrame.pack(expand = False, fill = 'x', pady = 10)
+            
+            addUpdateButton = CTkButton(applicationFrame,
+                                        text = 'Add',
+                                        font = ('Montserrat', 12),
+                                        text_color = '#000000',
+                                        fg_color = '#FFFFFF',
+                                        border_color = '#FFFFFF',
+                                        border_width = 2,
+                                        corner_radius = 15,
+                                        command = self.addUpdateButton_callback)
+            addUpdateButton.bind("<Enter>", lambda event: addUpdateButton.configure(text_color="#FFFFFF", fg_color = "#090E18", border_color = "#FFFFFF")) 
+            addUpdateButton.bind("<Leave>", lambda event: addUpdateButton.configure(text_color="#000000", fg_color = "#FFFFFF", border_color = "#FFFFFF"))  
+            addUpdateButton.pack(expand = False, side = 'right', padx = 10, pady = 10)
+            
+            cancelButton = CTkButton(applicationFrame,
+                                        text = 'Cancel',
+                                        font = ('Montserrat', 12),
+                                        text_color = '#000000',
+                                        fg_color = '#FFFFFF',
+                                        border_color = '#FFFFFF',
+                                        border_width = 2,
+                                        corner_radius = 15,
+                                        command = self.cancelButton_callback)
+            cancelButton.bind("<Enter>", lambda event: cancelButton.configure(text_color="#FFFFFF", fg_color = "#090E18", border_color = "#FFFFFF")) 
+            cancelButton.bind("<Leave>", lambda event: cancelButton.configure(text_color="#000000", fg_color = "#FFFFFF", border_color = "#FFFFFF"))  
+            cancelButton.pack(expand = False, side = 'right', padx = 10, pady = 10)
+            # End of Main Content Frame
+            
+            # Start of Navigation Frame (Bottom)
+            navigationFrame = tk.Frame(self, bg = '#090E18')
+            navigationFrame.pack(fill = 'both', side = 'bottom')
+            
+            dashboardButton = CTkButton(navigationFrame,
                                 text = 'Dashboard',
                                 command = lambda: parent.show_frame(parent.dashboardFrame), 
                                 font = ('Montserrat', 15),
@@ -714,27 +605,35 @@ class ConfigPage(tk.Frame):
                                 height = 30,
                                 width = 140)
         
-        dashboardButton.bind("<Enter>", lambda event: dashboardButton.configure(text_color="#090E18", fg_color = "#5E60CE")) 
-        dashboardButton.bind("<Leave>", lambda event: dashboardButton.configure(text_color="#5E60CE", fg_color = "#090E18")) 
+            dashboardButton.bind("<Enter>", lambda event: dashboardButton.configure(text_color="#090E18", fg_color = "#5E60CE")) 
+            dashboardButton.bind("<Leave>", lambda event: dashboardButton.configure(text_color="#5E60CE", fg_color = "#090E18")) 
 
-        # Logout of the account. For the Assignee, make sure to dispose necessary information before logging out.
-        logoutButton = CTkButton(bottomFrame,
-                                text = 'Logout',
-                                command = lambda: parent.show_frame(parent.loginFrame), 
-                                font = ('Montserrat', 15, "bold"),
-                                border_width = 2,
-                                corner_radius = 15,
-                                border_color = '#C1121F',
-                                text_color = '#090E18',
-                                fg_color = '#C1121F',
-                                height = 30,
-                                width = 100)
+            # Logout of the account. For the Assignee, make sure to dispose necessary information before logging out.
+            logoutButton = CTkButton(navigationFrame,
+                                    text = 'Logout',
+                                    command = lambda: parent.show_frame(parent.loginFrame), 
+                                    font = ('Montserrat', 15, "bold"),
+                                    border_width = 2,
+                                    corner_radius = 15,
+                                    border_color = '#C1121F',
+                                    text_color = '#090E18',
+                                    fg_color = '#C1121F',
+                                    height = 30,
+                                    width = 100)
 
-        logoutButton.bind("<Enter>", lambda event: logoutButton.configure(text_color="#C1121F", fg_color = "#090E18")) 
-        logoutButton.bind("<Leave>", lambda event: logoutButton.configure(text_color="#090E18", fg_color = "#C1121F")) 
-        
-        applyButton.pack(side = 'right', padx = 10, pady = 10)
-        scheduledApplyButton.pack(side = 'right', padx = 10, pady = 10)
-        dashboardButton.pack(side = 'right', padx = 10, pady = 10)
-        logoutButton.pack(side = 'right', padx = 10, pady = 10)
-        # End of Bottom Frame for navigation Buttons
+            logoutButton.bind("<Enter>", lambda event: logoutButton.configure(text_color="#C1121F", fg_color = "#090E18")) 
+            logoutButton.bind("<Leave>", lambda event: logoutButton.configure(text_color="#090E18", fg_color = "#C1121F")) 
+            
+            dashboardButton.pack(side = 'right', padx = 10, pady = 10)
+            logoutButton.pack(side = 'right', padx = 10, pady = 10)
+            
+            # Config Form
+            self.fromComboBox.set('')
+            self.toComboBox.set('')
+            self.everyComboBox.set('')
+            
+            # Detectables Form
+            self.truckComboBox.set('')
+            self.busComboBox.set('')
+            self.motorcycleComboBox.set('')
+            self.carComboBox.set('')
