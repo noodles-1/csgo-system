@@ -69,8 +69,9 @@ class DetectedLicensePlate(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     userId: Mapped[int] = mapped_column(ForeignKey('user.id'))
     cameraId: Mapped[int] = mapped_column(ForeignKey('camera.id'))
-    priceId: Mapped[int] = mapped_column(ForeignKey('price.id'))
     licenseNumber: Mapped[str] = mapped_column(String(14))
+    vehicleType: Mapped[str]
+    price: Mapped[float]
     date: Mapped[Date] = mapped_column(Date())
     time: Mapped[Time] = mapped_column(Time(timezone=True))
     image: Mapped[str]

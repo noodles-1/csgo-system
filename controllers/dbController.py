@@ -18,6 +18,7 @@ from sqlalchemy import select
 from sqlalchemy import update
 from sqlalchemy import or_
 from sqlalchemy import and_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 class DBController:
@@ -410,7 +411,7 @@ class DBController:
         return response
     
     @staticmethod
-    def addLicensePlate(userId: int, cameraId: int, priceId: int, licenseNumber: str) -> Response:
+    def addLicensePlate(userId: int, cameraId: int, licenseNumber: str, vehicleType: str, price: float, imageUrl: str, date=None, time=None) -> Response:
         '''
         Adds a recognized license plate number from the object detection module to the database, 
         accompanied with the user ID, camera ID, vehicle type, and the time and date when the 
@@ -436,10 +437,12 @@ class DBController:
                     license = DetectedLicensePlate(
                         userId=userId,
                         cameraId=cameraId,
-                        priceId=priceId,
                         licenseNumber=licenseNumber,
-                        date=datetime.now(),
-                        time=datetime.now().time()
+                        vehicleType=vehicleType,
+                        price=price,
+                        date=date, # datetime.now()
+                        time=time, # datetime.now().time()
+                        image=imageUrl
                     )
                     session.add(license)
                     session.commit()
@@ -474,6 +477,51 @@ class DBController:
                     session.delete(result)
                     session.commit()
                     response.ok = True
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+
+        return response
+    
+    @staticmethod
+    def getFilteredLicensePlates(vehicleType=None, date=None, hourFrom=None, hourTo=None):
+        response = DBController.Response()
+        
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(DetectedLicensePlate)
+                if vehicleType:
+                    stmt = stmt.where(DetectedLicensePlate.vehicleType == vehicleType)
+                if date and hourFrom and hourTo:
+                    stmt = stmt.where(and_(
+                        DetectedLicensePlate.date == date,
+                        DetectedLicensePlate.time >= hourFrom,
+                        DetectedLicensePlate.time <= hourTo
+                    ))
+                stmt = stmt.order_by(desc(DetectedLicensePlate.date)).order_by(desc(DetectedLicensePlate.time))
+                results = session.execute(stmt).all()
+                response.ok = True
+                response.data = results
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+
+        return response
+    
+    @staticmethod
+    def editLicensePlate(licensePlate: str, newLicensePlate: str, vehicleType: str, price: float) -> Response:
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                stmt = update(DetectedLicensePlate).where(DetectedLicensePlate.licenseNumber == licensePlate).values(
+                    licenseNumber=newLicensePlate,
+                    vehicleType=vehicleType,
+                    price=price
+                )
+                session.execute(stmt)
+                session.commit()
+                response.ok = True
         except Exception as e:
             response.ok = False
             response.messages['error'] = repr(e)

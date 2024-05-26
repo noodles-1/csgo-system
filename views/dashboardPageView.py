@@ -19,6 +19,20 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 from controllers.controller import AIController
 from controllers.dbController import DBController
+from controllers.s3controller import S3Controller
+
+classnames = [
+    "person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck", "boat",
+    "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat",
+    "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella",
+    "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite", "baseball bat",
+    "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup",
+    "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli",
+    "carrot", "hot dog", "pizza", "donut", "cake", "chair", "sofa", "pottedplant", "bed",
+    "diningtable", "toilet", "tvmonitor", "laptop", "mouse", "remote", "keyboard", "cell phone",
+    "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors",
+    "teddy bear", "hair drier", "toothbrush"
+]
 
 class DashboardPage(tk.Frame):
     # Close Application
@@ -33,6 +47,8 @@ class DashboardPage(tk.Frame):
         def start(self, cap, placeholder_label):
             if AIController.vehicle_detection_model.predictor:
                 AIController.vehicle_detection_model.predictor.trackers[0].reset()
+
+            detected_ids = set()
                 
             def show_frame():
                 success, frame = cap.read()
@@ -41,6 +57,22 @@ class DashboardPage(tk.Frame):
                     results = AIController.detect_vehicle(frame)
                     annotated_frame = results[0].plot()
 
+                    for result in results:
+                        for boxes in result.boxes:
+                            if boxes.id:
+                                id = int(boxes.id.item())
+                                vehicle_id = int(boxes.cls.item())
+                                if id not in detected_ids:
+                                    detected_ids.add(id)
+                                    x1, y1, x2, y2 = boxes.xyxy[0]
+                                    cropped_vehicle = frame[int(y1.item()):int(y2.item()), int(x1.item()):int(x2.item())]
+                                    
+                                    lp_result = AIController.detect_license_plate(frame=cropped_vehicle)
+                                    if lp_result[0].boxes:
+                                        x1, y1, x2, y2 = lp_result[0].boxes[0].xyxy[0]
+                                        cropped_lp = cropped_vehicle[int(y1.item()):int(y2.item()), int(x1.item()):int(x2.item())]
+                                        cv2.imwrite(f'test_lp/{classnames[vehicle_id]}_{id}.jpg', cropped_lp)
+
                     frame_rgb = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
                     img = Image.fromarray(frame_rgb)
                     img = img.resize((720, 540))
@@ -48,7 +80,7 @@ class DashboardPage(tk.Frame):
 
                     if cont.cameraEnabled:
                         placeholder_label.configure(image=img_tk, text='')
-                    placeholder_label.after(2 if cont.cameraEnabled else 500, show_frame)
+                    placeholder_label.after(4 if cont.cameraEnabled else 800, show_frame)
                 else:
                     cap.release()
                 
@@ -62,9 +94,9 @@ class DashboardPage(tk.Frame):
         result = DBController.getCamera(name=cameraName)
         ip_addr = result.id
         cameraUrl = f'rtsp://{ip_addr}:554'
-        video_path = "https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/Back+to+school+traffic+in+Metro+Manila.mp4"
+        video_path = "https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/IMG_9613_1.mp4"
 
-        self.cap = cv2.VideoCapture(cameraUrl)
+        self.cap = cv2.VideoCapture(video_path)
         DashboardPage.StartCamera().start(self.cap, self.placeholder_label)
 
     def __init__(self, parent):

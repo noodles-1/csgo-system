@@ -28,8 +28,8 @@ from ultralytics import YOLO
 from cnocr import CnOcr
 
 class AIController:
-    vehicleClasses = set([i for i in range(9)])
-    vehicle_detection_model = YOLO('trained_models/vehicle_detection/trained_yolov8n_3.pt')
+    vehicleClasses = set([2, 3, 5, 7])
+    vehicle_detection_model = YOLO('yolov8n.pt')
     lp_detection_model = YOLO('trained_models/lp_detection/trained_yolov8n_3.pt')
     cnocr = CnOcr(det_model_name='en_PP-OCRv3_det', rec_model_name='en_PP-OCRv3')
 

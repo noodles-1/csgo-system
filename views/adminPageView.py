@@ -18,53 +18,6 @@ from PIL import Image
 from controllers.dbController import DBController
 from controllers.rtspController import RTSPController
 
-# These are just samples for the database
-licensePlates = []
-vehicleTypes = {
-    'Car': 50,
-    'Taxi': 60,
-    'Motorcycle': 30,
-    'Bus': 100,
-    'Tricycle': 40,
-    'Jeepney': 70,
-    'Modern Jeepney': 80,
-    'Van': 90,
-    'Truck': 120
-}
-cameraID = ['Camera 1', 'Camera 2', 'Camera 3', 'Camera 4']
-dates = []
-times = []
-data = []
-
-def generate_license_plate():
-    letters = ''.join(random.choices(string.ascii_uppercase, k=3))
-    digits = ''.join(random.choices(string.digits, k=4))
-    license_plate = letters + digits
-    return license_plate
-
-def generate_random_past_date():
-    today = datetime.date.today()
-    random_days = random.randint(1, 365)
-    random_date = today - datetime.timedelta(days=random_days)
-    return random_date
-
-def generate_random_time():
-    random_hour = random.randint(0, 23)
-    random_minute = random.randint(0, 59)
-    return f"{random_hour:02d}:{random_minute:02d}"
-
-# Generate 100 Data Entries
-for _ in range(100):
-    license_plate = generate_license_plate()
-    vehicle_type = random.choice(list(vehicleTypes.keys()))
-    camera_id = random.choice(cameraID)
-    random_date = generate_random_past_date()
-    random_time = generate_random_time()
-    price = vehicleTypes[vehicle_type]
-
-    data.append((license_plate, vehicle_type, camera_id, random_time, random_date.strftime("%Y-%m-%d"), price))
-# -------
-
 class AdminPage(tk.Frame):
     # Close Application
     def closeApplication(self):
@@ -162,7 +115,7 @@ class AdminPage(tk.Frame):
         response = DBController.editUser(user, username, email, firstName, lastName, password, isAdmin, canChangeDetect, canChangePrice, canEditHours, canDownload)
 
         if response.ok:
-            self.editUserStatusLabel.configure(text='User successfully updated.', text_color='#25be8e')
+            self.editUserStatusLabel.configure(text='User successfully d.', text_color='#25be8e')
             self.after(3000, lambda: self.editUserStatusLabel.configure(text_color='#1b2431'))
             users = DBController.getUsers()
             self.selectUserCombo.configure(values=[user[0].username for user in users.data])
@@ -191,9 +144,6 @@ class AdminPage(tk.Frame):
         else:
             self.editUserStatusLabel.configure(text=response.messages['error'], text_color="#d62828")
             self.after(2000, lambda: self.editUserStatusLabel.configure(text_color="#1B2431"))
-            
-    def vehicleTypeCombo_callback(self, choice):
-        print("Filter By: ", choice)
     
     # Apply admin restriction to user
     def adminRadioButton_callback(self):
@@ -230,7 +180,7 @@ class AdminPage(tk.Frame):
         # Calendar for date selection
         calendarFrame = tk.Frame(top, bg="#1B2431")
         calendarFrame.pack(padx=10, pady=(10, 2), ipadx=5, ipady=5, expand=True, fill="both")
-        cal = Calendar(calendarFrame, selectmode='day', date_pattern='dd/mm/y', foreground="#FFFFFF", background="#1B2431", bordercolor="#1B2431")
+        cal = Calendar(calendarFrame, selectmode='day', date_pattern='mm/dd/y', foreground="#FFFFFF", background="#1B2431", bordercolor="#1B2431")
         cal.pack(padx=5, pady=5)
 
         # Frame for time selection
@@ -247,9 +197,9 @@ class AdminPage(tk.Frame):
             global selected_date, selected_hour_from, selected_hour_to
             
             self.selected_date = cal.get_date()
-            selected_hour = spinbox_hours.get()
-            self.selected_hour_from = f"{selected_hour}:00"
-            self.selected_hour_to = f"{selected_hour}:59"
+            self.selected_hour = spinbox_hours.get()
+            self.selected_hour_from = f"{self.selected_hour}:00"
+            self.selected_hour_to = f"{self.selected_hour}:59"
             
             #tk.messagebox.showinfo("Selected Date/Time", f"Date: {self.selected_date}\nTime: {self.selected_hour_from} - {self.selected_hour_to}")
             top.destroy()
@@ -268,7 +218,41 @@ class AdminPage(tk.Frame):
         self.selectedDateTimeLabel.configure(text = "Select Date-Time")
         
     def goFilter_callback(self):
-        pass
+        vehicleType = self.vehicleTypeComboVar.get()
+        selectedDate = self.selected_date
+        hourFrom = self.selected_hour_from
+        hourTo = self.selected_hour_to
+
+        if selectedDate and len(hourFrom) <= 3:
+            self.filterStatusLabel.configure(text='Invalid hours.', text_color="#d62828")
+            self.after(2000, lambda: self.filterStatusLabel.configure(text_color="#1B2431"))
+            return
+        
+        for row in self.databaseTable.get_children():
+            self.databaseTable.delete(row)
+
+        date = datetime.datetime.strptime(selectedDate, '%m/%d/%Y').date() if selectedDate else None
+        hourFrom = datetime.datetime.strptime(hourFrom, '%H:%M').time() if selectedDate else None
+        hourTo = datetime.datetime.strptime(hourTo, '%H:%M').time() if selectedDate else None
+
+        self.prevVehicleType = vehicleType
+        self.prevDate = date
+        self.prevHourFrom = hourFrom
+        self.prevHourTo = hourTo
+
+        filterResponse = DBController.getFilteredLicensePlates(vehicleType=vehicleType.lower(), date=date, hourFrom=hourFrom, hourTo=hourTo)
+        
+        if filterResponse.ok:
+            self.filterStatusLabel.configure(text='Filter applied.', text_color="#25be8e")
+            self.after(3000, lambda: self.filterStatusLabel.configure(text_color="#1B2431"))
+
+            for row in filterResponse.data:
+                self.databaseTable.insert('', 'end', values=(row[0].licenseNumber, row[0].vehicleType, row[0].cameraId, row[0].time, row[0].date, row[0].price))
+        else:
+            self.filterStatusLabel.configure(text=filterResponse.messages['error'], text_color="#d62828")
+            self.after(2000, lambda: self.filterStatusLabel.configure(text_color="#1B2431"))
+
+        self.clearFilter_callback()
     
     def insertDataToTable(self, inputLicensePlate, inputVehicleType, inputCameraID, inputTime, inputDate, inputPrice):
         self.databaseTable.insert(parent = '', index = 0, values = (inputLicensePlate, inputVehicleType, inputCameraID, inputTime, inputDate, inputPrice))
@@ -301,6 +285,7 @@ class AdminPage(tk.Frame):
         for item in selected_items:
             values = self.databaseTable.item(item)['values']
             if len(values) >= 6:
+                self.licensePlate = values[0]
                 self.licensePlateEntry.insert(0, values[0])
                 self.vehicleTypeEntry.insert(0, values[1])
                 self.priceEntry.insert(0, values[5])
@@ -415,17 +400,54 @@ class AdminPage(tk.Frame):
         self.savedCameraID.delete(0, 'end')
     
     def updateTable_callback(self):
-        inputLicensePlate = self.licensePlateEntry.get()
-        inputVehicleType = self.vehicleTypeEntry.get()
-        inputPrice = self.priceEntry.get()
+        def isPositiveFloat(s: str) -> bool:
+            try:
+                n = float(s)
+                return n >= 0
+            except:
+                return False
+
+        licensePlate = self.licensePlate
+        newLicensePlate = self.licensePlateEntry.get()
+        newVehicleType = self.vehicleTypeEntry.get()
+        newPrice = self.priceEntry.get()
+
+        if not newLicensePlate or not newVehicleType or not newPrice:
+            self.updateStatusLabel.configure(text='No camera chosen.', text_color='#d62828')
+            self.after(2000, lambda: self.updateStatusLabel.configure(text_color='#1b2431'))
+            return
         
-        self.licensePlateEntry.delete(0, tk.END)
-        self.vehicleTypeEntry.delete(0, tk.END)
-        self.priceEntry.delete(0, tk.END)
+        if newVehicleType.lower() not in {'car', 'motorcycle', 'jeepney', 'bus', 'tricycle', 'van', 'truck', 'taxi', 'modern jeepney'}:
+            self.updateStatusLabel.configure(text='Invalid vehicle type.', text_color='#d62828')
+            self.after(2000, lambda: self.updateStatusLabel.configure(text_color='#1b2431'))
+            return
         
-        '''
-            call update row
-        '''
+        if not isPositiveFloat(newPrice):
+            self.updateStatusLabel.configure(text='Invalid price.', text_color='#d62828')
+            self.after(2000, lambda: self.updateStatusLabel.configure(text_color='#1b2431'))
+            return
+        
+        response = DBController.editLicensePlate(licensePlate, newLicensePlate, newVehicleType, newPrice)
+
+        if response.ok:
+            self.updateStatusLabel.configure(text='Successfully updated.', text_color='#25be8e')
+            self.after(3000, lambda: self.updateStatusLabel.configure(text_color='#1b2431'))
+
+            for row in self.databaseTable.get_children():
+                self.databaseTable.delete(row)
+
+            filterResponse = DBController.getFilteredLicensePlates(vehicleType=self.prevVehicleType.lower(), date=self.prevDate, hourFrom=self.prevHourFrom, hourTo=self.prevHourTo)
+            
+            if filterResponse.ok:
+                for row in filterResponse.data:
+                    self.databaseTable.insert('', 'end', values=(row[0].licenseNumber, row[0].vehicleType, row[0].cameraId, row[0].time, row[0].date, row[0].price))
+        else:
+            self.updateStatusLabel.configure(text=response.messages['error'], text_color="#d62828")
+            self.after(2000, lambda: self.updateStatusLabel.configure(text_color="#1B2431"))
+
+        self.licensePlateEntry.delete(0, 'end')
+        self.vehicleTypeEntry.delete(0, 'end')
+        self.priceEntry.delete(0, 'end')
     
     def setCameraDisplay(self, changeCameraDisplay, cap, placeholder_label):
         self.changeCameraDisplay = changeCameraDisplay
@@ -542,7 +564,6 @@ class AdminPage(tk.Frame):
         self.vehicleTypeComboVar = StringVar()
         self.vehicleTypeComboBox = CTkComboBox(upperLowerLeft,
                                           values = ['', 'Car', 'Taxi', 'Jeepney', 'Modern Jeepney', 'Motorcycle', 'Truck', 'Bus', 'Taxi', 'Tricycle'],
-                                          command = self.vehicleTypeCombo_callback,
                                           variable = self.vehicleTypeComboVar,
                                           fg_color = "#FFFFFF",
                                           border_color = "#FFFFFF",
@@ -550,7 +571,8 @@ class AdminPage(tk.Frame):
                                           button_color = "#FFFFFF",
                                           dropdown_fg_color = "#FFFFFF",
                                           dropdown_text_color = "#000000",
-                                          dropdown_font = ('Montserrat', 12))
+                                          dropdown_font = ('Montserrat', 12),
+                                          state='readonly')
         # Date Time Picker
         dateTimeButton = CTkButton(upperLowerLeft,
                                    text = "Date and Time",
@@ -578,15 +600,20 @@ class AdminPage(tk.Frame):
                                       corner_radius = 5,
                                       command = self.clearFilter_callback)
         
+        filterStatus = tk.Frame(upperLowerLeft, bg="#1B2431")
+        self.filterStatusLabel = CTkLabel(filterStatus, text='Invalid hours.', font = ('Monteserrat', 13, 'italic'), anchor = "w", text_color = "#1B2431")
+        
         lowerLowerLeft = tk.Frame(lowerLeftContent, bg = "#090E18")
         databaseFrame = tk.Frame(lowerLowerLeft, bg = "#090E18")
         self.databaseTable = ttk.Treeview(databaseFrame, columns = ('licensePlate', 'vehicleType', 'cameraID', 'time', 'date', 'price'), show = "headings", style = 'Custom.Treeview')
         
+        filterResponse = DBController.getFilteredLicensePlates()
+        if filterResponse.ok:
+            for row in filterResponse.data:
+                self.databaseTable.insert('', 'end', values=(row[0].licenseNumber, row[0].vehicleType, row[0].cameraId, row[0].time, row[0].date, row[0].price))
+
         self.databaseTable.bind('<<TreeviewSelect>>', self.selectDataFromTable)
         self.databaseTable.bind('<Delete>', self.deleteDataFromTable)
-        
-        for entry in data:
-            self.databaseTable.insert('', 'end', values=entry)
         
         self.databaseTable.tag_configure('even', background='#2A2D2E', foreground='#FFFFFF')
         self.databaseTable.tag_configure('odd', background='#343638', foreground='#FFFFFF')
@@ -627,7 +654,10 @@ class AdminPage(tk.Frame):
         self.priceEntry = CTkEntry(priceHandlerFrame, text_color = "#000000", fg_color = "#FFFFFF", corner_radius = 5, font = ('Montserrat', 12))
         
         self.updateTableButton = CTkButton(databaseHandlerRow, fg_color = "#FFFFFF", text = "Update", font = ('Montserrat', 12, 'bold'), corner_radius = 5, text_color = "#000000", command = self.updateTable_callback)
-        # End of Contents of Left Content Frame
+        # End of Contents of Left Content 
+        
+        updateStatus = tk.Frame(databaseHandlerRow, bg = "#1B2431")
+        self.updateStatusLabel = CTkLabel(updateStatus, text='Data successfully updated.', font = ('Monteserrat', 13, 'italic'), anchor = "w", text_color = "#1B2431")
         
         rightContentFrame = CTkFrame(contentFrame, fg_color = "#1B2431", corner_radius = 5)
         # Contents of Right Content Frame
@@ -812,6 +842,10 @@ class AdminPage(tk.Frame):
         # Go Button
         goFilterButton.pack(side = "right", padx = 5, pady = 5)
         clearFilterButton.pack(side = "right", padx = 5, pady = 5)
+
+        filterStatus.pack(side = "top", fill = "both", expand = True, padx = 10, pady = 2)
+        self.filterStatusLabel.pack(side='left', pady = 10, expand = True, fill = "x")
+
         lowerLowerLeft.pack(side = "top", expand = True, fill = "both", padx = 5, pady = 5)
         databaseFrame.pack(side = "top", expand = True, fill = "both", padx = 2, pady = 2)
         self.databaseTable.pack(expand=True, fill='both', padx=0, pady=0, side = "left")
@@ -834,6 +868,9 @@ class AdminPage(tk.Frame):
         self.priceEntry.pack(side = "top", fill = "x", expand = True)
         
         self.updateTableButton.pack(side = "left", fill = "x", expand = True)
+
+        updateStatus.pack(side = "top", fill = "both", expand = True, padx = 10, pady = 2)
+        self.updateStatusLabel.pack(side='left', pady = 10, expand = True, fill = "x")
         
         # End of Contents of Left Content Frame
         rightContentFrame.pack(side = "left", expand = False, fill = "both", padx = 10, pady = 10, ipadx = 10, ipady = 10)
