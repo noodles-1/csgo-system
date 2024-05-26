@@ -9,9 +9,10 @@ sys.path.append(parent)
 from customtkinter import *
 from loginPageView import LoginPage
 from dashboardPageView import DashboardPage
-from configPageView import ConfigPage
+#from configPageView import ConfigPage
 from analyticsPageView import AnalyticsPage
 from adminPageView import AdminPage
+from configPageView import ConfigPage
 from models.connect import Connection as connection
 
 # view.py is the starting point of the GUI. This is where each Pages are defined. (Parent Class)

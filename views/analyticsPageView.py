@@ -14,6 +14,8 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
+from controllers.controller import ReportGenerationController as rgctrl
+
 class AnalyticsPage(tk.Frame):
     # Close Application
     def closeApplication(self):
@@ -24,6 +26,15 @@ class AnalyticsPage(tk.Frame):
         self.master.iconify()
     
     def downloadCSV(self):
+        rgctrl.downloadAndProcessCSV()
+    
+    def detectedVehiclesLocation_callback(self):
+        pass
+    
+    def revenueGeneratedLocation_callback(self):
+        pass
+    
+    def busiestTimeLocation_callback(self):
         pass
     
     def __init__(self, parent):
@@ -34,12 +45,12 @@ class AnalyticsPage(tk.Frame):
         style.theme_use('forest-dark')
         
         # Close Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
-        closePhoto = CTkImage(light_image = Image.open("views/icons/icon_close_lightmode.png"),
+        closePhoto = CTkImage(light_image = Image.open("views/icons/icon_close_darkmode.png"),
                               dark_image = Image.open("views/icons/icon_close_darkmode.png"),
                               size = (20, 20))
 
         # Minimize Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
-        minimizePhoto = CTkImage(light_image = Image.open("views/icons/icon_minimize_lightmode.png"),
+        minimizePhoto = CTkImage(light_image = Image.open("views/icons/icon_minimize_darkmode.png"),
                               dark_image = Image.open("views/icons/icon_minimize_darkmode.png"),
                               size = (20, 20))
         
@@ -99,7 +110,7 @@ class AnalyticsPage(tk.Frame):
         
         # Number of Detected Vehicles Graph
         numberOfDetectedVehicleInnerFrame = CTkFrame(numberOfDetectedVehicleFrame, bg_color = "#1B2431", fg_color = "#1B2431")
-        numberOfDetectedVehicleInnerFrame.pack(padx = 50, pady = 30, side ="top", expand = True, fill = "both")
+        numberOfDetectedVehicleInnerFrame.pack(padx = 50, pady = 10, side ="top", expand = True, fill = "both")
         
         #Insert Graph Here
         detectedVehiclesFigure = Figure()
@@ -109,11 +120,23 @@ class AnalyticsPage(tk.Frame):
         detectedVehiclesCanvas = FigureCanvasTkAgg(detectedVehiclesFigure, numberOfDetectedVehicleInnerFrame)
         detectedVehiclesCanvas.draw()
         detectedVehiclesCanvas.get_tk_widget().pack(side = "top", expand = True, fill = "both")
+        
+        detectedVehiclesLocation = CTkComboBox(numberOfDetectedVehicleFrame,
+                                               values = ['Location 1', 'Location 2', 'Location 3'],
+                                               command = self.detectedVehiclesLocation_callback,
+                                               width = 200,
+                                               fg_color = '#e5e5e5',
+                                               dropdown_fg_color = '#e5e5e5',
+                                               text_color = '#000000',
+                                               dropdown_text_color = '#000000',
+                                               border_color = '#FFFFFF',
+                                               button_color = '#FFFFFF')
+        detectedVehiclesLocation.pack(side = 'top', pady = (0, 10))
         # End ofNumber of Detected Vehicles Graph
         
         # Number of Revenue Generated Graph
         revenueGeneratedInnerFrame = CTkFrame(revenueGeneratedFrame, bg_color = "#1B2431", fg_color = "#1B2431")
-        revenueGeneratedInnerFrame.pack(padx = 50, pady = 30, side ="top", expand = True, fill = "both")
+        revenueGeneratedInnerFrame.pack(padx = 50, pady = 10, side ="top", expand = True, fill = "both")
         
         #Insert Graph Here
         revenueGeneratedFigure = Figure(figsize = (3,3))
@@ -123,6 +146,18 @@ class AnalyticsPage(tk.Frame):
         revenueGeneratedCanvas = FigureCanvasTkAgg(revenueGeneratedFigure, revenueGeneratedInnerFrame)
         revenueGeneratedCanvas.draw()
         revenueGeneratedCanvas.get_tk_widget().pack(side = "top", expand= True, fill = "both")
+        
+        revenueGeneratedLocation = CTkComboBox(revenueGeneratedFrame,
+                                               values = ['Location 1', 'Location 2', 'Location 3'],
+                                               command = self.revenueGeneratedLocation_callback,
+                                               width = 200,
+                                               fg_color = '#e5e5e5',
+                                               dropdown_fg_color = '#e5e5e5',
+                                               text_color = '#000000',
+                                               dropdown_text_color = '#000000',
+                                               border_color = '#FFFFFF',
+                                               button_color = '#FFFFFF')
+        revenueGeneratedLocation.pack(side = 'top', pady = (0, 10))
         # End of Number of Revenue Generated Graph
         
         # System Performance details
@@ -153,16 +188,28 @@ class AnalyticsPage(tk.Frame):
         
         # Busiest Time Graph
         busiestTimeInnerFrame = CTkFrame(busiestTimeFrame, bg_color = "#1B2431", fg_color = "#1B2431")
-        busiestTimeInnerFrame.pack(padx = 50, pady = 30, side ="top", expand = True, fill = "both")
+        busiestTimeInnerFrame.pack(padx = 50, pady = 10, side ="top", expand = True, fill = "both")
         
         #Insert Graph Here
         busiestTimeFigure = Figure(figsize = (3, 3))
         ax = busiestTimeFigure.add_subplot()
-        ax.set_title("Revenue Generated")
+        ax.set_title("Busiest Time of the Day")
         
         busiestTimeCanvas = FigureCanvasTkAgg(busiestTimeFigure, busiestTimeInnerFrame)
         busiestTimeCanvas.draw()
         busiestTimeCanvas.get_tk_widget().pack(side = "top", expand = True, fill = "both")
+        
+        busiestTimeLocation = CTkComboBox(busiestTimeFrame,
+                                               values = ['Location 1', 'Location 2', 'Location 3'],
+                                               command = self.busiestTimeLocation_callback,
+                                               width = 200,
+                                               fg_color = '#e5e5e5',
+                                               dropdown_fg_color = '#e5e5e5',
+                                               text_color = '#000000',
+                                               dropdown_text_color = '#000000',
+                                               border_color = '#FFFFFF',
+                                               button_color = '#FFFFFF')
+        busiestTimeLocation.pack(side = 'top', pady = (0, 10))
         # End of Busiest Time Graph
         
         # Dashboard Button - Navigates to Dashboard
