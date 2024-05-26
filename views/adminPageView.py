@@ -470,12 +470,12 @@ class AdminPage(tk.Frame):
         self.selected_hour_to = ""
         
         # Close Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
-        closePhoto = CTkImage(light_image = Image.open("views/icons/icon_close_lightmode.png"),
+        closePhoto = CTkImage(light_image = Image.open("views/icons/icon_close_darkmode.png"),
                               dark_image = Image.open("views/icons/icon_close_darkmode.png"),
                               size = (20, 20))
 
         # Minimize Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
-        minimizePhoto = CTkImage(light_image = Image.open("views/icons/icon_minimize_lightmode.png"),
+        minimizePhoto = CTkImage(light_image = Image.open("views/icons/icon_minimize_darkmode.png"),
                               dark_image = Image.open("views/icons/icon_minimize_darkmode.png"),
                               size = (20, 20))
 
@@ -539,6 +539,7 @@ class AdminPage(tk.Frame):
         self.discoveredCamerasDrop = CTkComboBox(manageCamerasFirstRow, values = [], font = ('Montserrat', 12), fg_color = "#FFFFFF", dropdown_fg_color = "#FFFFFF", dropdown_text_color = "#000000", border_color = "#FFFFFF", button_color = "#FFFFFF", text_color = "#000000", state='readonly')
         self.assignID = CTkEntry(manageCamerasFirstRow, placeholder_text = "Assign Name", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
         self.addCameraButton = CTkButton(manageCamerasFirstRow, text = "Add Camera", fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5, font = ('Montserrat', 12, 'bold'), command = self.addCamera_callback)
+        self.assignLocation = CTkEntry(manageCamerasFirstRow, placeholder_text = "Assign Location", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
         
         manageCamerasFirstRowStatus = tk.Frame(upperLeftContent, bg="#1B2431")
         self.addCameraStatusLabel = CTkLabel(manageCamerasFirstRowStatus, text='Camera successfully added.', font = ('Monteserrat', 13, 'italic'), anchor = "w", text_color = "#1B2431")
@@ -548,8 +549,11 @@ class AdminPage(tk.Frame):
         cameras = DBController.getCameras()
 
         manageCamerasSecondRow = tk.Frame(upperLeftContent, bg = "#1B2431")
+        
         self.savedCamerasDrop = CTkComboBox(manageCamerasSecondRow, values=[camera[0].name for camera in cameras.data], font = ('Montserrat', 12), fg_color = "#FFFFFF", dropdown_fg_color = "#FFFFFF", dropdown_text_color = "#000000", border_color = "#FFFFFF", button_color = "#FFFFFF", text_color = "#000000", state='readonly')
         self.savedCameraID = CTkEntry(manageCamerasSecondRow, placeholder_text = "Change Name", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        self.savedCameraLocation = CTkEntry(manageCamerasSecondRow, placeholder_text = "Assigned Location", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        
         updateSavedCameraButton = CTkButton(manageCamerasSecondRow, text = "Update Camera", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5, command = self.updateSavedCamera_callback)
         deleteSavedCameraButton = CTkButton(manageCamerasSecondRow, text = "Delete Camera", font = ('Montserrat', 12, 'bold'), fg_color = "#D62828", text_color = "#FFFFFF", corner_radius = 5, command = self.deleteSavedCamera_callback)
         
@@ -813,9 +817,10 @@ class AdminPage(tk.Frame):
         self.discoverCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
         self.discoveredCamerasDrop.pack(side = "left", fill = "x", expand = True, padx = 15)
         self.assignID.pack(side = "left", fill = "x", expand = True, padx = 15)
-        self.addCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
 
+        self.addCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
         self.addCameraStatusLabel.pack(side='left', pady = 10, expand = True, fill = "x")
+        self.assignLocation.pack(side = "left", fill = "x", expand = True, padx = 15)
         
         manageCamerasLabel.pack(side = "top", fill = "x", padx = 10, pady = (5,0))
         
@@ -823,6 +828,7 @@ class AdminPage(tk.Frame):
         manageCamerasSecondRowStatus.pack(side = "top", fill = "x", padx = 15, pady = (2))
         self.savedCamerasDrop.pack(side = "left", fill = "x", expand = True, padx = 15)
         self.savedCameraID.pack(side = "left", fill = "x", expand = True, padx = 15)
+        self.savedCameraLocation.pack(side = "left", fill = "x", expand = True, padx = 15)
         updateSavedCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
         deleteSavedCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
         
