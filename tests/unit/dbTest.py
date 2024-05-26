@@ -105,8 +105,9 @@ class TestDBControllerMethods(unittest.TestCase):
         response = db.editVehiclePrice(id=1, newPrice=500)
         self.assertTrue(response.ok)
 
+    @patch('controllers.dbController.DBController.getUser')
     @patch('controllers.dbController.Session')
-    def test_change_password(self, mock_session):
+    def test_change_password(self, mock_session, mock_get_user):
         '''
         Tests the changePassword method from DBController. Tests the password change
         of an account considering that the new password and confirm password fields
@@ -118,8 +119,9 @@ class TestDBControllerMethods(unittest.TestCase):
         '''
         mock_session.execute = MagicMock()
         mock_session.commit = MagicMock()
+        mock_get_user.return_value = MagicMock(password='123')
 
-        response = db.changePassword(email='a@gmail.com', newPassword='123', confirmPassword='123')
+        response = db.changePassword(email='a@gmail.com', newPassword='124', confirmPassword='124', currPassword='123')
         self.assertTrue(response.ok)
         
 if __name__ == '__main__':

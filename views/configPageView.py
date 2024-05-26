@@ -1,14 +1,18 @@
 import os
 import sys
 import tkinter as tk
-from customtkinter import *
-from tkinter import ttk
-from PIL import Image
-from tkcalendar import Calendar
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
+
+from customtkinter import *
+from tkinter import ttk
+from PIL import Image
+from tkcalendar import Calendar
+from controllers.controller import AIController
+from controllers.dbController import DBController
+from sessions.userSession import UserSession
 
 # Mock Data
 data1 = [("12 AM", "1 AM", "Mondays"),

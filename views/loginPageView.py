@@ -13,6 +13,7 @@ from customtkinter import *
 from tkinter import ttk
 from PIL import Image, ImageTk
 from controllers.dbController import DBController as db
+from sessions.userSession import UserSession
 
 class LoginPage(tk.Frame):
     # Close Application
@@ -35,11 +36,14 @@ class LoginPage(tk.Frame):
     # Function that is called when clicking Login
     def verifyCredentials(self, usernameEntry: CTkEntry, passwordEntry: CTkEntry, incorrectLabel: CTkLabel):
         username, password = usernameEntry.get(), passwordEntry.get()
-        print("verify credentials called", username, password)
-        
         response = db.loginUser(password=password, username=username)
+        
         if response.ok:
-            self.master.show_frame(self.master.dashboardFrame)
+            if UserSession.storeUserSession(response.data):
+                self.master.show_frame(self.master.dashboardFrame)
+            else:
+                incorrectLabel.configure(text='Error with user session.')
+                self.incorrectCredentials(incorrectLabel)
         else:
             incorrectLabel.configure(text=(response.messages['username'] or response.messages['password']))
             self.incorrectCredentials(incorrectLabel)
