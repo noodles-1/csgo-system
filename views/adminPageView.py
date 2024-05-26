@@ -76,69 +76,152 @@ class AdminPage(tk.Frame):
     
     # Select User Dropwdown Function
     def selectUserCombo_callback(self, choice):
-        # Insert Logic Here
-        print("Select User Combo Value: ", choice)
-    
-    # Add the new user button
-    def addUserButton_callback(self):
-        print("Add User Button Pressed")
+        user = DBController.getUser(username=choice)
+        self.firstNameVar.set(user.firstName)
+        self.lastNameVar.set(user.lastName)
+        self.emailVar.set(user.email)
+        self.usernameVar.set(user.username)
+        self.passwordVar.set(user.password) # to be hashed once user registration is finished
+        self.adminVar.set(1 if user.isAdmin else 2)
+        self.changePriceVar.set(1 if user.canChangePrice else 2)
+        self.downloadRadioVar.set(1 if user.canDownload else 2)
+        self.detectableRadioVar.set(1 if user.canChangeDetect else 2)
+        self.activeHoursRadioVar.set(1 if user.canEditHours else 2)
     
     # Clear the field button
     def clearFieldButton_callback(self):
-        print("Clear Field Button Pressed")
-        self.firstNameEntry.delete(0, "end")
-        self.lastNameEntry.delete(0, "end")
-        self.emailEntry.delete(0, "end")
-        self.passwordEntry.delete(0, "end")
-        self.usernameEntry.delete(0, "end")
+        self.firstNameVar.set('')
+        self.lastNameVar.set('')
+        self.emailVar.set('')
+        self.passwordVar.set('')
+        self.usernameVar.set('')
         self.selectUserComboVar.set("")
+        self.adminVar.set(0)
+        self.changePriceVar.set(0)
+        self.downloadRadioVar.set(0)
+        self.detectableRadioVar.set(0)
+        self.activeHoursRadioVar.set(0)
+    
+    # Add the new user button
+    def addUserButton_callback(self):
+        firstName = self.firstNameVar.get()
+        lastName = self.lastNameVar.get()
+        email = self.emailVar.get()
+        username = self.usernameVar.get()
+        password = self.passwordVar.get()
+
+        isAdmin = self.adminVar.get() != 0
+        canChangePrice = self.changePriceVar.get() != 0
+        canDownload = self.downloadRadioVar.get() != 0
+        canChangeDetect = self.detectableRadioVar.get() != 0
+        canEditHours = self.activeHoursRadioVar.get() != 0
+
+        if not firstName or not lastName or not email or not username or not password or not isAdmin or not canChangePrice or not canDownload or not canChangeDetect or not canEditHours:
+            self.editUserStatusLabel.configure(text='Incomplete fields.', text_color="#d62828")
+            self.after(2000, lambda: self.editUserStatusLabel.configure(text_color="#1B2431"))
+            return
+        
+        isAdmin = self.adminVar.get() == 1
+        canChangePrice = self.changePriceVar.get() == 1
+        canDownload = self.downloadRadioVar.get() == 1
+        canChangeDetect = self.detectableRadioVar.get() == 1
+        canEditHours = self.activeHoursRadioVar.get() == 1
+        
+        response = DBController.registerUser(email, username, firstName, lastName, password, isAdmin, canChangePrice, canDownload, canChangeDetect, canEditHours)
+
+        if response.ok:
+            self.editUserStatusLabel.configure(text='User successfully registered.', text_color='#25be8e')
+            self.after(3000, lambda: self.editUserStatusLabel.configure(text_color='#1b2431'))
+            users = DBController.getUsers()
+            self.selectUserCombo.configure(values=[user[0].username for user in users.data])
+            self.clearFieldButton_callback()
+        else:
+            self.editUserStatusLabel.configure(text=(response.messages['email'] or response.messages['username'] or response.messages['error']), text_color="#d62828")
+            self.after(2000, lambda: self.editUserStatusLabel.configure(text_color="#1B2431"))
+    
+    # Apply changes to the field
+    def applyUserButton_callback(self):
+        user = self.selectUserCombo.get()
+        firstName = self.firstNameVar.get()
+        lastName = self.lastNameVar.get()
+        email = self.emailVar.get()
+        username = self.usernameVar.get()
+        password = self.passwordVar.get()
+
+        isAdmin = self.adminVar.get() == 1
+        canChangePrice = self.changePriceVar.get() == 1
+        canDownload = self.downloadRadioVar.get() == 1
+        canChangeDetect = self.detectableRadioVar.get() == 1
+        canEditHours = self.activeHoursRadioVar.get() == 1
+
+        if not user or not firstName or not lastName or not email or not username or not password:
+            self.editUserStatusLabel.configure(text='Incomplete fields.', text_color="#d62828")
+            self.after(2000, lambda: self.editUserStatusLabel.configure(text_color="#1B2431"))
+            return
+        
+        response = DBController.editUser(user, username, email, firstName, lastName, password, isAdmin, canChangeDetect, canChangePrice, canEditHours, canDownload)
+
+        if response.ok:
+            self.editUserStatusLabel.configure(text='User successfully updated.', text_color='#25be8e')
+            self.after(3000, lambda: self.editUserStatusLabel.configure(text_color='#1b2431'))
+            users = DBController.getUsers()
+            self.selectUserCombo.configure(values=[user[0].username for user in users.data])
+            self.clearFieldButton_callback()
+        else:
+            self.editUserStatusLabel.configure(text=(response.messages['email'] or response.messages['username'] or response.messages['error']), text_color="#d62828")
+            self.after(2000, lambda: self.editUserStatusLabel.configure(text_color="#1B2431"))
     
     # Delete the user once selected
     def deleteUserButton_callback(self):
-        # Retrieve the selected user from the dropdown
-        selected_user = self.selectUserComboVar.get()
+        user = self.selectUserComboVar.get()
 
-        # Check if a user is selected
-        if selected_user:
-            # Remove the selected user from the Combobox values
-            current_values = list(self.selectUserCombo._values)
-            current_values.remove(selected_user)
-            
-            self.selectUserCombo.configure(values = current_values)
-                
-            self.selectUserCombo.set('')  # Clear the selection
+        if not user:
+            self.editUserStatusLabel.configure(text='Incomplete fields.', text_color="#d62828")
+            self.after(2000, lambda: self.editUserStatusLabel.configure(text_color="#1B2431"))
+            return
+
+        response = DBController.deleteUser(username=user)
+
+        if response.ok:
+            self.editUserStatusLabel.configure(text='User successfully deleted.', text_color='#25be8e')
+            self.after(3000, lambda: self.editUserStatusLabel.configure(text_color='#1b2431'))
+            users = DBController.getUsers()
+            self.selectUserCombo.configure(values=[user[0].username for user in users.data])
             self.clearFieldButton_callback()
-            print("Deleted User:", selected_user)
         else:
-            # If no user is selected, print a message or handle the situation accordingly
-            print("No user selected for deletion.")
+            self.editUserStatusLabel.configure(text=response.messages['error'], text_color="#d62828")
+            self.after(2000, lambda: self.editUserStatusLabel.configure(text_color="#1B2431"))
             
     def vehicleTypeCombo_callback(self, choice):
         print("Filter By: ", choice)
     
-    # Apply changes to the field
-    def applyUserButton_callback(self):
-        pass
-    
     # Apply admin restriction to user
     def adminRadioButton_callback(self):
-        pass
+        if self.adminVar.get() == 1:
+            self.changePriceVar.set(1)
+            self.downloadRadioVar.set(1)
+            self.detectableRadioVar.set(1)
+            self.activeHoursRadioVar.set(1)
     
     # Apply change price restriction to user
     def changePriceRadioButton_callback(self):
-        pass
+        if self.adminVar.get() == 1:
+            self.adminVar.set(2)
     
     # Apply change active hours restriction to user
     def changeActiveHoursRadioButton_callback(self):
-        pass
+        if self.adminVar.get() == 1:
+            self.adminVar.set(2)
     
     # Apply change detectable vehicles restriction to user
     def changeDetectableRadioButton_callback(self):
-        pass
+        if self.adminVar.get() == 1:
+            self.adminVar.set(2)
     
     # Apply download csv restriction to user
     def downloadCSVRadioButton_callback(self):
-        pass
+        if self.adminVar.get() == 1:
+            self.adminVar.set(2)
     
     def selectDateTime(self):
         top = tk.Toplevel(bg="#090E18")
@@ -235,6 +318,12 @@ class AdminPage(tk.Frame):
         self.discoveredCamerasDrop.set('')
         self.discoveredCamerasDrop.configure(state='readonly', values=list(self.ip_cameras))
         self.addCameraButton.configure(state='normal')
+
+        if self.ip_cameras:
+            self.addCameraStatusLabel.configure(text='New IP camera(s) discovered.', text_color="#25be8e")
+        else:
+            self.addCameraStatusLabel.configure(text='No IP cameras found.', text_color="#d62828")
+        self.after(2000, lambda: self.addCameraStatusLabel.configure(text_color="#1B2431"))
 
     def addCamera_callback(self):
         cameraIpAddr = self.discoveredCamerasDrop.get()
@@ -550,8 +639,11 @@ class AdminPage(tk.Frame):
         selectUserFrame = tk.Frame(leftUpperRight, bg = "#1B2431")
         selectUserLabel = CTkLabel(selectUserFrame, text = "Select User", font = ('Montserrat', 12), anchor = "w", text_color = "#FFFFFF")
         self.selectUserComboVar = StringVar()
+
+        users = DBController.getUsers()
+
         self.selectUserCombo = CTkComboBox(selectUserFrame,
-                                      values = ["Pagtalunan", "Roa", "Rayray", "Mendoza"],
+                                      values = [user[0].username for user in users.data],
                                       command = self.selectUserCombo_callback,
                                       variable = self.selectUserComboVar,
                                       fg_color = "#FFFFFF",
@@ -576,25 +668,31 @@ class AdminPage(tk.Frame):
         firstNameOuter = tk.Frame(upperMiddleRight, bg = "#1B2431")
         firstNameInner = tk.Frame(firstNameOuter, bg = "#1B2431")
         firstNameLabel = CTkLabel(firstNameInner, text = "First Name", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
-        self.firstNameEntry = CTkEntry(firstNameInner, placeholder_text = "Ex. Juan", font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF")
+        self.firstNameVar = StringVar(value='')
+        self.firstNameEntry = CTkEntry(firstNameInner, textvariable=self.firstNameVar, placeholder_text = "Ex. Juan", font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF")
         
         lastNameOuter = tk.Frame(upperMiddleRight, bg = "#1B2431")
         lastNameInner = tk.Frame(lastNameOuter, bg = "#1B2431")
         lastNameLabel = CTkLabel(lastNameInner, text = "Last Name", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
-        self.lastNameEntry = CTkEntry(lastNameInner, placeholder_text = "Ex. Cruz", font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF")
+        self.lastNameVar = StringVar(value='')
+        self.lastNameEntry = CTkEntry(lastNameInner, textvariable=self.lastNameVar, placeholder_text = "Ex. Cruz", font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF")
         
         emailOuter = tk.Frame(upperMiddleRight, bg = "#1B2431")
         emailInner = tk.Frame(emailOuter, bg = "#1B2431")
         emailLabel = CTkLabel(emailInner, text = "Email", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
-        self.emailEntry = CTkEntry(emailInner, placeholder_text = "Ex. juancruz@domain.com", font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF")
+        self.emailVar = StringVar(value='')
+        self.emailEntry = CTkEntry(emailInner, textvariable=self.emailVar, placeholder_text = "Ex. juancruz@domain.com", font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF")
         
         usernamePasswordOuter = tk.Frame(upperMiddleRight, bg = "#1B2431")
         usernameInner = tk.Frame(usernamePasswordOuter, bg = "#1B2431")
         usernameLabel = CTkLabel(usernameInner, text = "Username", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
-        self.usernameEntry = CTkEntry(usernameInner, font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF")
+        self.usernameVar = StringVar(value='')
+        self.usernameEntry = CTkEntry(usernameInner, textvariable=self.usernameVar, font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF")
+        
         passwordInner = tk.Frame(usernamePasswordOuter, bg = "#1B2431")
         passwordLabel = CTkLabel(passwordInner, text = "Password", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
-        self.passwordEntry = CTkEntry(passwordInner, font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF", show = "*")
+        self.passwordVar = StringVar(value='')
+        self.passwordEntry = CTkEntry(passwordInner, textvariable=self.passwordVar, font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF", show = "*")
         
         lowerMiddleRight = tk.Frame(middleRight, bg = "#1B2431")
         
@@ -604,42 +702,45 @@ class AdminPage(tk.Frame):
         leftAdminFrameInner = tk.Frame(adminFrameOuter, bg = "#1B2431")
         adminLabel = CTkLabel(leftAdminFrameInner, text = "Administrator", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
         rightAdminFrameInner = tk.Frame(adminFrameOuter, bg = "#1B2431")
-        adminVar = IntVar(value = 0)
-        adminRadio_yes = CTkRadioButton(rightAdminFrameInner, text = "Yes", variable = adminVar, value = 1, command = self.adminRadioButton_callback)
-        adminRadio_no = CTkRadioButton(rightAdminFrameInner, text = "No", variable = adminVar, value = 2, command = self.adminRadioButton_callback)
+        self.adminVar = IntVar(value = 0)
+        adminRadio_yes = CTkRadioButton(rightAdminFrameInner, text = "Yes", variable = self.adminVar, value = 1, command = self.adminRadioButton_callback)
+        adminRadio_no = CTkRadioButton(rightAdminFrameInner, text = "No", variable = self.adminVar, value = 2, command = self.adminRadioButton_callback)
         
         congestionPriceFrameOuter = tk.Frame(lowerMiddleRight, bg = "#1B2431")
         leftCongestionPriceFrameInner = tk.Frame(congestionPriceFrameOuter, bg = "#1B2431")
         congestionPriceLabel = CTkLabel(leftCongestionPriceFrameInner, text = "Change Congestion Price", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
         rightCongestionPriceFrameInner = tk.Frame(congestionPriceFrameOuter, bg = "#1B2431")
-        changePriceVar = IntVar(value = 0)
-        changePriceRadio_yes = CTkRadioButton(rightCongestionPriceFrameInner, text = "Yes", variable = changePriceVar, value = 1, command = self.changePriceRadioButton_callback)
-        changePriceRadio_no = CTkRadioButton(rightCongestionPriceFrameInner, text = "No", variable = changePriceVar, value = 2, command = self.changePriceRadioButton_callback)
+        self.changePriceVar = IntVar(value = 0)
+        changePriceRadio_yes = CTkRadioButton(rightCongestionPriceFrameInner, text = "Yes", variable = self.changePriceVar, value = 1, command = self.changePriceRadioButton_callback)
+        changePriceRadio_no = CTkRadioButton(rightCongestionPriceFrameInner, text = "No", variable = self.changePriceVar, value = 2, command = self.changePriceRadioButton_callback)
         
         activeHoursFrameOuter = tk.Frame(lowerMiddleRight, bg = "#1B2431")
         leftActiveHoursFrameInner = tk.Frame(activeHoursFrameOuter, bg = "#1B2431")
         activeHoursLabel = CTkLabel(leftActiveHoursFrameInner, text = "Change Active Hours", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
         rightActiveHoursFrameInner = tk.Frame(activeHoursFrameOuter, bg = "#1B2431")
-        activeHoursRadioVar = IntVar(value = 0)
-        activeHoursRadio_yes = CTkRadioButton(rightActiveHoursFrameInner, text = "Yes", variable = activeHoursRadioVar, value = 1, command = self.changeDetectableRadioButton_callback)
-        activeHoursRadio_no = CTkRadioButton(rightActiveHoursFrameInner, text = "No", variable = activeHoursRadioVar, value = 2, command = self.changeDetectableRadioButton_callback)
+        self.activeHoursRadioVar = IntVar(value = 0)
+        activeHoursRadio_yes = CTkRadioButton(rightActiveHoursFrameInner, text = "Yes", variable = self.activeHoursRadioVar, value = 1, command = self.changeDetectableRadioButton_callback)
+        activeHoursRadio_no = CTkRadioButton(rightActiveHoursFrameInner, text = "No", variable = self.activeHoursRadioVar, value = 2, command = self.changeDetectableRadioButton_callback)
         
         detectableFrameOuter = tk.Frame(lowerMiddleRight, bg = "#1B2431")
         leftDetectableFrameInner = tk.Frame(detectableFrameOuter, bg = "#1B2431")
         detectableLabel = CTkLabel(leftDetectableFrameInner, text = "Change Detectable Vehicles", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
         rightDetectableFrameInner = tk.Frame(detectableFrameOuter, bg = "#1B2431")
-        detectableRadioVar = IntVar(value = 0)
-        detectableRadio_yes = CTkRadioButton(rightDetectableFrameInner, text = "Yes", variable = detectableRadioVar, value = 1, command = self.changeDetectableRadioButton_callback)
-        detectableRadio_no = CTkRadioButton(rightDetectableFrameInner, text = "No", variable = detectableRadioVar, value = 2, command = self.changeDetectableRadioButton_callback)
+        self.detectableRadioVar = IntVar(value = 0)
+        detectableRadio_yes = CTkRadioButton(rightDetectableFrameInner, text = "Yes", variable = self.detectableRadioVar, value = 1, command = self.changeDetectableRadioButton_callback)
+        detectableRadio_no = CTkRadioButton(rightDetectableFrameInner, text = "No", variable = self.detectableRadioVar, value = 2, command = self.changeDetectableRadioButton_callback)
         
         downloadFrameOuter = tk.Frame(lowerMiddleRight, bg = "#1B2431")
         leftDownloadFrameInner = tk.Frame(downloadFrameOuter, bg = "#1B2431")
         downloadLabel = CTkLabel(leftDownloadFrameInner, text = "Download CSV", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
         rightDownloadFrameInner = tk.Frame(downloadFrameOuter, bg = "#1B2431")
-        downloadRadioVar = IntVar(value = 0)
-        downloadRadio_yes = CTkRadioButton(rightDownloadFrameInner, text = "Yes", variable = downloadRadioVar, value = 1, command = self.downloadCSVRadioButton_callback)
-        downloadRadio_no = CTkRadioButton(rightDownloadFrameInner, text = "No", variable = downloadRadioVar, value = 2, command = self.downloadCSVRadioButton_callback)
+        self.downloadRadioVar = IntVar(value = 0)
+        downloadRadio_yes = CTkRadioButton(rightDownloadFrameInner, text = "Yes", variable = self.downloadRadioVar, value = 1, command = self.downloadCSVRadioButton_callback)
+        downloadRadio_no = CTkRadioButton(rightDownloadFrameInner, text = "No", variable = self.downloadRadioVar, value = 2, command = self.downloadCSVRadioButton_callback)
         
+        editUserStatus = tk.Frame(lowerMiddleRight, bg = "#1B2431")
+        self.editUserStatusLabel = CTkLabel(editUserStatus, text='User successfully edited.', font = ('Monteserrat', 13, 'italic'), anchor = "w", text_color = "#1B2431")
+
         lowerRight = tk.Frame(rightContentFrame, bg = "#1B2431")
         deleteUserButton = CTkButton(lowerRight, text = "Delete User", font = ('Montserrat', 12, 'bold'), text_color = "#FFFFFF", fg_color = "#D62828",
                                   command = self.deleteUserButton_callback, corner_radius = 5)
@@ -814,6 +915,9 @@ class AdminPage(tk.Frame):
         rightDownloadFrameInner.pack(side = "left", fill = "both", expand = True)
         downloadRadio_no.pack(side = "right", padx = 0, pady = 2)
         downloadRadio_yes.pack(side = "right", padx = 5, pady = 2)
+
+        editUserStatus.pack(side = "top", fill = "both", expand = True, padx = 10, pady = 2)
+        self.editUserStatusLabel.pack(side='left', pady = 10, expand = True, fill = "x")
         
         lowerRight.pack(side = "top", expand = False, fill = "both", padx = 10, pady = 2)
         applyUserButton.pack(side = "right", expand = False, fill = "x", padx = (5,10), pady = 2)

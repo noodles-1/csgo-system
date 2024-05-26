@@ -21,7 +21,8 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str]
     username: Mapped[str] = mapped_column(String(50))
-    fullName: Mapped[str] = mapped_column(String(80))
+    firstName: Mapped[str] = mapped_column(String(80))
+    lastName: Mapped[str] = mapped_column(String(80))
     isAdmin: Mapped[bool]
     canChangeDetect: Mapped[bool]
     canChangePrice: Mapped[bool]
@@ -30,7 +31,7 @@ class User(Base):
     password: Mapped[str]
 
     def __repr__(self) -> str:
-        return f'User(userId={self.id}, email={self.email}, username={self.username}, fullName={self.fullName}, isAdmin={self.isAdmin})'
+        return f'User(userId={self.id}, email={self.email}, username={self.username}, fullName={self.firstName} {self.lastName}, isAdmin={self.isAdmin})'
     
 class Camera(Base):
     '''
