@@ -46,7 +46,9 @@ class MainWindow(tk.Tk):
         self.show_frame(self.loginFrame)
         
     # Function to show Frame (Can be used by the child Classes)
-    def show_frame(self, cont):
+    def show_frame(self, cont, changeCameraDisplay=None, cap=None, placeholder_label=None):
+        if changeCameraDisplay:
+            cont.setCameraDisplay(changeCameraDisplay, cap, placeholder_label)
         cont.tkraise()
 
 if __name__ == "__main__":

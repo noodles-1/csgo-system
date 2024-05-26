@@ -1,10 +1,6 @@
 import os
 import sys
 import tkinter as tk
-from customtkinter import *
-from tkinter import ttk
-from tkcalendar import Calendar
-from PIL import Image
 import random
 import string
 import datetime
@@ -13,52 +9,14 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
-# These are just samples for the database
-licensePlates = []
-vehicleTypes = {
-    'Car': 50,
-    'Taxi': 60,
-    'Motorcycle': 30,
-    'Bus': 100,
-    'Tricycle': 40,
-    'Jeepney': 70,
-    'Modern Jeepney': 80,
-    'Van': 90,
-    'Truck': 120
-}
-cameraID = ['Camera 1', 'Camera 2', 'Camera 3', 'Camera 4']
-dates = []
-times = []
-data = []
+import views.switchView as switch
 
-def generate_license_plate():
-    letters = ''.join(random.choices(string.ascii_uppercase, k=3))
-    digits = ''.join(random.choices(string.digits, k=4))
-    license_plate = letters + digits
-    return license_plate
-
-def generate_random_past_date():
-    today = datetime.date.today()
-    random_days = random.randint(1, 365)
-    random_date = today - datetime.timedelta(days=random_days)
-    return random_date
-
-def generate_random_time():
-    random_hour = random.randint(0, 23)
-    random_minute = random.randint(0, 59)
-    return f"{random_hour:02d}:{random_minute:02d}"
-
-# Generate 100 Data Entries
-for _ in range(100):
-    license_plate = generate_license_plate()
-    vehicle_type = random.choice(list(vehicleTypes.keys()))
-    camera_id = random.choice(cameraID)
-    random_date = generate_random_past_date()
-    random_time = generate_random_time()
-    price = vehicleTypes[vehicle_type]
-
-    data.append((license_plate, vehicle_type, camera_id, random_time, random_date.strftime("%Y-%m-%d"), price))
-# -------
+from customtkinter import *
+from tkinter import ttk
+from tkcalendar import Calendar
+from PIL import Image
+from controllers.dbController import DBController
+from controllers.rtspController import RTSPController
 
 class AdminPage(tk.Frame):
     # Close Application
@@ -71,69 +29,149 @@ class AdminPage(tk.Frame):
     
     # Select User Dropwdown Function
     def selectUserCombo_callback(self, choice):
-        # Insert Logic Here
-        print("Select User Combo Value: ", choice)
-    
-    # Add the new user button
-    def addUserButton_callback(self):
-        print("Add User Button Pressed")
+        user = DBController.getUser(username=choice)
+        self.firstNameVar.set(user.firstName)
+        self.lastNameVar.set(user.lastName)
+        self.emailVar.set(user.email)
+        self.usernameVar.set(user.username)
+        self.passwordVar.set(user.password) # to be hashed once user registration is finished
+        self.adminVar.set(1 if user.isAdmin else 2)
+        self.changePriceVar.set(1 if user.canChangePrice else 2)
+        self.downloadRadioVar.set(1 if user.canDownload else 2)
+        self.detectableRadioVar.set(1 if user.canChangeDetect else 2)
+        self.activeHoursRadioVar.set(1 if user.canEditHours else 2)
     
     # Clear the field button
     def clearFieldButton_callback(self):
-        print("Clear Field Button Pressed")
-        self.firstNameEntry.delete(0, "end")
-        self.lastNameEntry.delete(0, "end")
-        self.emailEntry.delete(0, "end")
-        self.passwordEntry.delete(0, "end")
-        self.usernameEntry.delete(0, "end")
+        self.firstNameVar.set('')
+        self.lastNameVar.set('')
+        self.emailVar.set('')
+        self.passwordVar.set('')
+        self.usernameVar.set('')
         self.selectUserComboVar.set("")
+        self.adminVar.set(0)
+        self.changePriceVar.set(0)
+        self.downloadRadioVar.set(0)
+        self.detectableRadioVar.set(0)
+        self.activeHoursRadioVar.set(0)
     
-    # Delete the user once selected
-    def deleteUserButton_callback(self):
-        # Retrieve the selected user from the dropdown
-        selected_user = self.selectUserComboVar.get()
+    # Add the new user button
+    def addUserButton_callback(self):
+        firstName = self.firstNameVar.get()
+        lastName = self.lastNameVar.get()
+        email = self.emailVar.get()
+        username = self.usernameVar.get()
+        password = self.passwordVar.get()
 
-        # Check if a user is selected
-        if selected_user:
-            # Remove the selected user from the Combobox values
-            current_values = list(self.selectUserCombo._values)
-            current_values.remove(selected_user)
-            
-            self.selectUserCombo.configure(values = current_values)
-                
-            self.selectUserCombo.set('')  # Clear the selection
+        isAdmin = self.adminVar.get() != 0
+        canChangePrice = self.changePriceVar.get() != 0
+        canDownload = self.downloadRadioVar.get() != 0
+        canChangeDetect = self.detectableRadioVar.get() != 0
+        canEditHours = self.activeHoursRadioVar.get() != 0
+
+        if not firstName or not lastName or not email or not username or not password or not isAdmin or not canChangePrice or not canDownload or not canChangeDetect or not canEditHours:
+            self.editUserStatusLabel.configure(text='Incomplete fields.', text_color="#d62828")
+            self.after(2000, lambda: self.editUserStatusLabel.configure(text_color="#1B2431"))
+            return
+        
+        isAdmin = self.adminVar.get() == 1
+        canChangePrice = self.changePriceVar.get() == 1
+        canDownload = self.downloadRadioVar.get() == 1
+        canChangeDetect = self.detectableRadioVar.get() == 1
+        canEditHours = self.activeHoursRadioVar.get() == 1
+        
+        response = DBController.registerUser(email, username, firstName, lastName, password, isAdmin, canChangePrice, canDownload, canChangeDetect, canEditHours)
+
+        if response.ok:
+            self.editUserStatusLabel.configure(text='User successfully registered.', text_color='#25be8e')
+            self.after(3000, lambda: self.editUserStatusLabel.configure(text_color='#1b2431'))
+            users = DBController.getUsers()
+            self.selectUserCombo.configure(values=[user[0].username for user in users.data])
             self.clearFieldButton_callback()
-            print("Deleted User:", selected_user)
         else:
-            # If no user is selected, print a message or handle the situation accordingly
-            print("No user selected for deletion.")
-            
-    def vehicleTypeCombo_callback(self, choice):
-        print("Filter By: ", choice)
+            self.editUserStatusLabel.configure(text=(response.messages['email'] or response.messages['username'] or response.messages['error']), text_color="#d62828")
+            self.after(2000, lambda: self.editUserStatusLabel.configure(text_color="#1B2431"))
     
     # Apply changes to the field
     def applyUserButton_callback(self):
-        pass
+        user = self.selectUserCombo.get()
+        firstName = self.firstNameVar.get()
+        lastName = self.lastNameVar.get()
+        email = self.emailVar.get()
+        username = self.usernameVar.get()
+        password = self.passwordVar.get()
+
+        isAdmin = self.adminVar.get() == 1
+        canChangePrice = self.changePriceVar.get() == 1
+        canDownload = self.downloadRadioVar.get() == 1
+        canChangeDetect = self.detectableRadioVar.get() == 1
+        canEditHours = self.activeHoursRadioVar.get() == 1
+
+        if not user or not firstName or not lastName or not email or not username or not password:
+            self.editUserStatusLabel.configure(text='Incomplete fields.', text_color="#d62828")
+            self.after(2000, lambda: self.editUserStatusLabel.configure(text_color="#1B2431"))
+            return
+        
+        response = DBController.editUser(user, username, email, firstName, lastName, password, isAdmin, canChangeDetect, canChangePrice, canEditHours, canDownload)
+
+        if response.ok:
+            self.editUserStatusLabel.configure(text='User successfully d.', text_color='#25be8e')
+            self.after(3000, lambda: self.editUserStatusLabel.configure(text_color='#1b2431'))
+            users = DBController.getUsers()
+            self.selectUserCombo.configure(values=[user[0].username for user in users.data])
+            self.clearFieldButton_callback()
+        else:
+            self.editUserStatusLabel.configure(text=(response.messages['email'] or response.messages['username'] or response.messages['error']), text_color="#d62828")
+            self.after(2000, lambda: self.editUserStatusLabel.configure(text_color="#1B2431"))
+    
+    # Delete the user once selected
+    def deleteUserButton_callback(self):
+        user = self.selectUserComboVar.get()
+
+        if not user:
+            self.editUserStatusLabel.configure(text='Incomplete fields.', text_color="#d62828")
+            self.after(2000, lambda: self.editUserStatusLabel.configure(text_color="#1B2431"))
+            return
+
+        response = DBController.deleteUser(username=user)
+
+        if response.ok:
+            self.editUserStatusLabel.configure(text='User successfully deleted.', text_color='#25be8e')
+            self.after(3000, lambda: self.editUserStatusLabel.configure(text_color='#1b2431'))
+            users = DBController.getUsers()
+            self.selectUserCombo.configure(values=[user[0].username for user in users.data])
+            self.clearFieldButton_callback()
+        else:
+            self.editUserStatusLabel.configure(text=response.messages['error'], text_color="#d62828")
+            self.after(2000, lambda: self.editUserStatusLabel.configure(text_color="#1B2431"))
     
     # Apply admin restriction to user
     def adminRadioButton_callback(self):
-        pass
+        if self.adminVar.get() == 1:
+            self.changePriceVar.set(1)
+            self.downloadRadioVar.set(1)
+            self.detectableRadioVar.set(1)
+            self.activeHoursRadioVar.set(1)
     
     # Apply change price restriction to user
     def changePriceRadioButton_callback(self):
-        pass
+        if self.adminVar.get() == 1:
+            self.adminVar.set(2)
     
     # Apply change active hours restriction to user
     def changeActiveHoursRadioButton_callback(self):
-        pass
+        if self.adminVar.get() == 1:
+            self.adminVar.set(2)
     
     # Apply change detectable vehicles restriction to user
     def changeDetectableRadioButton_callback(self):
-        pass
+        if self.adminVar.get() == 1:
+            self.adminVar.set(2)
     
     # Apply download csv restriction to user
     def downloadCSVRadioButton_callback(self):
-        pass
+        if self.adminVar.get() == 1:
+            self.adminVar.set(2)
     
     def selectDateTime(self):
         top = tk.Toplevel(bg="#090E18")
@@ -142,7 +180,7 @@ class AdminPage(tk.Frame):
         # Calendar for date selection
         calendarFrame = tk.Frame(top, bg="#1B2431")
         calendarFrame.pack(padx=10, pady=(10, 2), ipadx=5, ipady=5, expand=True, fill="both")
-        cal = Calendar(calendarFrame, selectmode='day', date_pattern='dd/mm/y', foreground="#FFFFFF", background="#1B2431", bordercolor="#1B2431")
+        cal = Calendar(calendarFrame, selectmode='day', date_pattern='mm/dd/y', foreground="#FFFFFF", background="#1B2431", bordercolor="#1B2431")
         cal.pack(padx=5, pady=5)
 
         # Frame for time selection
@@ -159,9 +197,9 @@ class AdminPage(tk.Frame):
             global selected_date, selected_hour_from, selected_hour_to
             
             self.selected_date = cal.get_date()
-            selected_hour = spinbox_hours.get()
-            self.selected_hour_from = f"{selected_hour}:00"
-            self.selected_hour_to = f"{selected_hour}:59"
+            self.selected_hour = spinbox_hours.get()
+            self.selected_hour_from = f"{self.selected_hour}:00"
+            self.selected_hour_to = f"{self.selected_hour}:59"
             
             #tk.messagebox.showinfo("Selected Date/Time", f"Date: {self.selected_date}\nTime: {self.selected_hour_from} - {self.selected_hour_to}")
             top.destroy()
@@ -180,7 +218,41 @@ class AdminPage(tk.Frame):
         self.selectedDateTimeLabel.configure(text = "Select Date-Time")
         
     def goFilter_callback(self):
-        pass
+        vehicleType = self.vehicleTypeComboVar.get()
+        selectedDate = self.selected_date
+        hourFrom = self.selected_hour_from
+        hourTo = self.selected_hour_to
+
+        if selectedDate and len(hourFrom) <= 3:
+            self.filterStatusLabel.configure(text='Invalid hours.', text_color="#d62828")
+            self.after(2000, lambda: self.filterStatusLabel.configure(text_color="#1B2431"))
+            return
+        
+        for row in self.databaseTable.get_children():
+            self.databaseTable.delete(row)
+
+        date = datetime.datetime.strptime(selectedDate, '%m/%d/%Y').date() if selectedDate else None
+        hourFrom = datetime.datetime.strptime(hourFrom, '%H:%M').time() if selectedDate else None
+        hourTo = datetime.datetime.strptime(hourTo, '%H:%M').time() if selectedDate else None
+
+        self.prevVehicleType = vehicleType
+        self.prevDate = date
+        self.prevHourFrom = hourFrom
+        self.prevHourTo = hourTo
+
+        filterResponse = DBController.getFilteredLicensePlates(vehicleType=vehicleType.lower(), date=date, hourFrom=hourFrom, hourTo=hourTo)
+        
+        if filterResponse.ok:
+            self.filterStatusLabel.configure(text='Filter applied.', text_color="#25be8e")
+            self.after(3000, lambda: self.filterStatusLabel.configure(text_color="#1B2431"))
+
+            for row in filterResponse.data:
+                self.databaseTable.insert('', 'end', values=(row[0].licenseNumber, row[0].vehicleType, row[0].cameraId, row[0].time, row[0].date, row[0].price))
+        else:
+            self.filterStatusLabel.configure(text=filterResponse.messages['error'], text_color="#d62828")
+            self.after(2000, lambda: self.filterStatusLabel.configure(text_color="#1B2431"))
+
+        self.clearFilter_callback()
     
     def insertDataToTable(self, inputLicensePlate, inputVehicleType, inputCameraID, inputTime, inputDate, inputPrice):
         self.databaseTable.insert(parent = '', index = 0, values = (inputLicensePlate, inputVehicleType, inputCameraID, inputTime, inputDate, inputPrice))
@@ -213,54 +285,181 @@ class AdminPage(tk.Frame):
         for item in selected_items:
             values = self.databaseTable.item(item)['values']
             if len(values) >= 6:
+                self.licensePlate = values[0]
                 self.licensePlateEntry.insert(0, values[0])
                 self.vehicleTypeEntry.insert(0, values[1])
                 self.priceEntry.insert(0, values[5])
         
     def discoverCameras_callback(self):
-        # This function discovers cameras from the system using ONVIF or SSDP
-        # Calls self.discoveredCamerasDrop.configure to config the values of the dropdown
-        '''
-            Sample for this code:
-                self.discoveredCamerasDrop.configure(values = [str1, str2 , str3...])
-        '''
-        pass
-    
+        self.discoverCameraButton.configure(state='disabled', text='Discovering Cameras...')
+        self.discoveredCamerasDrop.configure(state='disabled', values=[''])
+        self.addCameraButton.configure(state='disabled')
+
+        for ip, _ in RTSPController.scanNetwork():
+            if RTSPController.checkRtsp(ip=ip) and RTSPController.validateRtsp(ip=ip) and not DBController.cameraExists(ip_addr=ip):
+                self.ip_cameras.add(ip)
+
+        self.discoverCameraButton.configure(state='normal', text='Discover Cameras')
+        self.discoveredCamerasDrop.set('')
+        self.discoveredCamerasDrop.configure(state='readonly', values=list(self.ip_cameras))
+        self.addCameraButton.configure(state='normal')
+
+        if self.ip_cameras:
+            self.addCameraStatusLabel.configure(text='New IP camera(s) discovered.', text_color="#25be8e")
+        else:
+            self.addCameraStatusLabel.configure(text='No IP cameras found.', text_color="#d62828")
+        self.after(2000, lambda: self.addCameraStatusLabel.configure(text_color="#1B2431"))
+
     def addCamera_callback(self):
-        # This function gets the Assign ID Entry and the current value of the discoveredCamerasDrop
-        '''
-            Sample for this code:
-                self.assignID.get()
-                self.discoveredCamerasDrop.get()
-        '''
-        pass
-    
-    def deleteSavedCamera_callback(self):
-        self.savedCameraID.configure(text = "")
-        # This function retrieves the values of savedCameraId and savedCamerasDrop and deletes them from the saved cameras.
-        # Then configs the drop down with the updated list of the saved cameras
-        print("Delete Saved Camera Button Pressed")
+        cameraIpAddr = self.discoveredCamerasDrop.get()
+        cameraName = self.assignID.get()
+
+        if not cameraIpAddr or not cameraName:
+            self.addCameraStatusLabel.configure(text='Incomplete fields.', text_color="#d62828")
+            self.after(2000, lambda: self.addCameraStatusLabel.configure(text_color="#1B2431"))
+            return
+
+        response = DBController.registerCamera(ip_addr=cameraIpAddr, name=cameraName)
+
+        if response.ok:
+            self.addCameraStatusLabel.configure(text='Camera successfully added.', text_color="#25be8e")
+            self.after(3000, lambda: self.addCameraStatusLabel.configure(text_color="#1B2431"))
+            cameras = DBController.getCameras()
+            values = [camera[0].name for camera in cameras.data]
+            self.savedCamerasDrop.set('')
+            self.savedCamerasDrop.configure(values=values)
+            self.ip_cameras.remove(cameraIpAddr)
+            self.discoveredCamerasDrop.set('')
+            self.discoveredCamerasDrop.configure(values=list(self.ip_cameras))
+            self.changeCameraDisplay.set('(NONE)')
+            self.changeCameraDisplay.configure(values=values)
+            if self.cap:
+                self.cap.release()
+                self.placeholder_label.configure(text='(Change cameras below)')
+        else:
+            self.addCameraStatusLabel.configure(text=response.messages['error'], text_color="#d62828")
+            self.after(2000, lambda: self.addCameraStatusLabel.configure(text_color="#1B2431"))
+
+        self.assignID.delete(0, 'end')
     
     def updateSavedCamera_callback(self):
-        print("Update Saved Camera Button Pressed")
-        print("Saved Camera ID: ", self.savedCameraID.get())
-        print("Saved Camera Drop Item: ",self.savedCamerasDrop.get())
+        cameraOldName = self.savedCamerasDrop.get()
+        cameraNewName = self.savedCameraID.get()
+
+        if not cameraOldName or not cameraNewName:
+            self.secondRowStatusLabel.configure(text='Incomplete fields.', text_color="#d62828")
+            self.after(2000, lambda: self.secondRowStatusLabel.configure(text_color="#1B2431"))
+            return
         
+        response = DBController.editCamera(oldName=cameraOldName, newName=cameraNewName)
+
+        if response.ok:
+            self.secondRowStatusLabel.configure(text='Camera successfully updated.', text_color='#25be8e')
+            self.after(3000, lambda: self.secondRowStatusLabel.configure(text_color='#1b2431'))
+            cameras = DBController.getCameras()
+            values = [camera[0].name for camera in cameras.data]
+            self.savedCamerasDrop.set('')
+            self.savedCamerasDrop.configure(values=values)
+            self.changeCameraDisplay.set('(NONE)')
+            self.changeCameraDisplay.configure(values=values)
+            if self.cap:
+                self.cap.release()
+                self.placeholder_label.configure(text='(Change cameras below)')
+        else:
+            self.secondRowStatusLabel.configure(text=response.messages['error'], text_color="#d62828")
+            self.after(2000, lambda: self.secondRowStatusLabel.configure(text_color="#1B2431"))
+
+        self.savedCameraID.delete(0, 'end')
+
+    def deleteSavedCamera_callback(self):
+        cameraToDelete = self.savedCamerasDrop.get()
+
+        if not cameraToDelete:
+            self.secondRowStatusLabel.configure(text='No camera chosen.', text_color='#d62828')
+            self.after(2000, lambda: self.secondRowStatusLabel.configure(text_color='#1b2431'))
+            return
+        
+        response = DBController.deleteCamera(name=cameraToDelete)
+
+        if response.ok:
+            self.secondRowStatusLabel.configure(text='Camera successfully deleted.', text_color='#25be8e')
+            self.after(3000, lambda: self.secondRowStatusLabel.configure(text_color='#1b2431'))
+            cameras = DBController.getCameras()
+            values = [camera[0].name for camera in cameras.data]
+            self.savedCamerasDrop.set('')
+            self.savedCamerasDrop.configure(values=values)
+            self.changeCameraDisplay.set('(NONE)')
+            self.changeCameraDisplay.configure(values=values)
+            if self.cap:
+                self.cap.release()
+                self.placeholder_label.configure(text='(Change cameras below)')
+        else:
+            self.secondRowStatusLabel.configure(text=response.messages['error'], text_color="#d62828")
+            self.after(2000, lambda: self.secondRowStatusLabel.configure(text_color="#1B2431"))
+
+        self.savedCameraID.delete(0, 'end')
+    
     def updateTable_callback(self):
-        inputLicensePlate = self.licensePlateEntry.get()
-        inputVehicleType = self.vehicleTypeEntry.get()
-        inputPrice = self.priceEntry.get()
+        def isPositiveFloat(s: str) -> bool:
+            try:
+                n = float(s)
+                return n >= 0
+            except:
+                return False
+
+        licensePlate = self.licensePlate
+        newLicensePlate = self.licensePlateEntry.get()
+        newVehicleType = self.vehicleTypeEntry.get()
+        newPrice = self.priceEntry.get()
+
+        if not newLicensePlate or not newVehicleType or not newPrice:
+            self.updateStatusLabel.configure(text='No camera chosen.', text_color='#d62828')
+            self.after(2000, lambda: self.updateStatusLabel.configure(text_color='#1b2431'))
+            return
         
-        self.licensePlateEntry.delete(0, tk.END)
-        self.vehicleTypeEntry.delete(0, tk.END)
-        self.priceEntry.delete(0, tk.END)
+        if newVehicleType.lower() not in {'car', 'motorcycle', 'jeepney', 'bus', 'tricycle', 'van', 'truck', 'taxi', 'modern jeepney'}:
+            self.updateStatusLabel.configure(text='Invalid vehicle type.', text_color='#d62828')
+            self.after(2000, lambda: self.updateStatusLabel.configure(text_color='#1b2431'))
+            return
         
-        '''
-            call update row
-        '''
+        if not isPositiveFloat(newPrice):
+            self.updateStatusLabel.configure(text='Invalid price.', text_color='#d62828')
+            self.after(2000, lambda: self.updateStatusLabel.configure(text_color='#1b2431'))
+            return
         
+        response = DBController.editLicensePlate(licensePlate, newLicensePlate, newVehicleType, newPrice)
+
+        if response.ok:
+            self.updateStatusLabel.configure(text='Successfully updated.', text_color='#25be8e')
+            self.after(3000, lambda: self.updateStatusLabel.configure(text_color='#1b2431'))
+
+            for row in self.databaseTable.get_children():
+                self.databaseTable.delete(row)
+
+            filterResponse = DBController.getFilteredLicensePlates(vehicleType=self.prevVehicleType.lower(), date=self.prevDate, hourFrom=self.prevHourFrom, hourTo=self.prevHourTo)
+            
+            if filterResponse.ok:
+                for row in filterResponse.data:
+                    self.databaseTable.insert('', 'end', values=(row[0].licenseNumber, row[0].vehicleType, row[0].cameraId, row[0].time, row[0].date, row[0].price))
+        else:
+            self.updateStatusLabel.configure(text=response.messages['error'], text_color="#d62828")
+            self.after(2000, lambda: self.updateStatusLabel.configure(text_color="#1B2431"))
+
+        self.licensePlateEntry.delete(0, 'end')
+        self.vehicleTypeEntry.delete(0, 'end')
+        self.priceEntry.delete(0, 'end')
+    
+    def setCameraDisplay(self, changeCameraDisplay, cap, placeholder_label):
+        self.changeCameraDisplay = changeCameraDisplay
+        self.placeholder_label = placeholder_label
+        self.cap = cap
         
     def __init__(self, parent):
+        self.ip_cameras = set()
+        self.changeCameraDisplay = None
+        self.placeholder_label = None
+        self.cap = None
+
         tk.Frame.__init__(self, parent, bg = "#090E18")
         
         style = ttk.Style()
@@ -336,21 +535,31 @@ class AdminPage(tk.Frame):
         addCamerasLabel = CTkLabel(upperLeftContent, text = "Add Camera", font = ('Montserrat', 12, 'bold'), anchor = "w", text_color = "#FFFFFF")
         
         manageCamerasFirstRow = tk.Frame(upperLeftContent, bg = "#1B2431")
-        discoverCameraButton = CTkButton(manageCamerasFirstRow, text = "Discover Cameras", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5, command = self.discoverCameras_callback)
-        self.discoveredCamerasDrop = CTkComboBox(manageCamerasFirstRow, values = ["Camera 1", "Camera 2", "Camera 3"], font = ('Montserrat', 12), fg_color = "#FFFFFF", dropdown_fg_color = "#FFFFFF", dropdown_text_color = "#000000", border_color = "#FFFFFF", button_color = "#FFFFFF", text_color = "#000000")
-        self.assignID = CTkEntry(manageCamerasFirstRow, placeholder_text = "Assign ID", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        self.discoverCameraButton = CTkButton(manageCamerasFirstRow, text = "Discover Cameras", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5, command = self.discoverCameras_callback)
+        self.discoveredCamerasDrop = CTkComboBox(manageCamerasFirstRow, values = [], font = ('Montserrat', 12), fg_color = "#FFFFFF", dropdown_fg_color = "#FFFFFF", dropdown_text_color = "#000000", border_color = "#FFFFFF", button_color = "#FFFFFF", text_color = "#000000", state='readonly')
+        self.assignID = CTkEntry(manageCamerasFirstRow, placeholder_text = "Assign Name", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        self.addCameraButton = CTkButton(manageCamerasFirstRow, text = "Add Camera", fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5, font = ('Montserrat', 12, 'bold'), command = self.addCamera_callback)
         self.assignLocation = CTkEntry(manageCamerasFirstRow, placeholder_text = "Assign Location", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
-        addCameraButton = CTkButton(manageCamerasFirstRow, text = "Add Camera", fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5, font = ('Montserrat', 12, 'bold'), command = self.addCamera_callback)
         
+        manageCamerasFirstRowStatus = tk.Frame(upperLeftContent, bg="#1B2431")
+        self.addCameraStatusLabel = CTkLabel(manageCamerasFirstRowStatus, text='Camera successfully added.', font = ('Monteserrat', 13, 'italic'), anchor = "w", text_color = "#1B2431")
+
         manageCamerasLabel = CTkLabel(upperLeftContent, text = "Manage Cameras", font = ('Montserrat', 12, 'bold'), anchor = "w", text_color = "#FFFFFF")
         
+        cameras = DBController.getCameras()
+
         manageCamerasSecondRow = tk.Frame(upperLeftContent, bg = "#1B2431")
-        self.savedCamerasDrop = CTkComboBox(manageCamerasSecondRow, values = ["Camera 1", "Camera 2", "Camera 3"], font = ('Montserrat', 12), fg_color = "#FFFFFF", dropdown_fg_color = "#FFFFFF", dropdown_text_color = "#000000", border_color = "#FFFFFF", button_color = "#FFFFFF", text_color = "#000000")
-        self.savedCameraID = CTkEntry(manageCamerasSecondRow, placeholder_text = "Assigned ID", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        
+        self.savedCamerasDrop = CTkComboBox(manageCamerasSecondRow, values=[camera[0].name for camera in cameras.data], font = ('Montserrat', 12), fg_color = "#FFFFFF", dropdown_fg_color = "#FFFFFF", dropdown_text_color = "#000000", border_color = "#FFFFFF", button_color = "#FFFFFF", text_color = "#000000", state='readonly')
+        self.savedCameraID = CTkEntry(manageCamerasSecondRow, placeholder_text = "Change Name", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
         self.savedCameraLocation = CTkEntry(manageCamerasSecondRow, placeholder_text = "Assigned Location", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        
         updateSavedCameraButton = CTkButton(manageCamerasSecondRow, text = "Update Camera", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5, command = self.updateSavedCamera_callback)
         deleteSavedCameraButton = CTkButton(manageCamerasSecondRow, text = "Delete Camera", font = ('Montserrat', 12, 'bold'), fg_color = "#D62828", text_color = "#FFFFFF", corner_radius = 5, command = self.deleteSavedCamera_callback)
         
+        manageCamerasSecondRowStatus = tk.Frame(upperLeftContent, bg="#1B2431")
+        self.secondRowStatusLabel = CTkLabel(manageCamerasSecondRowStatus, text='Camera successfully added.', font = ('Monteserrat', 13, 'italic'), anchor = "w", text_color = "#1B2431")
+
         lowerLeftContent = CTkFrame(leftContentFrame, fg_color = "#1B2431", corner_radius = 5)
         upperLowerLeft = tk.Frame(lowerLeftContent, bg = "#1B2431")
         # Label for context
@@ -359,7 +568,6 @@ class AdminPage(tk.Frame):
         self.vehicleTypeComboVar = StringVar()
         self.vehicleTypeComboBox = CTkComboBox(upperLowerLeft,
                                           values = ['', 'Car', 'Taxi', 'Jeepney', 'Modern Jeepney', 'Motorcycle', 'Truck', 'Bus', 'Taxi', 'Tricycle'],
-                                          command = self.vehicleTypeCombo_callback,
                                           variable = self.vehicleTypeComboVar,
                                           fg_color = "#FFFFFF",
                                           border_color = "#FFFFFF",
@@ -367,7 +575,8 @@ class AdminPage(tk.Frame):
                                           button_color = "#FFFFFF",
                                           dropdown_fg_color = "#FFFFFF",
                                           dropdown_text_color = "#000000",
-                                          dropdown_font = ('Montserrat', 12))
+                                          dropdown_font = ('Montserrat', 12),
+                                          state='readonly')
         # Date Time Picker
         dateTimeButton = CTkButton(upperLowerLeft,
                                    text = "Date and Time",
@@ -395,15 +604,20 @@ class AdminPage(tk.Frame):
                                       corner_radius = 5,
                                       command = self.clearFilter_callback)
         
+        filterStatus = tk.Frame(upperLowerLeft, bg="#1B2431")
+        self.filterStatusLabel = CTkLabel(filterStatus, text='Invalid hours.', font = ('Monteserrat', 13, 'italic'), anchor = "w", text_color = "#1B2431")
+        
         lowerLowerLeft = tk.Frame(lowerLeftContent, bg = "#090E18")
         databaseFrame = tk.Frame(lowerLowerLeft, bg = "#090E18")
         self.databaseTable = ttk.Treeview(databaseFrame, columns = ('licensePlate', 'vehicleType', 'cameraID', 'time', 'date', 'price'), show = "headings", style = 'Custom.Treeview')
         
+        filterResponse = DBController.getFilteredLicensePlates()
+        if filterResponse.ok:
+            for row in filterResponse.data:
+                self.databaseTable.insert('', 'end', values=(row[0].licenseNumber, row[0].vehicleType, row[0].cameraId, row[0].time, row[0].date, row[0].price))
+
         self.databaseTable.bind('<<TreeviewSelect>>', self.selectDataFromTable)
         self.databaseTable.bind('<Delete>', self.deleteDataFromTable)
-        
-        for entry in data:
-            self.databaseTable.insert('', 'end', values=entry)
         
         self.databaseTable.tag_configure('even', background='#2A2D2E', foreground='#FFFFFF')
         self.databaseTable.tag_configure('odd', background='#343638', foreground='#FFFFFF')
@@ -444,7 +658,10 @@ class AdminPage(tk.Frame):
         self.priceEntry = CTkEntry(priceHandlerFrame, text_color = "#000000", fg_color = "#FFFFFF", corner_radius = 5, font = ('Montserrat', 12))
         
         self.updateTableButton = CTkButton(databaseHandlerRow, fg_color = "#FFFFFF", text = "Update", font = ('Montserrat', 12, 'bold'), corner_radius = 5, text_color = "#000000", command = self.updateTable_callback)
-        # End of Contents of Left Content Frame
+        # End of Contents of Left Content 
+        
+        updateStatus = tk.Frame(databaseHandlerRow, bg = "#1B2431")
+        self.updateStatusLabel = CTkLabel(updateStatus, text='Data successfully updated.', font = ('Monteserrat', 13, 'italic'), anchor = "w", text_color = "#1B2431")
         
         rightContentFrame = CTkFrame(contentFrame, fg_color = "#1B2431", corner_radius = 5)
         # Contents of Right Content Frame
@@ -456,8 +673,11 @@ class AdminPage(tk.Frame):
         selectUserFrame = tk.Frame(leftUpperRight, bg = "#1B2431")
         selectUserLabel = CTkLabel(selectUserFrame, text = "Select User", font = ('Montserrat', 12), anchor = "w", text_color = "#FFFFFF")
         self.selectUserComboVar = StringVar()
+
+        users = DBController.getUsers()
+
         self.selectUserCombo = CTkComboBox(selectUserFrame,
-                                      values = ["Pagtalunan", "Roa", "Rayray", "Mendoza"],
+                                      values = [user[0].username for user in users.data],
                                       command = self.selectUserCombo_callback,
                                       variable = self.selectUserComboVar,
                                       fg_color = "#FFFFFF",
@@ -482,25 +702,31 @@ class AdminPage(tk.Frame):
         firstNameOuter = tk.Frame(upperMiddleRight, bg = "#1B2431")
         firstNameInner = tk.Frame(firstNameOuter, bg = "#1B2431")
         firstNameLabel = CTkLabel(firstNameInner, text = "First Name", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
-        self.firstNameEntry = CTkEntry(firstNameInner, placeholder_text = "Ex. Juan", font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF")
+        self.firstNameVar = StringVar(value='')
+        self.firstNameEntry = CTkEntry(firstNameInner, textvariable=self.firstNameVar, placeholder_text = "Ex. Juan", font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF")
         
         lastNameOuter = tk.Frame(upperMiddleRight, bg = "#1B2431")
         lastNameInner = tk.Frame(lastNameOuter, bg = "#1B2431")
         lastNameLabel = CTkLabel(lastNameInner, text = "Last Name", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
-        self.lastNameEntry = CTkEntry(lastNameInner, placeholder_text = "Ex. Cruz", font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF")
+        self.lastNameVar = StringVar(value='')
+        self.lastNameEntry = CTkEntry(lastNameInner, textvariable=self.lastNameVar, placeholder_text = "Ex. Cruz", font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF")
         
         emailOuter = tk.Frame(upperMiddleRight, bg = "#1B2431")
         emailInner = tk.Frame(emailOuter, bg = "#1B2431")
         emailLabel = CTkLabel(emailInner, text = "Email", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
-        self.emailEntry = CTkEntry(emailInner, placeholder_text = "Ex. juancruz@domain.com", font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF")
+        self.emailVar = StringVar(value='')
+        self.emailEntry = CTkEntry(emailInner, textvariable=self.emailVar, placeholder_text = "Ex. juancruz@domain.com", font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF")
         
         usernamePasswordOuter = tk.Frame(upperMiddleRight, bg = "#1B2431")
         usernameInner = tk.Frame(usernamePasswordOuter, bg = "#1B2431")
         usernameLabel = CTkLabel(usernameInner, text = "Username", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
-        self.usernameEntry = CTkEntry(usernameInner, font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF")
+        self.usernameVar = StringVar(value='')
+        self.usernameEntry = CTkEntry(usernameInner, textvariable=self.usernameVar, font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF")
+        
         passwordInner = tk.Frame(usernamePasswordOuter, bg = "#1B2431")
         passwordLabel = CTkLabel(passwordInner, text = "Password", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
-        self.passwordEntry = CTkEntry(passwordInner, font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF", show = "*")
+        self.passwordVar = StringVar(value='')
+        self.passwordEntry = CTkEntry(passwordInner, textvariable=self.passwordVar, font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF", show = "*")
         
         lowerMiddleRight = tk.Frame(middleRight, bg = "#1B2431")
         
@@ -510,42 +736,45 @@ class AdminPage(tk.Frame):
         leftAdminFrameInner = tk.Frame(adminFrameOuter, bg = "#1B2431")
         adminLabel = CTkLabel(leftAdminFrameInner, text = "Administrator", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
         rightAdminFrameInner = tk.Frame(adminFrameOuter, bg = "#1B2431")
-        adminVar = IntVar(value = 0)
-        adminRadio_yes = CTkRadioButton(rightAdminFrameInner, text = "Yes", variable = adminVar, value = 1, command = self.adminRadioButton_callback)
-        adminRadio_no = CTkRadioButton(rightAdminFrameInner, text = "No", variable = adminVar, value = 2, command = self.adminRadioButton_callback)
+        self.adminVar = IntVar(value = 0)
+        adminRadio_yes = CTkRadioButton(rightAdminFrameInner, text = "Yes", variable = self.adminVar, value = 1, command = self.adminRadioButton_callback)
+        adminRadio_no = CTkRadioButton(rightAdminFrameInner, text = "No", variable = self.adminVar, value = 2, command = self.adminRadioButton_callback)
         
         congestionPriceFrameOuter = tk.Frame(lowerMiddleRight, bg = "#1B2431")
         leftCongestionPriceFrameInner = tk.Frame(congestionPriceFrameOuter, bg = "#1B2431")
         congestionPriceLabel = CTkLabel(leftCongestionPriceFrameInner, text = "Change Congestion Price", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
         rightCongestionPriceFrameInner = tk.Frame(congestionPriceFrameOuter, bg = "#1B2431")
-        changePriceVar = IntVar(value = 0)
-        changePriceRadio_yes = CTkRadioButton(rightCongestionPriceFrameInner, text = "Yes", variable = changePriceVar, value = 1, command = self.changePriceRadioButton_callback)
-        changePriceRadio_no = CTkRadioButton(rightCongestionPriceFrameInner, text = "No", variable = changePriceVar, value = 2, command = self.changePriceRadioButton_callback)
+        self.changePriceVar = IntVar(value = 0)
+        changePriceRadio_yes = CTkRadioButton(rightCongestionPriceFrameInner, text = "Yes", variable = self.changePriceVar, value = 1, command = self.changePriceRadioButton_callback)
+        changePriceRadio_no = CTkRadioButton(rightCongestionPriceFrameInner, text = "No", variable = self.changePriceVar, value = 2, command = self.changePriceRadioButton_callback)
         
         activeHoursFrameOuter = tk.Frame(lowerMiddleRight, bg = "#1B2431")
         leftActiveHoursFrameInner = tk.Frame(activeHoursFrameOuter, bg = "#1B2431")
         activeHoursLabel = CTkLabel(leftActiveHoursFrameInner, text = "Change Active Hours", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
         rightActiveHoursFrameInner = tk.Frame(activeHoursFrameOuter, bg = "#1B2431")
-        activeHoursRadioVar = IntVar(value = 0)
-        activeHoursRadio_yes = CTkRadioButton(rightActiveHoursFrameInner, text = "Yes", variable = activeHoursRadioVar, value = 1, command = self.changeDetectableRadioButton_callback)
-        activeHoursRadio_no = CTkRadioButton(rightActiveHoursFrameInner, text = "No", variable = activeHoursRadioVar, value = 2, command = self.changeDetectableRadioButton_callback)
+        self.activeHoursRadioVar = IntVar(value = 0)
+        activeHoursRadio_yes = CTkRadioButton(rightActiveHoursFrameInner, text = "Yes", variable = self.activeHoursRadioVar, value = 1, command = self.changeDetectableRadioButton_callback)
+        activeHoursRadio_no = CTkRadioButton(rightActiveHoursFrameInner, text = "No", variable = self.activeHoursRadioVar, value = 2, command = self.changeDetectableRadioButton_callback)
         
         detectableFrameOuter = tk.Frame(lowerMiddleRight, bg = "#1B2431")
         leftDetectableFrameInner = tk.Frame(detectableFrameOuter, bg = "#1B2431")
         detectableLabel = CTkLabel(leftDetectableFrameInner, text = "Change Detectable Vehicles", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
         rightDetectableFrameInner = tk.Frame(detectableFrameOuter, bg = "#1B2431")
-        detectableRadioVar = IntVar(value = 0)
-        detectableRadio_yes = CTkRadioButton(rightDetectableFrameInner, text = "Yes", variable = detectableRadioVar, value = 1, command = self.changeDetectableRadioButton_callback)
-        detectableRadio_no = CTkRadioButton(rightDetectableFrameInner, text = "No", variable = detectableRadioVar, value = 2, command = self.changeDetectableRadioButton_callback)
+        self.detectableRadioVar = IntVar(value = 0)
+        detectableRadio_yes = CTkRadioButton(rightDetectableFrameInner, text = "Yes", variable = self.detectableRadioVar, value = 1, command = self.changeDetectableRadioButton_callback)
+        detectableRadio_no = CTkRadioButton(rightDetectableFrameInner, text = "No", variable = self.detectableRadioVar, value = 2, command = self.changeDetectableRadioButton_callback)
         
         downloadFrameOuter = tk.Frame(lowerMiddleRight, bg = "#1B2431")
         leftDownloadFrameInner = tk.Frame(downloadFrameOuter, bg = "#1B2431")
         downloadLabel = CTkLabel(leftDownloadFrameInner, text = "Download CSV", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
         rightDownloadFrameInner = tk.Frame(downloadFrameOuter, bg = "#1B2431")
-        downloadRadioVar = IntVar(value = 0)
-        downloadRadio_yes = CTkRadioButton(rightDownloadFrameInner, text = "Yes", variable = downloadRadioVar, value = 1, command = self.downloadCSVRadioButton_callback)
-        downloadRadio_no = CTkRadioButton(rightDownloadFrameInner, text = "No", variable = downloadRadioVar, value = 2, command = self.downloadCSVRadioButton_callback)
+        self.downloadRadioVar = IntVar(value = 0)
+        downloadRadio_yes = CTkRadioButton(rightDownloadFrameInner, text = "Yes", variable = self.downloadRadioVar, value = 1, command = self.downloadCSVRadioButton_callback)
+        downloadRadio_no = CTkRadioButton(rightDownloadFrameInner, text = "No", variable = self.downloadRadioVar, value = 2, command = self.downloadCSVRadioButton_callback)
         
+        editUserStatus = tk.Frame(lowerMiddleRight, bg = "#1B2431")
+        self.editUserStatusLabel = CTkLabel(editUserStatus, text='User successfully edited.', font = ('Monteserrat', 13, 'italic'), anchor = "w", text_color = "#1B2431")
+
         lowerRight = tk.Frame(rightContentFrame, bg = "#1B2431")
         deleteUserButton = CTkButton(lowerRight, text = "Delete User", font = ('Montserrat', 12, 'bold'), text_color = "#FFFFFF", fg_color = "#D62828",
                                   command = self.deleteUserButton_callback, corner_radius = 5)
@@ -557,7 +786,7 @@ class AdminPage(tk.Frame):
         # Dashboard Button - Navigates to Dashboard
         dashboardButton = CTkButton(navigationFrame,
                                 text = 'Dashboard',
-                                command = lambda: parent.show_frame(parent.dashboardFrame), 
+                                command = lambda: switch.showDashboardPage(parent), 
                                 font = ('Montserrat', 15),
                                 border_width = 2,
                                 corner_radius = 15,
@@ -584,21 +813,27 @@ class AdminPage(tk.Frame):
         addCamerasLabel.pack(side = "top", fill = "x", padx = 10, pady = (5,0))
         
         manageCamerasFirstRow.pack(side = "top", fill = "x", padx = 10, pady = (2, 10))
-        discoverCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
+        manageCamerasFirstRowStatus.pack(side = "top", fill = "x", padx = 15, pady = (2))
+        self.discoverCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
         self.discoveredCamerasDrop.pack(side = "left", fill = "x", expand = True, padx = 15)
         self.assignID.pack(side = "left", fill = "x", expand = True, padx = 15)
+
+        self.addCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
+        self.addCameraStatusLabel.pack(side='left', pady = 10, expand = True, fill = "x")
         self.assignLocation.pack(side = "left", fill = "x", expand = True, padx = 15)
-        addCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
         
         manageCamerasLabel.pack(side = "top", fill = "x", padx = 10, pady = (5,0))
         
         manageCamerasSecondRow.pack(side = "top", fill = "x", padx = 10, pady = (2, 10))
+        manageCamerasSecondRowStatus.pack(side = "top", fill = "x", padx = 15, pady = (2))
         self.savedCamerasDrop.pack(side = "left", fill = "x", expand = True, padx = 15)
         self.savedCameraID.pack(side = "left", fill = "x", expand = True, padx = 15)
         self.savedCameraLocation.pack(side = "left", fill = "x", expand = True, padx = 15)
         updateSavedCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
         deleteSavedCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
         
+        self.secondRowStatusLabel.pack(side='left', pady = 10, expand = True, fill = "x")
+
         lowerLeftContent.pack(side = "top", expand = True, fill = "both", padx = 10, pady = 10, ipadx = 10, ipady = 10)
         
         upperLowerLeft.pack(side = "top", fill = "both", padx = 10, pady = 10)
@@ -613,6 +848,10 @@ class AdminPage(tk.Frame):
         # Go Button
         goFilterButton.pack(side = "right", padx = 5, pady = 5)
         clearFilterButton.pack(side = "right", padx = 5, pady = 5)
+
+        filterStatus.pack(side = "top", fill = "both", expand = True, padx = 10, pady = 2)
+        self.filterStatusLabel.pack(side='left', pady = 10, expand = True, fill = "x")
+
         lowerLowerLeft.pack(side = "top", expand = True, fill = "both", padx = 5, pady = 5)
         databaseFrame.pack(side = "top", expand = True, fill = "both", padx = 2, pady = 2)
         self.databaseTable.pack(expand=True, fill='both', padx=0, pady=0, side = "left")
@@ -635,6 +874,9 @@ class AdminPage(tk.Frame):
         self.priceEntry.pack(side = "top", fill = "x", expand = True)
         
         self.updateTableButton.pack(side = "left", fill = "x", expand = True)
+
+        updateStatus.pack(side = "top", fill = "both", expand = True, padx = 10, pady = 2)
+        self.updateStatusLabel.pack(side='left', pady = 10, expand = True, fill = "x")
         
         # End of Contents of Left Content Frame
         rightContentFrame.pack(side = "left", expand = False, fill = "both", padx = 10, pady = 10, ipadx = 10, ipady = 10)
@@ -716,6 +958,9 @@ class AdminPage(tk.Frame):
         rightDownloadFrameInner.pack(side = "left", fill = "both", expand = True)
         downloadRadio_no.pack(side = "right", padx = 0, pady = 2)
         downloadRadio_yes.pack(side = "right", padx = 5, pady = 2)
+
+        editUserStatus.pack(side = "top", fill = "both", expand = True, padx = 10, pady = 2)
+        self.editUserStatusLabel.pack(side='left', pady = 10, expand = True, fill = "x")
         
         lowerRight.pack(side = "top", expand = False, fill = "both", padx = 10, pady = 2)
         applyUserButton.pack(side = "right", expand = False, fill = "x", padx = (5,10), pady = 2)

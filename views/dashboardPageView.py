@@ -11,10 +11,28 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
+import controllers.controller as cont
+import views.switchView as switch
+
 from customtkinter import *
 from tkinter import ttk
 from PIL import Image, ImageTk
 from controllers.controller import AIController
+from controllers.dbController import DBController
+from controllers.s3controller import S3Controller
+
+classnames = [
+    "person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck", "boat",
+    "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat",
+    "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella",
+    "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite", "baseball bat",
+    "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup",
+    "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli",
+    "carrot", "hot dog", "pizza", "donut", "cake", "chair", "sofa", "pottedplant", "bed",
+    "diningtable", "toilet", "tvmonitor", "laptop", "mouse", "remote", "keyboard", "cell phone",
+    "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors",
+    "teddy bear", "hair drier", "toothbrush"
+]
 
 class DashboardPage(tk.Frame):
     # Close Application
@@ -24,13 +42,66 @@ class DashboardPage(tk.Frame):
     # Minimize or Iconify the Application
     def minimizeApplicaiton(self):
         self.master.iconify()
+
+    class StartCamera:
+        def start(self, cap, placeholder_label):
+            if AIController.vehicle_detection_model.predictor:
+                AIController.vehicle_detection_model.predictor.trackers[0].reset()
+
+            detected_ids = set()
+                
+            def show_frame():
+                success, frame = cap.read()
+
+                if cont.loggedIn and success:
+                    results = AIController.detect_vehicle(frame)
+                    annotated_frame = results[0].plot()
+
+                    for result in results:
+                        for boxes in result.boxes:
+                            if boxes.id:
+                                id = int(boxes.id.item())
+                                vehicle_id = int(boxes.cls.item())
+                                if id not in detected_ids:
+                                    detected_ids.add(id)
+                                    x1, y1, x2, y2 = boxes.xyxy[0]
+                                    cropped_vehicle = frame[int(y1.item()):int(y2.item()), int(x1.item()):int(x2.item())]
+                                    
+                                    lp_result = AIController.detect_license_plate(frame=cropped_vehicle)
+                                    if lp_result[0].boxes:
+                                        x1, y1, x2, y2 = lp_result[0].boxes[0].xyxy[0]
+                                        cropped_lp = cropped_vehicle[int(y1.item()):int(y2.item()), int(x1.item()):int(x2.item())]
+                                        cv2.imwrite(f'test_lp/{classnames[vehicle_id]}_{id}.jpg', cropped_lp)
+
+                    frame_rgb = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
+                    img = Image.fromarray(frame_rgb)
+                    img = img.resize((720, 540))
+                    img_tk = ImageTk.PhotoImage(image=img)
+
+                    if cont.cameraEnabled:
+                        placeholder_label.configure(image=img_tk, text='')
+                    placeholder_label.after(4 if cont.cameraEnabled else 800, show_frame)
+                else:
+                    cap.release()
+                
+            show_frame()
     
     # Function to change the camera displayed
-    def changeCameraDisplay_callback(self, choice):
-        # Insert Logic Here
-        print("Change Camera Display callback: ", choice)
+    def changeCameraDisplay_callback(self, cameraName):
+        if self.cap:
+            self.cap.release()
+
+        result = DBController.getCamera(name=cameraName)
+        ip_addr = result.id
+        cameraUrl = f'rtsp://{ip_addr}:554'
+        video_path = "https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/IMG_9613_1.mp4"
+
+        self.cap = cv2.VideoCapture(video_path)
+        DashboardPage.StartCamera().start(self.cap, self.placeholder_label)
 
     def __init__(self, parent):
+        self.cap = None
+
         tk.Frame.__init__(self, parent, bg = "#090E18")
         
         # Style definition. Can be utilized with the Change Theme from Light to Dark
@@ -89,7 +160,7 @@ class DashboardPage(tk.Frame):
         # Goes to the Analytics Page
         analyticsButton = CTkButton(bottomFrame,
                                     text = 'Analytics',
-                                    command = lambda: parent.show_frame(parent.analyticsFrame),
+                                    command = lambda: switch.showAnalyticsPage(parent),
                                     font = ('Montserrat', 15),
                                     border_width = 2,
                                     corner_radius = 15,
@@ -102,7 +173,7 @@ class DashboardPage(tk.Frame):
         # Goes to the Admin Page (Should be disabled unless the user logged in is an Admin)
         adminButton = CTkButton(bottomFrame,
                                 text = 'Admin',
-                                command = lambda: parent.show_frame(parent.adminFrame), 
+                                command = lambda: switch.showAdminPage(parent, changeCameraDisplay, self.cap, self.placeholder_label), 
                                 font = ('Montserrat', 15),
                                 border_width = 2,
                                 corner_radius = 15,
@@ -215,15 +286,17 @@ class DashboardPage(tk.Frame):
         cameraFrame.pack(fill = 'both', expand = True, padx = 15, pady = 10)
 
         # This is where you should input the camera Frame. Delete the code below this if integrating the camera display.
-        placeholder_delete_this_label = CTkLabel(cameraFrame, text = 'PLACEHOLDER TEXT HERE', font = ('Montserrat', 45), text_color = 'white')
-        placeholder_delete_this_label.pack(fill = 'both', expand = True)
+        self.placeholder_label = CTkLabel(cameraFrame, text='(Change cameras below)', font = ('Montserrat', 45), text_color = 'white')
+        self.placeholder_label.pack(fill = 'both', expand = True)
         # ----
         
         dropdownFrame = CTkFrame(cameraFrame, fg_color = "#1B2431")
         dropdownFrame.pack(fill = 'x', side = "bottom", padx = 10, pady = 10)
+
+        cameras = DBController.getCameras()
         
-        changeCameraDisplay = CTkComboBox(dropdownFrame, values = ["Camera 1", "Camera 2", "Camera 3", "Camera 4", "Camera 5"], command = self.changeCameraDisplay_callback, width = 100)
-        changeCameraDisplay.set("Camera 1")
+        changeCameraDisplay = CTkComboBox(dropdownFrame, values=[camera[0].name for camera in cameras.data], command=self.changeCameraDisplay_callback, width=100, state='readonly')
+        changeCameraDisplay.set('(NONE)')
         changeCameraDisplay.pack(side = "right")
         
         changeCameraLabel = CTkLabel(dropdownFrame, text = "Change Camera", font = ('Montserrat', 13), text_color = "#FFFFFF")
@@ -235,7 +308,7 @@ class DashboardPage(tk.Frame):
                                     height = 32,
                                     width = 148,
                                     text_color = '#48BFE3',
-                                    command = lambda: parent.show_frame(parent.configFrame), 
+                                    command = lambda: switch.showSettingsPage(parent), 
                                     border_color = '#48BFE3', 
                                     fg_color = '#090E18', 
                                     border_width = 2,
@@ -247,34 +320,6 @@ class DashboardPage(tk.Frame):
         
         settingsButton.bind("<Enter>", lambda event: settingsButton.configure(text_color="#090E18", fg_color = "#48BFE3")) 
         settingsButton.bind("<Leave>", lambda event: settingsButton.configure(text_color="#48BFE3", fg_color = "#090E18")) 
-
-        '''
-        For demo only, will be used for camera implementation.
-        '''
-        def start_video():
-            video_path = "https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/Back+to+school+traffic+in+Metro+Manila.mp4"
-            cap = cv2.VideoCapture(video_path)
-
-            def show_frame():
-                success, frame = cap.read()
-
-                if success:
-                    results = AIController.detect_vehicle(frame)
-                    annotated_frame = results[0].plot()
-
-                    frame_rgb = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
-                    img = Image.fromarray(frame_rgb)
-                    img = img.resize((720, 540))
-                    img_tk = ImageTk.PhotoImage(image=img)
-
-                    placeholder_delete_this_label.configure(image=img_tk)
-                    placeholder_delete_this_label.after(2, show_frame)
-                else:
-                    cap.release()
-
-            show_frame()
-
-        #start_video()
 
         '''
         @Mendoza

@@ -14,6 +14,7 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 from controllers.dbController import DBController as db
 from sessions.userSession import UserSession
+import controllers.controller as cont
 
 class LoginPage(tk.Frame):
     # Close Application
@@ -41,6 +42,8 @@ class LoginPage(tk.Frame):
         if response.ok:
             if UserSession.storeUserSession(response.data):
                 self.master.show_frame(self.master.dashboardFrame)
+                cont.cameraEnabled = True
+                cont.loggedIn = True
             else:
                 incorrectLabel.configure(text='Error with user session.')
                 self.incorrectCredentials(incorrectLabel)

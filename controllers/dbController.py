@@ -17,6 +17,8 @@ from models.schemas import Price
 from sqlalchemy import select
 from sqlalchemy import update
 from sqlalchemy import or_
+from sqlalchemy import and_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 class DBController:
@@ -66,6 +68,31 @@ class DBController:
             return False
         
     @staticmethod
+    def otherEmailExists(username, newEmail) -> bool:
+        '''
+        Checks if another email already exists in the User table in database aside from 
+        the current user's email.
+
+        params:
+        - email: str => the email which will be checked for existence in the database
+
+        returns:
+        - True => if the executed query contains a User data
+        - False => if the executed query does contain a User data
+        '''
+        try:
+            user = DBController.getUser(username=username)
+            with Session(Connection.engine) as session:
+                stmt = select(User).where(and_(User.id != user.id, User.email == newEmail))
+                result = session.scalar(stmt)
+                return result is not None
+        except Exception as e:
+            with open('logs.txt', 'a') as file:
+                now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py emailExists() - {repr(e)}\n')
+            return False
+        
+    @staticmethod
     def usernameExists(username) -> bool:
         '''
         Checks if the username already exists in the User table in database.
@@ -86,6 +113,47 @@ class DBController:
             with open('logs.txt', 'a') as file:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/dbController.py usernameExists() - {repr(e)}\n')
+            return False
+        
+    @staticmethod
+    def otherUsernameExists(username, newUsername) -> bool:
+        '''
+        Checks if another username already exists in the User table in database
+        aside from the current user's username.
+
+        params:
+        - username: str => the username which will be checked for existence in the database
+
+        returns:
+        - True => if the executed query contains a User data
+        - False => if the executed query does contain a User data
+        '''
+        try:
+            user = DBController.getUser(username=username)
+            with Session(Connection.engine) as session:
+                stmt = select(User).where(and_(User.id != user.id, User.username == newUsername))
+                result = session.scalar(stmt)
+                return result is not None
+        except Exception as e:
+            with open('logs.txt', 'a') as file:
+                now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py emailExists() - {repr(e)}\n')
+            return False
+        
+    @staticmethod
+    def cameraExists(ip_addr='', name='') -> bool:
+        try:
+            with Session(Connection.engine) as session:
+                if name:
+                    stmt = select(Camera).where(or_(Camera.id == ip_addr, Camera.name == name))
+                else:
+                    stmt = select(Camera).where(Camera.id == ip_addr)
+                result = session.scalar(stmt)
+                return result is not None
+        except Exception as e:
+            with open('logs.txt', 'a') as file:
+                now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py cameraExists() - {repr(e)}\n')
             return False
         
     @staticmethod
@@ -110,6 +178,19 @@ class DBController:
             with open('logs.txt', 'a') as file:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/dbController.py getUser() - {repr(e)}\n')
+            return None
+        
+    @staticmethod
+    def getCamera(name: str) -> Response:
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(Camera).where(Camera.name == name)
+                result = session.scalar(stmt)
+                return result
+        except Exception as e:
+            with open('logs.txt', 'a') as file:
+                now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py getCamera() - {repr(e)}\n')
             return None
         
     @staticmethod
@@ -217,7 +298,7 @@ class DBController:
     Database transaction methods
     '''
     @staticmethod
-    def registerUser(email: str, username: str, fullName: str, password: str, isAdmin=False) -> Response:
+    def registerUser(email: str, username: str, firstName: str, lastName: str, password: str, isAdmin=False, canChangePrice=False, canDownload=False, canChangeDetect=False, canEditHours=False) -> Response:
         '''
         Inserts a new row (if it doesn't already exist yet) in the User table containing the 
         auto-generated ID, email, username, full name, is admin, and password. Corresponding
@@ -226,14 +307,15 @@ class DBController:
         params:
         - email: str => the email inputted by the user for registration
         - username: str => the username inputted for registration
-        - fullName: str => the full name inputted for registration
+        - firstName: str => the first name inputted for registration
+        - lastName: str => the last name inputted for registration
         - password: str => the password inputted for registration
         - isAdmin: bool => True if the user has admin privileges, and False otherwise
 
         returns:
         - response: Response => contains the response status and messages
         '''
-        credentials = {'email': email, 'username': username, 'fullName': fullName, 'password': password}
+        credentials = {'email': email, 'username': username, 'firstName': firstName, 'lastName': lastName, 'password': password}
         response = DBController.validateMissing(credentials)
 
         if not response.ok:
@@ -265,8 +347,13 @@ class DBController:
                     user = User(
                         email=email, 
                         username=username,
-                        fullName=fullName,
+                        firstName=firstName,
+                        lastName=lastName,
                         isAdmin=isAdmin,
+                        canChangeDetect=canChangeDetect,
+                        canChangePrice=canChangePrice,
+                        canEditHours=canEditHours,
+                        canDownload=canDownload,
                         password=password
                     )
                     session.add(user)
@@ -324,7 +411,7 @@ class DBController:
         return response
     
     @staticmethod
-    def addLicensePlate(userId: int, cameraId: int, priceId: int, licenseNumber: str) -> Response:
+    def addLicensePlate(userId: int, cameraId: int, licenseNumber: str, vehicleType: str, price: float, imageUrl: str, date=None, time=None) -> Response:
         '''
         Adds a recognized license plate number from the object detection module to the database, 
         accompanied with the user ID, camera ID, vehicle type, and the time and date when the 
@@ -350,10 +437,12 @@ class DBController:
                     license = DetectedLicensePlate(
                         userId=userId,
                         cameraId=cameraId,
-                        priceId=priceId,
                         licenseNumber=licenseNumber,
-                        date=datetime.now(),
-                        time=datetime.now().time()
+                        vehicleType=vehicleType,
+                        price=price,
+                        date=date, # datetime.now()
+                        time=time, # datetime.now().time()
+                        image=imageUrl
                     )
                     session.add(license)
                     session.commit()
@@ -388,6 +477,51 @@ class DBController:
                     session.delete(result)
                     session.commit()
                     response.ok = True
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+
+        return response
+    
+    @staticmethod
+    def getFilteredLicensePlates(vehicleType=None, date=None, hourFrom=None, hourTo=None):
+        response = DBController.Response()
+        
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(DetectedLicensePlate)
+                if vehicleType:
+                    stmt = stmt.where(DetectedLicensePlate.vehicleType == vehicleType)
+                if date and hourFrom and hourTo:
+                    stmt = stmt.where(and_(
+                        DetectedLicensePlate.date == date,
+                        DetectedLicensePlate.time >= hourFrom,
+                        DetectedLicensePlate.time <= hourTo
+                    ))
+                stmt = stmt.order_by(desc(DetectedLicensePlate.date)).order_by(desc(DetectedLicensePlate.time))
+                results = session.execute(stmt).all()
+                response.ok = True
+                response.data = results
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+
+        return response
+    
+    @staticmethod
+    def editLicensePlate(licensePlate: str, newLicensePlate: str, vehicleType: str, price: float) -> Response:
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                stmt = update(DetectedLicensePlate).where(DetectedLicensePlate.licenseNumber == licensePlate).values(
+                    licenseNumber=newLicensePlate,
+                    vehicleType=vehicleType,
+                    price=price
+                )
+                session.execute(stmt)
+                session.commit()
+                response.ok = True
         except Exception as e:
             response.ok = False
             response.messages['error'] = repr(e)
@@ -501,4 +635,166 @@ class DBController:
             response.ok = False
             response.messages['error'] = repr(e)
         
+        return response
+    
+    @staticmethod
+    def registerCamera(ip_addr: str, name='', location='') -> Response:
+        response = DBController.Response()
+
+        try:
+            if DBController.cameraExists(name=name):
+                response.ok = False
+                response.messages['error'] = 'Camera name already exists.'
+            else:
+                with Session(Connection.engine) as session:
+                    camera = Camera(
+                        id=ip_addr,
+                        name=name,
+                        location=location
+                    )
+                    session.add(camera)
+                    session.commit()
+                    response.ok = True
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+        
+        return response
+    
+    @staticmethod
+    def editCamera(oldName: str, newName: str) -> Response:
+        response = DBController.Response()
+
+        try:
+            if DBController.cameraExists(name=newName):
+                response.ok = False
+                response.messages['error'] = 'Camera name already exists.'
+            else:
+                with Session(Connection.engine) as session:
+                    stmt = update(Camera).where(Camera.name == oldName).values(name=newName)
+                    session.execute(stmt)
+                    session.commit()
+                    response.ok = True
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+
+        return response
+
+    @staticmethod
+    def getCameras() -> Response:
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(Camera)
+                res = session.execute(stmt).all()
+                response.ok = True
+                response.data = res
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+        
+        return response
+    
+    @staticmethod
+    def deleteCamera(name: str) -> Response:
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(Camera).where(Camera.name == name)
+                result = session.scalar(stmt)
+                session.delete(result)
+                session.commit()
+                response.ok = True
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+        
+        return response
+    
+    @staticmethod
+    def getUsers() -> Response:
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(User)
+                result = session.execute(stmt).all()
+                response.ok = True
+                response.data = result
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+        
+        return response
+    
+    @staticmethod
+    def editUser(username: str, newUsername: str, newEmail: str, newFirstName: str, newLastName: str, newPassword: str, isAdmin: bool, canChangeDetect: bool, canChangePrice: bool, canEditHours: bool, canDownload: bool):
+        credentials = {'username': newUsername, 'email': newEmail, 'firstName': newFirstName, 'lastName': newLastName, 'password': newPassword}
+        response = DBController.validateMissing(credentials)
+
+        if not response.ok:
+            return response
+        
+        try:
+            if not DBController.isValidEmail(newEmail):
+                response.ok = False
+                response.messages['error'] = 'Email error.'
+                response.messages['email'] = 'Invalid email.'
+            elif not DBController.isValidUsername(newUsername):
+                response.ok = False
+                response.messages['error'] = 'Username error.'
+                response.messages['username'] = 'Username should be alphanumeric only.'
+            elif DBController.otherEmailExists(username, newEmail):
+                response.ok = False
+                response.messages['error'] = 'Email error.'
+                response.messages['email'] = 'Email already exists.'
+            elif DBController.otherUsernameExists(username, newUsername):
+                response.ok = False
+                response.messages['error'] = 'Username error.'
+                response.messages['username'] = 'Username already exists.'
+            elif len(newUsername) > 50:
+                response.ok = False
+                response.messages['error'] = 'Username error.'
+                response.messages['username'] = 'Length should be less than 50 characters.'
+            else:
+                with Session(Connection.engine) as session:
+                    stmt = update(User).where(User.username == username).values(
+                        username=newUsername,
+                        email=newEmail,
+                        firstName=newFirstName,
+                        lastName=newLastName,
+                        password=newPassword,
+                        isAdmin=isAdmin,
+                        canChangeDetect=canChangeDetect,
+                        canChangePrice=canChangePrice,
+                        canDownload=canDownload,
+                        canEditHours=canEditHours
+                    )
+                    session.execute(stmt)
+                    session.commit()
+                    response.ok = True
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+
+        return response
+    
+    @staticmethod
+    def deleteUser(username: str) -> Response:
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(User).where(User.username == username)
+                user = session.scalar(stmt)
+                session.delete(user)
+                session.commit()
+                response.ok = True
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+
         return response

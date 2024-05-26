@@ -28,8 +28,8 @@ from ultralytics import YOLO
 from cnocr import CnOcr
 
 class AIController:
-    vehicleClasses = set([i for i in range(9)])
-    vehicle_detection_model = YOLO('trained_models/vehicle_detection/trained_yolov8n_2.pt')
+    vehicleClasses = set([2, 3, 5, 7])
+    vehicle_detection_model = YOLO('yolov8n.pt')
     lp_detection_model = YOLO('trained_models/lp_detection/trained_yolov8n_3.pt')
     cnocr = CnOcr(det_model_name='en_PP-OCRv3_det', rec_model_name='en_PP-OCRv3')
 
@@ -56,6 +56,9 @@ class AIController:
         else:
             if id in AIController.vehicleClasses:
                 AIController.vehicleClasses.remove(id)
+
+cameraEnabled = False
+loggedIn = False
 
 def bounding_box(frame, box, color, classNames):
     x1, y1, x2, y2 = box.xyxy[0]
@@ -255,18 +258,21 @@ class AccountController:
         
         Functions are called in the __init__ method of the pages(config, dashboard, and analytics)
     '''
-    def dashboard_page_restriction(adminButton, userType):
+    @staticmethod
+    def admin_page_restriction(adminButton, userType):
         if userType == "admin":
             adminButton.config(state = 'normal')
         else:
             adminButton.config(state = 'disabled')
     
+    @staticmethod
     def analytics_page_restriction(downloadButton, userType):
         if userType == "admin":
             downloadButton.config(state = 'normal')
         else:
             downloadButton.config(state = 'disabled')
     
+    @staticmethod
     def config_page_restriction(carTrueRadioButton, carFalseRadioButton, truckTrueRadioButton,
                                 truckFalseRadioButton, jeepneyTrueRadioButton, jeepneyFalseRadioButton,
                                 busTrueRadioButton, busFalseRadioButton, motorTrueRadioButton,

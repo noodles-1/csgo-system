@@ -13,31 +13,38 @@ class Base(DeclarativeBase):
 
 class User(Base):
     '''
-    User table with columns ID (PK), email, username, full name, is admin, and password.
+    User table with columns ID (PK), email, username, full name, is admin, and privilege
+    to change vehicles to detect, congestion prices, edit hours, and download CSV.
     '''
     __tablename__ = 'user'
 
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str]
     username: Mapped[str] = mapped_column(String(50))
-    fullName: Mapped[str] = mapped_column(String(80))
+    firstName: Mapped[str] = mapped_column(String(80))
+    lastName: Mapped[str] = mapped_column(String(80))
     isAdmin: Mapped[bool]
+    canChangeDetect: Mapped[bool]
+    canChangePrice: Mapped[bool]
+    canEditHours: Mapped[bool]
+    canDownload: Mapped[bool]
     password: Mapped[str]
 
     def __repr__(self) -> str:
-        return f'User(userId={self.id}, email={self.email}, username={self.username}, fullName={self.fullName}, isAdmin={self.isAdmin})'
+        return f'User(userId={self.id}, email={self.email}, username={self.username}, fullName={self.firstName} {self.lastName}, isAdmin={self.isAdmin})'
     
 class Camera(Base):
     '''
-    Camera table with columns ID (PK) and the camera name.
+    Camera table with columns ID containing the IP address (PK) and the camera name.
     '''
     __tablename__ = 'camera'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[str] = mapped_column(primary_key=True)
     name: Mapped[str]
+    location: Mapped[str]
 
     def __repr__(self) -> str:
-        return f'Camera(cameraId={self.id}, name={self.name})'
+        return f'Camera(cameraId={self.id}, name={self.name}, location={self.location})'
     
 class Price(Base):
     '''
@@ -62,8 +69,9 @@ class DetectedLicensePlate(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     userId: Mapped[int] = mapped_column(ForeignKey('user.id'))
     cameraId: Mapped[int] = mapped_column(ForeignKey('camera.id'))
-    priceId: Mapped[int] = mapped_column(ForeignKey('price.id'))
     licenseNumber: Mapped[str] = mapped_column(String(14))
+    vehicleType: Mapped[str]
+    price: Mapped[float]
     date: Mapped[Date] = mapped_column(Date())
     time: Mapped[Time] = mapped_column(Time(timezone=True))
     image: Mapped[str]

@@ -2,11 +2,6 @@ import os
 import sys
 import tkinter as tk
 import matplotlib
-from customtkinter import *
-from tkinter import ttk
-from PIL import Image
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
 
 matplotlib.use("TkAgg")
 
@@ -14,6 +9,13 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
+import views.switchView as switch
+
+from customtkinter import *
+from tkinter import ttk
+from PIL import Image
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
 from controllers.controller import ReportGenerationController as rgctrl
 
 class AnalyticsPage(tk.Frame):
@@ -215,7 +217,7 @@ class AnalyticsPage(tk.Frame):
         # Dashboard Button - Navigates to Dashboard
         dashboardButton = CTkButton(navigationFrame,
                                 text = 'Dashboard',
-                                command = lambda: parent.show_frame(parent.dashboardFrame), 
+                                command = lambda: switch.showDashboardPage(parent), 
                                 font = ('Montserrat', 15),
                                 border_width = 2,
                                 corner_radius = 15,
