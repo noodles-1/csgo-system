@@ -89,22 +89,6 @@ class TestDBControllerMethods(unittest.TestCase):
         response = db.deleteLicensePlate('AAA1111')
         self.assertTrue(response.ok)
 
-    @patch('controllers.dbController.Session')
-    def test_edit_vehicle_price(self, mock_session):
-        '''
-        Tests the editVehiclePrice method from DBController. Tests the price update
-        of the vehicle type where the price should be a positive number.
-
-        asserts:
-        - True => if the price update is successful
-        - False => if the price update is unsuccessful
-        '''
-        mock_session.execute = MagicMock()
-        mock_session.commit = MagicMock()
-
-        response = db.editVehiclePrice(id=1, newPrice=500)
-        self.assertTrue(response.ok)
-
     @patch('controllers.dbController.DBController.getUser')
     @patch('controllers.dbController.Session')
     def test_change_password(self, mock_session, mock_get_user):

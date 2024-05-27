@@ -25,7 +25,7 @@ from controllers.socketController import SocketController
 from sessions.userSession import UserSession
 
 classnames = [
-    "person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck", "boat",
+    "person", "bicycle", "car", "motorcycle", "aeroplane", "bus", "train", "truck", "boat",
     "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat",
     "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella",
     "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite", "baseball bat",
@@ -133,11 +133,10 @@ class DashboardPage(tk.Frame):
                                 time = datetime.now().time()
                                 imageUrl = S3Controller().uploadImage(cropped_vehicle, f'[{date} - {time}] {classnames[vehicle_id]} - id: {id}')
                                 userSession = UserSession.loadUserSession()
-                                vehicleType = DBController.getVehiclePrice(vehicleType=classnames[vehicle_id])
-                                response = DBController.addLicensePlate(userSession.id, ip_addr, extracted_lp, classnames[vehicle_id], vehicleType.price, imageUrl, date, time)
+                                response = DBController.addLicensePlate(userSession.id, ip_addr, extracted_lp, classnames[vehicle_id], 0, imageUrl)
 
                                 if response.ok:
-                                    databaseTable.insert('', 0, values=(extracted_lp, classnames[vehicle_id], ip_addr, time, date, vehicleType.price))
+                                    databaseTable.insert('', 0, values=(extracted_lp, classnames[vehicle_id], ip_addr, time, date, 0))
                             except Exception as e:
                                 with open('logs.txt', 'a') as file:
                                     now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')

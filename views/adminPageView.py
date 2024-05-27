@@ -426,7 +426,7 @@ class AdminPage(tk.Frame):
             self.after(2000, lambda: self.updateStatusLabel.configure(text_color='#1b2431'))
             return
         
-        if newVehicleType.lower() not in {'car', 'motorbike', 'bus', 'truck'}:
+        if newVehicleType.lower() not in {'car', 'motorcycle', 'bus', 'truck'}:
             self.updateStatusLabel.configure(text='Invalid vehicle type.', text_color='#d62828')
             self.after(2000, lambda: self.updateStatusLabel.configure(text_color='#1b2431'))
             return

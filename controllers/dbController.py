@@ -13,7 +13,7 @@ from models.connect import Connection
 from models.schemas import User
 from models.schemas import Camera
 from models.schemas import DetectedLicensePlate
-from models.schemas import Price
+from models.schemas import Setting
 from sqlalchemy import select
 from sqlalchemy import update
 from sqlalchemy import or_
@@ -181,7 +181,7 @@ class DBController:
             return None
         
     @staticmethod
-    def getCamera(name: str) -> Response:
+    def getCamera(name: str):
         try:
             with Session(Connection.engine) as session:
                 stmt = select(Camera).where(Camera.name == name)
@@ -191,6 +191,19 @@ class DBController:
             with open('logs.txt', 'a') as file:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/dbController.py getCamera() - {repr(e)}\n')
+            return None
+        
+    @staticmethod
+    def getSetting(id: int):
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(Setting).where(Setting.id == id)
+                result = session.scalar(stmt)
+                return result
+        except Exception as e:
+            with open('logs.txt', 'a') as file:
+                now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py getSetting() - {repr(e)}\n')
             return None
         
     @staticmethod
@@ -270,34 +283,6 @@ class DBController:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/dbController.py licensePlateExists() - {repr(e)}\n')
             return False
-        
-    @staticmethod
-    def getVehiclePrice(id='', vehicleType='') -> Response:
-        '''
-        Retrieves the row from the Price table that matches with the ID.
-
-        params:
-        - id (Optional): str => the id which will be checked in the database
-        - vehicleType (Optional): str => the vehicle type which will be checked
-
-        returns:
-        - result => the result containing the Price data that matched with the ID
-        - None => if the query encountered an exception
-        '''
-        try:
-            with Session(Connection.engine) as session:
-                stmt = select(Price)
-                if id:
-                    stmt = stmt.where(Price.id == id)
-                elif vehicleType:
-                    stmt = stmt.where(Price.vehicleType == vehicleType)
-                result = session.scalar(stmt)
-                return result
-        except Exception as e:
-            with open('logs.txt', 'a') as file:
-                now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
-                file.write(f'[{now}] Error at function invocation controllers/dbController.py getVehiclePrice() - {repr(e)}\n')
-            return None
     
     '''
     Database transaction methods
@@ -416,7 +401,7 @@ class DBController:
         return response
     
     @staticmethod
-    def addLicensePlate(userId: int, cameraId: int, licenseNumber: str, vehicleType: str, price: float, imageUrl: str, date=None, time=None) -> Response:
+    def addLicensePlate(userId: int, cameraId: int, licenseNumber: str, vehicleType: str, price: float, imageUrl: str) -> Response:
         '''
         Adds a recognized license plate number from the object detection module to the database, 
         accompanied with the user ID, camera ID, vehicle type, and the time and date when the 
@@ -445,8 +430,8 @@ class DBController:
                         licenseNumber=licenseNumber,
                         vehicleType=vehicleType,
                         price=price,
-                        date=date, # datetime.now()
-                        time=time, # datetime.now().time()
+                        date=datetime.now().date(),
+                        time=datetime.now().time(),
                         image=imageUrl
                     )
                     session.add(license)
@@ -560,38 +545,7 @@ class DBController:
             response.messages['error'] = repr(e)
 
         return response
-
-    @staticmethod
-    def editVehiclePrice(id: int, newPrice: float) -> Response:
-        '''
-        Edits the associated price of the vehicle type.
-
-        params:
-        - id: int => represents the id of the vehicle type
-        - newPrice: int => the new price that will overwrite the previous price
-
-        returns:
-        - response: Response => contains the response status and error messages if any
-        '''
-        response = DBController.Response()
-
-        try:
-            if newPrice <= 0:
-                response.ok = False
-                response.messages['error'] = 'New price should be a positive.'
-            else:
-                with Session(Connection.engine) as session:
-                    stmt = update(Price).where(Price.id == id).values(price=newPrice)
-                    session.execute(stmt)
-                    session.commit()
-                    response.ok = True
-        except Exception as e:
-            response.ok = False
-            response.messages['error'] = repr(e)
-
-        return response
     
-
     @staticmethod
     def changePassword(email: str, newPassword: str, confirmPassword: str, currPassword=None) -> Response:
         '''
@@ -802,6 +756,127 @@ class DBController:
                 session.delete(user)
                 session.commit()
                 response.ok = True
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+
+        return response
+    
+    @staticmethod
+    def addSetting(hourFrom: datetime.time, hourTo: datetime.time, day: str, startDate: datetime.date, startTime: datetime.time, detectCar: bool, detectMotorcycle: bool, detectBus: bool, detectTruck: bool, carPrice: float, motorcyclePrice: float, busPrice: float, truckPrice: float) -> Response:
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                currDate = datetime.now().date()
+                currTime = datetime.now().time()
+
+                # Remove other overlapping intervals
+                if currDate == startDate and startTime <= currTime:
+                    stmt = select(Setting).where(and_(
+                        Setting.day == day, 
+                        or_(
+                            Setting.startDate < currDate,
+                            and_(
+                                Setting.startDate == currDate,
+                                Setting.startTime <= currTime
+                            )
+                        )
+                    ))
+                    results = session.execute(stmt).all()
+
+                    for result in results:
+                        hourFrom2, hourTo2 = result[0].hourFrom, result[0].hourTo
+                        if hourFrom2 <= hourTo and hourFrom <= hourTo2:
+                            session.delete(result[0])
+                            session.commit()
+                
+                setting = Setting(
+                    hourFrom=hourFrom,
+                    hourTo=hourTo,
+                    day=day,
+                    startDate=startDate,
+                    startTime=startTime,
+                    detectCar=detectCar,
+                    detectMotorcycle=detectMotorcycle,
+                    detectBus=detectBus,
+                    detectTruck=detectTruck,
+                    carPrice=carPrice,
+                    motorcyclePrice=motorcyclePrice,
+                    busPrice=busPrice,
+                    truckPrice=truckPrice
+                )
+                session.add(setting)
+                session.commit()
+                response.ok = True
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+
+        return response
+    
+    @staticmethod
+    def getCurrentSettings() -> Response:
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                currDate = datetime.now().date()
+                currTime = datetime.now().time()
+
+                stmt = select(Setting).where(or_(
+                    Setting.startDate < currDate,
+                    and_(
+                        Setting.startDate == currDate,
+                        Setting.startTime <= currTime
+                    )
+                )).order_by(desc(Setting.startDate)).order_by(desc(Setting.startTime))
+                results = session.execute(stmt).all()
+                response.ok = True
+                response.data = results
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+
+        return response
+    
+    @staticmethod
+    def getFutureSettings() -> Response:
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                currDate = datetime.now().date()
+                currTime = datetime.now().time()
+
+                stmt = select(Setting).where(or_(
+                    currDate < Setting.startDate,
+                    and_(
+                        currDate == Setting.startDate,
+                        currTime < Setting.startTime
+                    )
+                )).order_by(desc(Setting.startDate)).order_by(desc(Setting.startTime))
+                results = session.execute(stmt).all()
+                response.ok = True
+                response.data = results
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+
+        return response
+    
+    @staticmethod
+    def editSetting(id: int, hourFrom: datetime.time, hourTo: datetime.time, day: str, startDate: datetime.date, startTime: datetime.time, detectCar: bool, detectMotorcycle: bool, detectBus: bool, detectTruck: bool, carPrice: float, motorcyclePrice: float, busPrice: float, truckPrice: float) -> Response:
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(Setting).where(Setting.id == id)
+                res = session.scalar(stmt)
+                session.delete(res)
+                session.commit()
+
+                response = DBController.addSetting(hourFrom, hourTo, day, startDate, startTime, detectCar, detectMotorcycle, detectBus, detectTruck, carPrice, motorcyclePrice, busPrice, truckPrice)
         except Exception as e:
             response.ok = False
             response.messages['error'] = repr(e)
