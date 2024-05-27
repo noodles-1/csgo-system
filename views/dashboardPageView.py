@@ -2,10 +2,14 @@ import os
 import sys
 import cv2
 import tkinter as tk
+import re
+import socket
+import numpy as np
 
+from datetime import datetime
 from customtkinter import *
 from tkinter import ttk
-from PIL import Image
+from PIL import Image, ImageTk
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -14,15 +18,14 @@ sys.path.append(parent)
 import controllers.controller as cont
 import views.switchView as switch
 
-from customtkinter import *
-from tkinter import ttk
-from PIL import Image, ImageTk
 from controllers.controller import AIController
 from controllers.dbController import DBController
 from controllers.s3controller import S3Controller
+from controllers.socketController import SocketController
+from sessions.userSession import UserSession
 
 classnames = [
-    "person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck", "boat",
+    "person", "bicycle", "car", "motorcycle", "aeroplane", "bus", "train", "truck", "boat",
     "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat",
     "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella",
     "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite", "baseball bat",
@@ -44,14 +47,20 @@ class DashboardPage(tk.Frame):
         self.master.iconify()
 
     class StartCamera:
-        def start(self, cap, placeholder_label):
+        def start(self, cap, placeholder_label, ip_addr, databaseTable):
             if AIController.vehicle_detection_model.predictor:
                 AIController.vehicle_detection_model.predictor.trackers[0].reset()
 
             detected_ids = set()
+
+            def isValidLicensePlate(licensePlate: str) -> bool:
+                regex1 = r'^[A-Z]{3}\d{3,4}$'
+                regex2 = r'^\d{3,4}[A-Z]{3}$'
+                return re.fullmatch(regex1, licensePlate) is not None or re.fullmatch(regex2, licensePlate) is not None
                 
-            def show_frame():
+            def showFrame():
                 success, frame = cap.read()
+
 
                 if cont.loggedIn and success:
                     results = AIController.detect_vehicle(frame)
@@ -59,32 +68,94 @@ class DashboardPage(tk.Frame):
 
                     for result in results:
                         for boxes in result.boxes:
-                            if boxes.id:
-                                id = int(boxes.id.item())
-                                vehicle_id = int(boxes.cls.item())
-                                if id not in detected_ids:
-                                    detected_ids.add(id)
-                                    x1, y1, x2, y2 = boxes.xyxy[0]
-                                    cropped_vehicle = frame[int(y1.item()):int(y2.item()), int(x1.item()):int(x2.item())]
-                                    
-                                    lp_result = AIController.detect_license_plate(frame=cropped_vehicle)
-                                    if lp_result[0].boxes:
-                                        x1, y1, x2, y2 = lp_result[0].boxes[0].xyxy[0]
-                                        cropped_lp = cropped_vehicle[int(y1.item()):int(y2.item()), int(x1.item()):int(x2.item())]
-                                        cv2.imwrite(f'test_lp/{classnames[vehicle_id]}_{id}.jpg', cropped_lp)
+                            if not boxes.id:
+                                continue
 
-                    frame_rgb = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
+                            id = int(boxes.id.item())
+                            vehicle_id = int(boxes.cls.item())
+                            
+                            if id in detected_ids:
+                                continue
+
+                            detected_ids.add(id)
+                            x1, y1, x2, y2 = boxes.xyxy[0]
+                            cropped_vehicle = frame[int(y1.item()):int(y2.item()), int(x1.item()):int(x2.item())]
+                            
+                            lp_result = AIController.detect_license_plate(frame=cropped_vehicle)
+
+                            if not lp_result[0].boxes:
+                                detected_ids.remove(id)
+                                continue
+
+                            x1, y1, x2, y2 = lp_result[0].boxes[0].xyxy[0]
+                            cropped_lp = cropped_vehicle[int(y1.item()):int(y2.item()), int(x1.item()):int(x2.item())]
+
+                            # client_socket_foggy = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                            client_socket_lowlight = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                            # client_socket_foggy.connect(('localhost', 8001))
+                            client_socket_lowlight.connect(('localhost', 8000))
+
+                            SocketController.sendImage(client_socket_lowlight, cropped_lp)
+                            processed_lp = SocketController.receiveImage(client_socket_lowlight)
+
+                            client_socket_lowlight.close()
+
+                            if processed_lp is None:
+                                detected_ids.remove(id)
+                                continue
+
+                            # Convert to grayscale
+                            gray = cv2.cvtColor(processed_lp, cv2.COLOR_BGR2GRAY)
+
+                            # Apply Gaussian Blur to reduce noise
+                            blur = cv2.GaussianBlur(gray, (5, 5), 0)
+
+                            # Apply thresholding
+                            _, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+                            # Apply dilation to connect text regions
+                            kernel = np.ones((2, 2), np.uint8)
+                            dilated = cv2.dilate(thresh, kernel, iterations=1)
+
+                            # Optionally apply erosion to reduce noise
+                            eroded = cv2.erode(dilated, kernel, iterations=1)
+            
+                            extracted_lp_results = AIController.get_license_number_cnocr(frame=eroded)
+                            temp = [extracted_lp_results[i]['text'] for i in range(len(extracted_lp_results))]
+                            extracted_lp = ''.join(temp).replace(' ', '')
+                            
+                            if not isValidLicensePlate(extracted_lp):
+                                detected_ids.remove(id)
+                                continue
+                            
+                            try:
+                                date = datetime.now().date()
+                                time = datetime.now().time()
+                                imageUrl = S3Controller().uploadImage(cropped_vehicle, f'[{date} - {time}] {classnames[vehicle_id]} - id: {id}')
+                                userSession = UserSession.loadUserSession()
+                                response = DBController.addLicensePlate(userSession.id, ip_addr, extracted_lp, classnames[vehicle_id], 0, imageUrl)
+
+                                if response.ok:
+                                    databaseTable.insert('', 0, values=(extracted_lp, classnames[vehicle_id], ip_addr, time, date, 0))
+                            except Exception as e:
+                                with open('logs.txt', 'a') as file:
+                                    now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+                                    file.write(f'[{now}] Error at function views/dashboardPageView.py/dbController.py StartCamera/start()/showFrame() - {repr(e)}\n')
+                                    print(repr(e))
+                                    return
+
+                    resized_frame = cv2.resize(annotated_frame, (640, 360))
+                    frame_rgb = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2RGB)
                     img = Image.fromarray(frame_rgb)
-                    img = img.resize((720, 540))
                     img_tk = ImageTk.PhotoImage(image=img)
 
                     if cont.cameraEnabled:
                         placeholder_label.configure(image=img_tk, text='')
-                    placeholder_label.after(4 if cont.cameraEnabled else 800, show_frame)
+                    placeholder_label.after(30 if cont.cameraEnabled else 800, showFrame)
                 else:
                     cap.release()
                 
-            show_frame()
+            showFrame()
     
     # Function to change the camera displayed
     def changeCameraDisplay_callback(self, cameraName):
@@ -94,10 +165,9 @@ class DashboardPage(tk.Frame):
         result = DBController.getCamera(name=cameraName)
         ip_addr = result.id
         cameraUrl = f'rtsp://{ip_addr}:554'
-        video_path = "https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/IMG_9613_1.mp4"
 
-        self.cap = cv2.VideoCapture(video_path)
-        DashboardPage.StartCamera().start(self.cap, self.placeholder_label)
+        self.cap = cv2.VideoCapture('test_images/morayta.mp4')
+        DashboardPage.StartCamera().start(self.cap, self.placeholder_label, ip_addr, self.databaseTable)
 
     def __init__(self, parent):
         self.cap = None
@@ -225,37 +295,37 @@ class DashboardPage(tk.Frame):
                   background=[('active', '#48BFE3')])
 
         # ADD or REMOVE headers as needed @Database Integration
-        databaseTable = ttk.Treeview(databaseTableFrame, columns = ('licensePlate', 'vehicleType', 'cameraID', 'time', 'date', 'price'), show = "headings", style = 'Custom.Treeview')
+        self.databaseTable = ttk.Treeview(databaseTableFrame, columns = ('licensePlate', 'vehicleType', 'cameraID', 'time', 'date', 'price'), show = "headings", style = 'Custom.Treeview')
 
         # Inserts Blank Entries to the Treeview so that it doesnt look bad when the Treeview is Empty.
         #for _ in range(100):
             #databaseTable.insert('', 'end', values=('', '', '', '', '', ''))
 
-        databaseTable.tag_configure('even', background='#2A2D2E', foreground='#FFFFFF')
-        databaseTable.tag_configure('odd', background='#343638', foreground='#FFFFFF')
+        self.databaseTable.tag_configure('even', background='#2A2D2E', foreground='#FFFFFF')
+        self.databaseTable.tag_configure('odd', background='#343638', foreground='#FFFFFF')
         
-        databaseTable.heading('licensePlate', text="License Plate", anchor='center')
-        databaseTable.heading('vehicleType', text="Vehicle Type", anchor='center')
-        databaseTable.heading('cameraID', text="Camera ID", anchor='center')
-        databaseTable.heading('time', text="Time", anchor='center')
-        databaseTable.heading('date', text="Date", anchor='center')
-        databaseTable.heading('price', text="Price", anchor='center')
+        self.databaseTable.heading('licensePlate', text="License Plate", anchor='center')
+        self.databaseTable.heading('vehicleType', text="Vehicle Type", anchor='center')
+        self.databaseTable.heading('cameraID', text="Camera ID", anchor='center')
+        self.databaseTable.heading('time', text="Time", anchor='center')
+        self.databaseTable.heading('date', text="Date", anchor='center')
+        self.databaseTable.heading('price', text="Price", anchor='center')
 
-        databaseTable.column('licensePlate', width=150, anchor='center')
-        databaseTable.column('vehicleType', width=150, anchor='center')
-        databaseTable.column('cameraID', width=120, anchor='center')
-        databaseTable.column('time', width=100, anchor='center')
-        databaseTable.column('date', width=100, anchor='center')
-        databaseTable.column('price', width=80, anchor='center')
+        self.databaseTable.column('licensePlate', width=150, anchor='center')
+        self.databaseTable.column('vehicleType', width=150, anchor='center')
+        self.databaseTable.column('cameraID', width=120, anchor='center')
+        self.databaseTable.column('time', width=100, anchor='center')
+        self.databaseTable.column('date', width=100, anchor='center')
+        self.databaseTable.column('price', width=80, anchor='center')
 
-        databaseTable.pack(side = 'left', expand=True, fill='both', padx=0, pady=0)
+        self.databaseTable.pack(side = 'left', expand=True, fill='both', padx=0, pady=0)
 
-        yscrollbar = ttk.Scrollbar(databaseTableFrame, orient='vertical', command=databaseTable.yview)
-        databaseTable.configure(yscrollcommand=yscrollbar.set)
+        yscrollbar = ttk.Scrollbar(databaseTableFrame, orient='vertical', command=self.databaseTable.yview)
+        self.databaseTable.configure(yscrollcommand=yscrollbar.set)
         yscrollbar.pack(side='right', fill='both', padx=5, pady=0)
         
-        xscrollbar = ttk.Scrollbar(databaseFrame, orient='horizontal', command=databaseTable.xview)
-        databaseTable.configure(xscrollcommand=xscrollbar.set)
+        xscrollbar = ttk.Scrollbar(databaseFrame, orient='horizontal', command=self.databaseTable.xview)
+        self.databaseTable.configure(xscrollcommand=xscrollbar.set)
         xscrollbar.pack(side='bottom', fill='both', padx=0, pady=5)
         
         topLeftMainFrame = tk.Frame(leftMainFrame, bg = "#090E18")

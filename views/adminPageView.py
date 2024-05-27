@@ -83,7 +83,7 @@ class AdminPage(tk.Frame):
         response = DBController.registerUser(email, username, firstName, lastName, password, isAdmin, canChangePrice, canDownload, canChangeDetect, canEditHours)
 
         if response.ok:
-            self.editUserStatusLabel.configure(text='User successfully registered.', text_color='#25be8e')
+            self.editUserStatusLabel.configure(text='User successfully edited.', text_color='#25be8e')
             self.after(3000, lambda: self.editUserStatusLabel.configure(text_color='#1b2431'))
             users = DBController.getUsers()
             self.selectUserCombo.configure(values=[user[0].username for user in users.data])
@@ -115,7 +115,7 @@ class AdminPage(tk.Frame):
         response = DBController.editUser(user, username, email, firstName, lastName, password, isAdmin, canChangeDetect, canChangePrice, canEditHours, canDownload)
 
         if response.ok:
-            self.editUserStatusLabel.configure(text='User successfully d.', text_color='#25be8e')
+            self.editUserStatusLabel.configure(text='User successfully updated.', text_color='#25be8e')
             self.after(3000, lambda: self.editUserStatusLabel.configure(text_color='#1b2431'))
             users = DBController.getUsers()
             self.selectUserCombo.configure(values=[user[0].username for user in users.data])
@@ -313,13 +313,14 @@ class AdminPage(tk.Frame):
     def addCamera_callback(self):
         cameraIpAddr = self.discoveredCamerasDrop.get()
         cameraName = self.assignID.get()
+        cameraLocation = self.assignLocation.get()
 
-        if not cameraIpAddr or not cameraName:
+        if not cameraIpAddr or not cameraName or not cameraLocation:
             self.addCameraStatusLabel.configure(text='Incomplete fields.', text_color="#d62828")
             self.after(2000, lambda: self.addCameraStatusLabel.configure(text_color="#1B2431"))
             return
 
-        response = DBController.registerCamera(ip_addr=cameraIpAddr, name=cameraName)
+        response = DBController.registerCamera(ip_addr=cameraIpAddr, name=cameraName, location=cameraLocation)
 
         if response.ok:
             self.addCameraStatusLabel.configure(text='Camera successfully added.', text_color="#25be8e")
@@ -341,17 +342,24 @@ class AdminPage(tk.Frame):
             self.after(2000, lambda: self.addCameraStatusLabel.configure(text_color="#1B2431"))
 
         self.assignID.delete(0, 'end')
+        self.assignLocation.delete(0, 'end')
     
     def updateSavedCamera_callback(self):
         cameraOldName = self.savedCamerasDrop.get()
         cameraNewName = self.savedCameraID.get()
+        cameraNewLocation = self.savedCameraLocation.get()
 
-        if not cameraOldName or not cameraNewName:
-            self.secondRowStatusLabel.configure(text='Incomplete fields.', text_color="#d62828")
+        if not cameraOldName:
+            self.secondRowStatusLabel.configure(text='No camera chosen.', text_color="#d62828")
             self.after(2000, lambda: self.secondRowStatusLabel.configure(text_color="#1B2431"))
             return
         
-        response = DBController.editCamera(oldName=cameraOldName, newName=cameraNewName)
+        if not cameraNewName and not cameraNewLocation:
+            self.secondRowStatusLabel.configure(text='Incomplete field(s).', text_color="#d62828")
+            self.after(2000, lambda: self.secondRowStatusLabel.configure(text_color="#1B2431"))
+            return
+        
+        response = DBController.editCamera(oldName=cameraOldName, newName=cameraNewName, newLocation=cameraNewLocation)
 
         if response.ok:
             self.secondRowStatusLabel.configure(text='Camera successfully updated.', text_color='#25be8e')
@@ -370,6 +378,7 @@ class AdminPage(tk.Frame):
             self.after(2000, lambda: self.secondRowStatusLabel.configure(text_color="#1B2431"))
 
         self.savedCameraID.delete(0, 'end')
+        self.savedCameraLocation.delete(0, 'end')
 
     def deleteSavedCamera_callback(self):
         cameraToDelete = self.savedCamerasDrop.get()
@@ -417,7 +426,7 @@ class AdminPage(tk.Frame):
             self.after(2000, lambda: self.updateStatusLabel.configure(text_color='#1b2431'))
             return
         
-        if newVehicleType.lower() not in {'car', 'motorcycle', 'jeepney', 'bus', 'tricycle', 'van', 'truck', 'taxi', 'modern jeepney'}:
+        if newVehicleType.lower() not in {'car', 'motorcycle', 'bus', 'truck'}:
             self.updateStatusLabel.configure(text='Invalid vehicle type.', text_color='#d62828')
             self.after(2000, lambda: self.updateStatusLabel.configure(text_color='#1b2431'))
             return
@@ -427,7 +436,7 @@ class AdminPage(tk.Frame):
             self.after(2000, lambda: self.updateStatusLabel.configure(text_color='#1b2431'))
             return
         
-        response = DBController.editLicensePlate(licensePlate, newLicensePlate, newVehicleType, newPrice)
+        response = DBController.editLicensePlate(licensePlate, newLicensePlate, newVehicleType.lower(), newPrice)
 
         if response.ok:
             self.updateStatusLabel.configure(text='Successfully updated.', text_color='#25be8e')
@@ -552,7 +561,7 @@ class AdminPage(tk.Frame):
         
         self.savedCamerasDrop = CTkComboBox(manageCamerasSecondRow, values=[camera[0].name for camera in cameras.data], font = ('Montserrat', 12), fg_color = "#FFFFFF", dropdown_fg_color = "#FFFFFF", dropdown_text_color = "#000000", border_color = "#FFFFFF", button_color = "#FFFFFF", text_color = "#000000", state='readonly')
         self.savedCameraID = CTkEntry(manageCamerasSecondRow, placeholder_text = "Change Name", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
-        self.savedCameraLocation = CTkEntry(manageCamerasSecondRow, placeholder_text = "Assigned Location", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        self.savedCameraLocation = CTkEntry(manageCamerasSecondRow, placeholder_text = "Change Location", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
         
         updateSavedCameraButton = CTkButton(manageCamerasSecondRow, text = "Update Camera", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5, command = self.updateSavedCamera_callback)
         deleteSavedCameraButton = CTkButton(manageCamerasSecondRow, text = "Delete Camera", font = ('Montserrat', 12, 'bold'), fg_color = "#D62828", text_color = "#FFFFFF", corner_radius = 5, command = self.deleteSavedCamera_callback)
@@ -818,9 +827,9 @@ class AdminPage(tk.Frame):
         self.discoveredCamerasDrop.pack(side = "left", fill = "x", expand = True, padx = 15)
         self.assignID.pack(side = "left", fill = "x", expand = True, padx = 15)
 
+        self.assignLocation.pack(side = "left", fill = "x", expand = True, padx = 15)
         self.addCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
         self.addCameraStatusLabel.pack(side='left', pady = 10, expand = True, fill = "x")
-        self.assignLocation.pack(side = "left", fill = "x", expand = True, padx = 15)
         
         manageCamerasLabel.pack(side = "top", fill = "x", padx = 10, pady = (5,0))
         

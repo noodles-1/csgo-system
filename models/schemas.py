@@ -45,19 +45,6 @@ class Camera(Base):
 
     def __repr__(self) -> str:
         return f'Camera(cameraId={self.id}, name={self.name}, location={self.location})'
-    
-class Price(Base):
-    '''
-    Price table that associates a variable price with a corresponding vehicle type.
-    '''
-    __tablename__ = 'price'
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    vehicleType: Mapped[str]
-    price: Mapped[float]
-
-    def __repr__(self) -> str:
-        return f'Price(priceId={self.id}, vehicleType={self.vehicleType})'
 
 class DetectedLicensePlate(Base):
     '''
@@ -69,6 +56,7 @@ class DetectedLicensePlate(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     userId: Mapped[int] = mapped_column(ForeignKey('user.id'))
     cameraId: Mapped[int] = mapped_column(ForeignKey('camera.id'))
+    settingId: Mapped[int] = mapped_column(ForeignKey('setting.id'))
     licenseNumber: Mapped[str] = mapped_column(String(14))
     vehicleType: Mapped[str]
     price: Mapped[float]
@@ -78,3 +66,27 @@ class DetectedLicensePlate(Base):
 
     def __repr__(self) -> str:
         return f'Detection(id={self.id}, userId={self.userId}, cameraId={self.cameraId}, priceId={self.priceId}, licenseNumber={self.licenseNumber}, date={self.date}, time={self.time}, image={self.image})'
+    
+class Setting(Base):
+    '''
+    Setting table that contains different settings for the congestion pricing system.
+    '''
+    __tablename__ = 'setting'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    hourFrom: Mapped[Time] = mapped_column(Time(timezone=True))
+    hourTo: Mapped[Time] = mapped_column(Time(timezone=True))
+    day: Mapped[str]
+    startDate: Mapped[Date] = mapped_column(Date())
+    startTime: Mapped[Time] = mapped_column(Time(timezone=True))
+    detectCar: Mapped[bool]
+    detectMotorcycle: Mapped[bool]
+    detectBus: Mapped[bool]
+    detectTruck: Mapped[bool]
+    carPrice: Mapped[float]
+    motorcyclePrice: Mapped[float]
+    busPrice: Mapped[float]
+    truckPrice: Mapped[float]
+
+    def __repr__(self) -> str:
+        return f'Setting(settingId={self.id}, hourFrom={self.hourFrom}, hourTo={self.hourTo}, day={self.day}, startDate={self.startDate}, detectCar={self.detectCar}, detectMotorcycle={self.detectMotorcycle}, detectBus={self.detectBus}, detectTruck={self.detectTruck}, carPrice={self.carPrice}, motorcyclePrice={self.motorcyclePrice}, busPrice={self.busPrice}, truckPrice={self.truckPrice})'
