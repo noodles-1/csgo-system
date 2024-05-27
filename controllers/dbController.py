@@ -272,12 +272,13 @@ class DBController:
             return False
         
     @staticmethod
-    def getVehiclePrice(id: int) -> Response:
+    def getVehiclePrice(id='', vehicleType='') -> Response:
         '''
         Retrieves the row from the Price table that matches with the ID.
 
         params:
         - id (Optional): str => the id which will be checked in the database
+        - vehicleType (Optional): str => the vehicle type which will be checked
 
         returns:
         - result => the result containing the Price data that matched with the ID
@@ -285,7 +286,11 @@ class DBController:
         '''
         try:
             with Session(Connection.engine) as session:
-                stmt = select(Price).where(Price.id == id)
+                stmt = select(Price)
+                if id:
+                    stmt = stmt.where(Price.id == id)
+                elif vehicleType:
+                    stmt = stmt.where(Price.vehicleType == vehicleType)
                 result = session.scalar(stmt)
                 return result
         except Exception as e:
@@ -662,16 +667,20 @@ class DBController:
         return response
     
     @staticmethod
-    def editCamera(oldName: str, newName: str) -> Response:
+    def editCamera(oldName: str, newName: str, newLocation: str) -> Response:
         response = DBController.Response()
 
         try:
-            if DBController.cameraExists(name=newName):
+            if newName and DBController.cameraExists(name=newName):
                 response.ok = False
                 response.messages['error'] = 'Camera name already exists.'
             else:
                 with Session(Connection.engine) as session:
-                    stmt = update(Camera).where(Camera.name == oldName).values(name=newName)
+                    stmt = update(Camera).where(Camera.name == oldName)
+                    if newName:
+                        stmt = stmt.values(name=newName)
+                    if newLocation:
+                        stmt = stmt.values(location=newLocation)
                     session.execute(stmt)
                     session.commit()
                     response.ok = True
