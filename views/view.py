@@ -1,5 +1,6 @@
 import os
 import sys
+import asyncio
 import tkinter as tk
 import tk_async_execute as tk_async
 
@@ -10,11 +11,11 @@ sys.path.append(parent)
 from customtkinter import *
 from loginPageView import LoginPage
 from dashboardPageView import DashboardPage
-#from configPageView import ConfigPage
 from analyticsPageView import AnalyticsPage
 from adminPageView import AdminPage
 from configPageView import ConfigPage
 from models.connect import Connection as connection
+from controllers.pollController import PollController
 
 # view.py is the starting point of the GUI. This is where each Pages are defined. (Parent Class)
 
@@ -52,9 +53,27 @@ class MainWindow(tk.Tk):
             cont.setCameraDisplay(changeCameraDisplay, cap, placeholder_label)
         cont.tkraise()
 
+def startAsyncLoop(loop):
+    loop.call_soon(loop.stop)
+    loop.run_forever()
+    app.after(30000, startAsyncLoop, loop)
+
+async def runAsync():
+    asyncio.create_task(poll())
+
+async def poll():
+    while True:
+        PollController.updateFutureSettings()
+        await asyncio.sleep(60)
+
 if __name__ == "__main__":
     connection.connect('database/test.db')
+
+    loop = asyncio.get_event_loop()
+    loop.create_task(runAsync())
+
     app = MainWindow()
+    app.after(30000, startAsyncLoop, loop)
 
     tk_async.start()
     app.mainloop()

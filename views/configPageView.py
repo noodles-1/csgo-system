@@ -50,6 +50,12 @@ class ConfigPage(tk.Frame):
         self.leftDatabaseTable.selection_remove(self.leftDatabaseTable.selection())
         
         self.clearInput()
+
+    def refresh_callback(self):
+        self.rightDatabaseTable.selection_remove(self.rightDatabaseTable.selection())
+        self.leftDatabaseTable.selection_remove(self.leftDatabaseTable.selection())
+        self.reloadLeftDatabase()
+        self.reloadRightDatabase()
         
     def deleteDataFromTable(self, event):
         caller = event.widget
@@ -130,8 +136,8 @@ class ConfigPage(tk.Frame):
         hourTo = datetime.strptime(hourTo, '%H:%M').time()
         
         try:
-            selectedDate = datetime.strptime(selectedDate, '%m/%d/%Y').date() if selectedDate else datetime.now().date()
-            selectedTime = datetime.strptime(selectedTime, '%H:%M').time() if selectedTime else datetime.now().time()
+            selectedDate = datetime.strptime(selectedDate, '%m/%d/%Y').date() if selectedDate else None
+            selectedTime = datetime.strptime(selectedTime, '%H:%M').time() if selectedTime else None
         except:
             self.statusLabel.configure(text='Invalid date or time', text_color="#d62828")
             self.after(2000, lambda: self.statusLabel.configure(text_color="#1B2431"))
@@ -148,9 +154,12 @@ class ConfigPage(tk.Frame):
             return
         
         if self.chosenId is None:
-            response = DBController.addSetting(hourFrom, hourTo, dayEntry, selectedDate, selectedTime, carDropdown == 'Enabled', motorDropdown == 'Enabled', busDropdown == 'Enabled', truckDropdown == 'Enabled', float(carPrice), float(motorPrice), float(busPrice), float(truckPrice))
+            if selectedDate and selectedTime:
+                response = DBController.addFutureSetting(hourFrom, hourTo, dayEntry, selectedDate, selectedTime, carDropdown == 'Enabled', motorDropdown == 'Enabled', busDropdown == 'Enabled', truckDropdown == 'Enabled', float(carPrice), float(motorPrice), float(busPrice), float(truckPrice))
+            else:
+                response = DBController.addCurrentSetting(hourFrom, hourTo, dayEntry, carDropdown == 'Enabled', motorDropdown == 'Enabled', busDropdown == 'Enabled', truckDropdown == 'Enabled', float(carPrice), float(motorPrice), float(busPrice), float(truckPrice))
         else:
-            response = DBController.editSetting(self.chosenId, hourFrom, hourTo, dayEntry, selectedDate, selectedTime, carDropdown == 'Enabled', motorDropdown == 'Enabled', busDropdown == 'Enabled', truckDropdown == 'Enabled', float(carPrice), float(motorPrice), float(busPrice), float(truckPrice))
+            response = DBController.editSetting(self.chosenId, hourFrom, hourTo, dayEntry, carDropdown == 'Enabled', motorDropdown == 'Enabled', busDropdown == 'Enabled', truckDropdown == 'Enabled', float(carPrice), float(motorPrice), float(busPrice), float(truckPrice), self.isCurrentSetting, startDate=selectedDate, startTime=selectedTime)
 
         if response.ok:
             self.statusLabel.configure(text='Setting successfully saved.', text_color="#25be8e")
@@ -245,6 +254,7 @@ class ConfigPage(tk.Frame):
             self.carComboBox.set('')
 
             self.chosenId = None
+            self.isCurrentSetting = None
             return
         
         # These are all the widgets that updates whenever there is a row selection from either table.
@@ -277,8 +287,9 @@ class ConfigPage(tk.Frame):
 
             if caller == self.leftDatabaseTable and len(values) >= 4:
                 self.chosenId = int(values[0])
+                self.isCurrentSetting = True
 
-                setting = DBController.getSetting(self.chosenId)
+                setting = DBController.getCurrentSetting(self.chosenId)
                 
                 self.carComboBox.set('Enabled' if setting.detectCar else 'Disabled')
                 self.motorcycleComboBox.set('Enabled' if setting.detectMotorcycle else 'Disabled')
@@ -304,8 +315,9 @@ class ConfigPage(tk.Frame):
                 
             if caller == self.rightDatabaseTable and len(values) >= 5:
                 self.chosenId = int(values[0])
+                self.isCurrentSetting = False
 
-                setting = DBController.getSetting(self.chosenId)
+                setting = DBController.getFutureSetting(self.chosenId)
                 
                 self.carComboBox.set('Enabled' if setting.detectCar else 'Disabled')
                 self.motorcycleComboBox.set('Enabled' if setting.detectMotorcycle else 'Disabled')
@@ -344,6 +356,7 @@ class ConfigPage(tk.Frame):
         self.selected_date = ''
         self.selected_time = ''
         self.chosenId = None
+        self.isCurrentSetting = None
         
         tk.Frame.__init__(self, parent, bg = "#090E18")
         
@@ -482,6 +495,19 @@ class ConfigPage(tk.Frame):
         
         addNewFrame = tk.Frame(mainContentFrame, bg = '#090E18')
         addNewFrame.pack(expand = False, fill = 'x', side = 'top', pady = (0, 10))
+        
+        refreshButton = CTkButton(addNewFrame,
+                                    text = 'Refresh Tables',
+                                    command = self.refresh_callback,
+                                    text_color = "#000000",
+                                    font = ('Montserrat', 12),
+                                    fg_color = "#FFFFFF",
+                                    corner_radius = 15,
+                                    border_color = "#FFFFFF",
+                                    border_width = 2)
+        refreshButton.bind("<Enter>", lambda event: refreshButton.configure(text_color="#FFFFFF", fg_color = "#090E18", border_color = "#FFFFFF")) 
+        refreshButton.bind("<Leave>", lambda event: refreshButton.configure(text_color="#000000", fg_color = "#FFFFFF", border_color = "#FFFFFF"))  
+        refreshButton.pack(expand = False, side = 'right', padx = 10, pady = 0)
         
         addNewButton = CTkButton(addNewFrame,
                                     text = 'Add New',

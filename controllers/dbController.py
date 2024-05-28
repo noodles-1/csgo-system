@@ -13,11 +13,13 @@ from models.connect import Connection
 from models.schemas import User
 from models.schemas import Camera
 from models.schemas import DetectedLicensePlate
-from models.schemas import Setting
+from models.schemas import CurrentSetting
+from models.schemas import FutureSetting
 from sqlalchemy import select
 from sqlalchemy import update
 from sqlalchemy import or_
 from sqlalchemy import and_
+from sqlalchemy import asc
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
@@ -194,16 +196,29 @@ class DBController:
             return None
         
     @staticmethod
-    def getSetting(id: int):
+    def getCurrentSetting(id: int):
         try:
             with Session(Connection.engine) as session:
-                stmt = select(Setting).where(Setting.id == id)
+                stmt = select(CurrentSetting).where(CurrentSetting.id == id)
                 result = session.scalar(stmt)
                 return result
         except Exception as e:
             with open('logs.txt', 'a') as file:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
-                file.write(f'[{now}] Error at function invocation controllers/dbController.py getSetting() - {repr(e)}\n')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py getCurrentSetting() - {repr(e)}\n')
+            return None
+    
+    @staticmethod
+    def getFutureSetting(id: int):
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(FutureSetting).where(FutureSetting.id == id)
+                result = session.scalar(stmt)
+                return result
+        except Exception as e:
+            with open('logs.txt', 'a') as file:
+                now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py getFutureSetting() - {repr(e)}\n')
             return None
         
     @staticmethod
@@ -763,35 +778,49 @@ class DBController:
         return response
     
     @staticmethod
-    def addSetting(hourFrom: datetime.time, hourTo: datetime.time, day: str, startDate: datetime.date, startTime: datetime.time, detectCar: bool, detectMotorcycle: bool, detectBus: bool, detectTruck: bool, carPrice: float, motorcyclePrice: float, busPrice: float, truckPrice: float) -> Response:
+    def addCurrentSetting(hourFrom: datetime.time, hourTo: datetime.time, day: str, detectCar: bool, detectMotorcycle: bool, detectBus: bool, detectTruck: bool, carPrice: float, motorcyclePrice: float, busPrice: float, truckPrice: float) -> Response:
         response = DBController.Response()
 
         try:
             with Session(Connection.engine) as session:
-                currDate = datetime.now().date()
-                currTime = datetime.now().time()
+                stmt = select(CurrentSetting).where(CurrentSetting.day == day)
+                results = session.execute(stmt).all()
 
-                # Remove other overlapping intervals
-                if currDate == startDate and startTime <= currTime:
-                    stmt = select(Setting).where(and_(
-                        Setting.day == day, 
-                        or_(
-                            Setting.startDate < currDate,
-                            and_(
-                                Setting.startDate == currDate,
-                                Setting.startTime <= currTime
-                            )
-                        )
-                    ))
-                    results = session.execute(stmt).all()
-
-                    for result in results:
-                        hourFrom2, hourTo2 = result[0].hourFrom, result[0].hourTo
-                        if hourFrom2 <= hourTo and hourFrom <= hourTo2:
-                            session.delete(result[0])
-                            session.commit()
+                for result in results:
+                    hourFrom2, hourTo2 = result[0].hourFrom, result[0].hourTo
+                    if hourFrom2 <= hourTo and hourFrom <= hourTo2:
+                        session.delete(result[0])
+                        session.commit()
                 
-                setting = Setting(
+                setting = CurrentSetting(
+                    hourFrom=hourFrom,
+                    hourTo=hourTo,
+                    day=day,
+                    detectCar=detectCar,
+                    detectMotorcycle=detectMotorcycle,
+                    detectBus=detectBus,
+                    detectTruck=detectTruck,
+                    carPrice=carPrice,
+                    motorcyclePrice=motorcyclePrice,
+                    busPrice=busPrice,
+                    truckPrice=truckPrice
+                )
+                session.add(setting)
+                session.commit()
+                response.ok = True
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+
+        return response
+    
+    @staticmethod
+    def addFutureSetting(hourFrom: datetime.time, hourTo: datetime.time, day: str, startDate: datetime.date, startTime: datetime.time, detectCar: bool, detectMotorcycle: bool, detectBus: bool, detectTruck: bool, carPrice: float, motorcyclePrice: float, busPrice: float, truckPrice: float) -> Response:
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                setting = FutureSetting(
                     hourFrom=hourFrom,
                     hourTo=hourTo,
                     day=day,
@@ -821,16 +850,7 @@ class DBController:
 
         try:
             with Session(Connection.engine) as session:
-                currDate = datetime.now().date()
-                currTime = datetime.now().time()
-
-                stmt = select(Setting).where(or_(
-                    Setting.startDate < currDate,
-                    and_(
-                        Setting.startDate == currDate,
-                        Setting.startTime <= currTime
-                    )
-                )).order_by(desc(Setting.startDate)).order_by(desc(Setting.startTime))
+                stmt = select(CurrentSetting)
                 results = session.execute(stmt).all()
                 response.ok = True
                 response.data = results
@@ -846,16 +866,7 @@ class DBController:
 
         try:
             with Session(Connection.engine) as session:
-                currDate = datetime.now().date()
-                currTime = datetime.now().time()
-
-                stmt = select(Setting).where(or_(
-                    currDate < Setting.startDate,
-                    and_(
-                        currDate == Setting.startDate,
-                        currTime < Setting.startTime
-                    )
-                )).order_by(desc(Setting.startDate)).order_by(desc(Setting.startTime))
+                stmt = select(FutureSetting).order_by(asc(FutureSetting.startDate)).order_by(asc(FutureSetting.startTime))
                 results = session.execute(stmt).all()
                 response.ok = True
                 response.data = results
@@ -866,17 +877,52 @@ class DBController:
         return response
     
     @staticmethod
-    def editSetting(id: int, hourFrom: datetime.time, hourTo: datetime.time, day: str, startDate: datetime.date, startTime: datetime.time, detectCar: bool, detectMotorcycle: bool, detectBus: bool, detectTruck: bool, carPrice: float, motorcyclePrice: float, busPrice: float, truckPrice: float) -> Response:
+    def updateFutureSettings() -> Response:
         response = DBController.Response()
 
         try:
             with Session(Connection.engine) as session:
-                stmt = select(Setting).where(Setting.id == id)
-                res = session.scalar(stmt)
-                session.delete(res)
-                session.commit()
+                currDate = datetime.now().date()
+                currTime = datetime.now().time()
 
-                response = DBController.addSetting(hourFrom, hourTo, day, startDate, startTime, detectCar, detectMotorcycle, detectBus, detectTruck, carPrice, motorcyclePrice, busPrice, truckPrice)
+                stmt = select(FutureSetting).where(or_(
+                    FutureSetting.startDate < currDate,
+                    and_(
+                        FutureSetting.startDate == currDate,
+                        FutureSetting.startTime <= currTime
+                    )
+                )).order_by(asc(FutureSetting.id))
+                results = session.execute(stmt).all()
+
+                for result in results:
+                    setting = result[0]
+                    session.delete(setting)
+                    session.commit()
+                    response = DBController.addCurrentSetting(setting.hourFrom, setting.hourTo, setting.day, setting.detectCar, setting.detectMotorcycle, setting.detectBus, setting.detectTruck, setting.carPrice, setting.motorcyclePrice, setting.busPrice, setting.busPrice)
+                    if not response.ok:
+                        break
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+
+        return response
+    
+    @staticmethod
+    def editSetting(id: int, hourFrom: datetime.time, hourTo: datetime.time, day: str, detectCar: bool, detectMotorcycle: bool, detectBus: bool, detectTruck: bool, carPrice: float, motorcyclePrice: float, busPrice: float, truckPrice: float, isCurrentSetting: bool, startDate=None, startTime=None) -> Response:
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                if isCurrentSetting:
+                    setting = DBController.getCurrentSetting(id)
+                else:
+                    setting = DBController.getFutureSetting(id)
+                session.delete(setting)
+                session.commit()
+                if startDate and startTime:
+                    response = DBController.addFutureSetting(hourFrom, hourTo, day, startDate, startTime, detectCar, detectMotorcycle, detectBus, detectTruck, carPrice, motorcyclePrice, busPrice, truckPrice)
+                else:
+                    response = DBController.addCurrentSetting(hourFrom, hourTo, day, detectCar, detectMotorcycle, detectBus, detectTruck, carPrice, motorcyclePrice, busPrice, truckPrice)
         except Exception as e:
             response.ok = False
             response.messages['error'] = repr(e)
