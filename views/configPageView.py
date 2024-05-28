@@ -63,11 +63,19 @@ class ConfigPage(tk.Frame):
         if tk.messagebox.askyesno("Confirm Delete", "Are you sure you want to delete the selected items?"):                
             if caller == self.leftDatabaseTable:
                 for i in self.leftDatabaseTable.selection():
-                    self.leftDatabaseTable.delete(i)
+                    values = caller.item(i)['values']
+                    id = int(values[0])
+                    response = DBController.deleteCurrentSetting(id)
+                    if response.ok:
+                        self.leftDatabaseTable.delete(i)
                     
             elif caller == self.rightDatabaseTable:
                 for i in self.rightDatabaseTable.selection():
-                    self.rightDatabaseTable.delete(i)
+                    values = caller.item(i)['values']
+                    id = int(values[0])
+                    response = DBController.deleteFutureSetting(id)
+                    if response.ok:
+                        self.rightDatabaseTable.delete(i)
     
     def cancelButton_callback(self):
         pass
@@ -147,7 +155,12 @@ class ConfigPage(tk.Frame):
             self.statusLabel.configure(text='Date should be the current or future date.', text_color="#d62828")
             self.after(2000, lambda: self.statusLabel.configure(text_color="#1B2431"))
             return
-
+        
+        if selectedDate and selectedDate == datetime.now().date() and selectedTime < datetime.now().time():
+            self.statusLabel.configure(text='Time should be current or future time.', text_color="#d62828")
+            self.after(2000, lambda: self.statusLabel.configure(text_color="#1B2431"))
+            return
+        
         if hourTo <= hourFrom:
             self.statusLabel.configure(text='Ending hour cannot be less than or equal the starting hour.', text_color="#d62828")
             self.after(2000, lambda: self.statusLabel.configure(text_color="#1B2431"))

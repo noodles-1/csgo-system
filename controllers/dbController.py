@@ -209,6 +209,26 @@ class DBController:
             return None
     
     @staticmethod
+    def getActiveSetting():
+        try:
+            with Session(Connection.engine) as session:
+                currTime = datetime.now().time()
+                currDay = datetime.now().strftime('%A')
+
+                stmt = select(CurrentSetting).where(and_(
+                    CurrentSetting.day == currDay,
+                    CurrentSetting.hourFrom <= currTime,
+                    currTime <= CurrentSetting.hourTo
+                ))
+                result = session.scalar(stmt)
+                return result
+        except Exception as e:
+            with open('logs.txt', 'a') as file:
+                now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py getCurrentSetting() - {repr(e)}\n')
+            return None
+
+    @staticmethod
     def getFutureSetting(id: int):
         try:
             with Session(Connection.engine) as session:
@@ -923,6 +943,40 @@ class DBController:
                     response = DBController.addFutureSetting(hourFrom, hourTo, day, startDate, startTime, detectCar, detectMotorcycle, detectBus, detectTruck, carPrice, motorcyclePrice, busPrice, truckPrice)
                 else:
                     response = DBController.addCurrentSetting(hourFrom, hourTo, day, detectCar, detectMotorcycle, detectBus, detectTruck, carPrice, motorcyclePrice, busPrice, truckPrice)
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+
+        return response
+    
+    @staticmethod
+    def deleteCurrentSetting(id: int) -> Response:
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(CurrentSetting).where(CurrentSetting.id == id)
+                result = session.scalar(stmt)
+                session.delete(result)
+                session.commit()
+                response.ok = True
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+
+        return response
+    
+    @staticmethod
+    def deleteFutureSetting(id: int) -> Response:
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(FutureSetting).where(FutureSetting.id == id)
+                result = session.scalar(stmt)
+                session.delete(result)
+                session.commit()
+                response.ok = True
         except Exception as e:
             response.ok = False
             response.messages['error'] = repr(e)

@@ -8,9 +8,10 @@ sys.path.append(parent)
 from datetime import datetime
 from controllers.dbController import DBController
 
+
 class PollController:
     currSetting = None
-
+    
     @staticmethod
     def updateFutureSettings():
         response = DBController.updateFutureSettings()
@@ -19,3 +20,7 @@ class PollController:
             with open('logs.txt', 'a') as file:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/pollController.py updateFutureSettings() - {repr(response.messages["error"])}\n')
+    
+    @staticmethod
+    def updateActiveSetting():
+        PollController.currSetting = DBController.getActiveSetting()

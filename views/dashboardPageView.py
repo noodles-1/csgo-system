@@ -22,6 +22,7 @@ from controllers.controller import AIController
 from controllers.dbController import DBController
 from controllers.s3controller import S3Controller
 from controllers.socketController import SocketController
+from controllers.pollController import PollController
 from sessions.userSession import UserSession
 
 classnames = [
@@ -61,11 +62,11 @@ class DashboardPage(tk.Frame):
             def showFrame():
                 success, frame = cap.read()
 
-
                 if cont.loggedIn and success:
                     results = AIController.detect_vehicle(frame)
                     annotated_frame = results[0].plot()
 
+                    '''
                     for result in results:
                         for boxes in result.boxes:
                             if not boxes.id:
@@ -143,6 +144,7 @@ class DashboardPage(tk.Frame):
                                     file.write(f'[{now}] Error at function views/dashboardPageView.py/dbController.py StartCamera/start()/showFrame() - {repr(e)}\n')
                                     print(repr(e))
                                     return
+                        '''
 
                     resized_frame = cv2.resize(annotated_frame, (640, 360))
                     frame_rgb = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2RGB)
@@ -166,7 +168,7 @@ class DashboardPage(tk.Frame):
         ip_addr = result.id
         cameraUrl = f'rtsp://{ip_addr}:554'
 
-        self.cap = cv2.VideoCapture('test_images/morayta.mp4')
+        self.cap = cv2.VideoCapture('https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/highway_videoplayback.mp4')
         DashboardPage.StartCamera().start(self.cap, self.placeholder_label, ip_addr, self.databaseTable)
 
     def __init__(self, parent):

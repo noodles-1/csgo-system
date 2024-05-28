@@ -64,6 +64,7 @@ async def runAsync():
 async def poll():
     while True:
         PollController.updateFutureSettings()
+        PollController.updateActiveSetting()
         await asyncio.sleep(60)
 
 if __name__ == "__main__":
