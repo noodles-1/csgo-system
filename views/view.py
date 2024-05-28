@@ -1,6 +1,7 @@
 import os
 import sys
 import tkinter as tk
+import tk_async_execute as tk_async
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -54,4 +55,7 @@ class MainWindow(tk.Tk):
 if __name__ == "__main__":
     connection.connect('database/test.db')
     app = MainWindow()
+
+    tk_async.start()
     app.mainloop()
+    tk_async.stop()

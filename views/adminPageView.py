@@ -1,9 +1,9 @@
 import os
 import sys
-import tkinter as tk
-import random
-import string
 import datetime
+import tkinter as tk
+import asyncio
+import tk_async_execute as tk_async
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -289,26 +289,33 @@ class AdminPage(tk.Frame):
                 self.licensePlateEntry.insert(0, values[0])
                 self.vehicleTypeEntry.insert(0, values[1])
                 self.priceEntry.insert(0, values[5])
-        
-    def discoverCameras_callback(self):
-        self.discoverCameraButton.configure(state='disabled', text='Discovering Cameras...')
-        self.discoveredCamerasDrop.configure(state='disabled', values=[''])
-        self.addCameraButton.configure(state='disabled')
 
+    async def searchCameras(self):
         for ip, _ in RTSPController.scanNetwork():
             if RTSPController.checkRtsp(ip=ip) and RTSPController.validateRtsp(ip=ip) and not DBController.cameraExists(ip_addr=ip):
                 self.ip_cameras.add(ip)
+        
+    async def discoverCameras(self):
+        tk_async.tk_execute(self.discoverCameraButton.configure, state='disabled', text='Discovering Cameras...')
+        tk_async.tk_execute(self.discoveredCamerasDrop.configure, state='disabled', values=[''])
+        tk_async.tk_execute(self.discoveredCamerasDrop.set, '')
+        tk_async.tk_execute(self.addCameraButton.configure, state='disabled')
 
-        self.discoverCameraButton.configure(state='normal', text='Discover Cameras')
-        self.discoveredCamerasDrop.set('')
-        self.discoveredCamerasDrop.configure(state='readonly', values=list(self.ip_cameras))
-        self.addCameraButton.configure(state='normal')
+        await self.searchCameras()
+
+        tk_async.tk_execute(self.discoverCameraButton.configure, state='normal', text='Discover Cameras')
+        tk_async.tk_execute(self.discoveredCamerasDrop.configure, state='readonly', values=list(self.ip_cameras))
+        tk_async.tk_execute(self.discoveredCamerasDrop.set, '')
+        tk_async.tk_execute(self.addCameraButton.configure, state='normal')
 
         if self.ip_cameras:
-            self.addCameraStatusLabel.configure(text='New IP camera(s) discovered.', text_color="#25be8e")
+            tk_async.tk_execute(self.addCameraStatusLabel.configure, text='New IP camera(s)', text_color='#25be8e')
         else:
-            self.addCameraStatusLabel.configure(text='No IP cameras found.', text_color="#d62828")
-        self.after(2000, lambda: self.addCameraStatusLabel.configure(text_color="#1B2431"))
+            tk_async.tk_execute(self.addCameraStatusLabel.configure, text='No IP cameras found.', text_color='#d62828')
+
+    def discoverCameras_callback(self):
+        tk_async.async_execute(self.discoverCameras(), visible=False)
+        self.after(2000, lambda: self.addCameraStatusLabel.configure(text_color='#1B2431'))
 
     def addCamera_callback(self):
         cameraIpAddr = self.discoveredCamerasDrop.get()
