@@ -9,12 +9,13 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
+import controllers.controller as cont
+import switchView as switch
+
 from customtkinter import *
 from tkinter import ttk
 from PIL import Image, ImageTk
 from controllers.dbController import DBController as db
-from sessions.userSession import UserSession
-import controllers.controller as cont
 
 class LoginPage(tk.Frame):
     # Close Application
@@ -35,18 +36,14 @@ class LoginPage(tk.Frame):
         pass
     
     # Function that is called when clicking Login
-    def verifyCredentials(self, usernameEntry: CTkEntry, passwordEntry: CTkEntry, incorrectLabel: CTkLabel):
+    def verifyCredentials(self, parent, usernameEntry: CTkEntry, passwordEntry: CTkEntry, incorrectLabel: CTkLabel):
         username, password = usernameEntry.get(), passwordEntry.get()
         response = db.loginUser(password=password, username=username)
         
         if response.ok:
-            if UserSession.storeUserSession(response.data):
-                self.master.show_frame(self.master.dashboardFrame)
-                cont.cameraEnabled = True
-                cont.loggedIn = True
-            else:
-                incorrectLabel.configure(text='Error with user session.')
-                self.incorrectCredentials(incorrectLabel)
+            parent.setUser(response.data)
+            switch.showDashboardPage(parent)
+            cont.loggedIn = True
         else:
             incorrectLabel.configure(text=(response.messages['username'] or response.messages['password']))
             self.incorrectCredentials(incorrectLabel)
@@ -141,7 +138,7 @@ class LoginPage(tk.Frame):
                                 height = 32,
                                 width = 148,
                                 text_color = '#48BFE3',
-                                command = lambda: self.verifyCredentials(usernameEntry, passwordEntry, incorrectLabel),
+                                command = lambda: self.verifyCredentials(parent, usernameEntry, passwordEntry, incorrectLabel),
                                 border_color = '#48BFE3',
                                 fg_color = '#000000', 
                                 border_width = 2,

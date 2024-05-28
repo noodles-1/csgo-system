@@ -23,7 +23,6 @@ from controllers.dbController import DBController
 from controllers.s3controller import S3Controller
 from controllers.socketController import SocketController
 from controllers.pollController import PollController
-from sessions.userSession import UserSession
 
 classnames = [
     "person", "bicycle", "car", "motorcycle", "aeroplane", "bus", "train", "truck", "boat",
@@ -133,8 +132,7 @@ class DashboardPage(tk.Frame):
                                 date = datetime.now().date()
                                 time = datetime.now().time()
                                 imageUrl = S3Controller().uploadImage(cropped_vehicle, f'[{date} - {time}] {classnames[vehicle_id]} - id: {id}')
-                                userSession = UserSession.loadUserSession()
-                                response = DBController.addLicensePlate(userSession.id, ip_addr, extracted_lp, classnames[vehicle_id], 0, imageUrl)
+                                response = DBController.addLicensePlate(self.currUser.id, ip_addr, extracted_lp, classnames[vehicle_id], 0, imageUrl)
 
                                 if response.ok:
                                     databaseTable.insert('', 0, values=(extracted_lp, classnames[vehicle_id], ip_addr, time, date, 0))
@@ -171,8 +169,13 @@ class DashboardPage(tk.Frame):
         self.cap = cv2.VideoCapture('https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/highway_videoplayback.mp4')
         DashboardPage.StartCamera().start(self.cap, self.placeholder_label, ip_addr, self.databaseTable)
 
+    def setCurrUser(self, user):
+        self.currUser = user
+        self.adminButton.configure(state='disabled' if not user.isAdmin else 'normal')
+
     def __init__(self, parent):
         self.cap = None
+        self.currUser = None
 
         tk.Frame.__init__(self, parent, bg = "#090E18")
         
@@ -243,7 +246,7 @@ class DashboardPage(tk.Frame):
                                     width = 140)
         
         # Goes to the Admin Page (Should be disabled unless the user logged in is an Admin)
-        adminButton = CTkButton(bottomFrame,
+        self.adminButton = CTkButton(bottomFrame,
                                 text = 'Admin',
                                 command = lambda: switch.showAdminPage(parent, changeCameraDisplay, self.cap, self.placeholder_label), 
                                 font = ('Montserrat', 15),
@@ -256,13 +259,13 @@ class DashboardPage(tk.Frame):
                                 width = 140)
         
         analyticsButton.pack(side = 'right', padx = 10, pady = 10)
-        adminButton.pack(side = 'right', padx = 10, pady = 10)
+        self.adminButton.pack(side = 'right', padx = 10, pady = 10)
         
         analyticsButton.bind("<Enter>", lambda event: analyticsButton.configure(text_color="#090E18", fg_color = "#5E60CE")) 
         analyticsButton.bind("<Leave>", lambda event: analyticsButton.configure(text_color="#5E60CE", fg_color = "#090E18")) 
         
-        adminButton.bind("<Enter>", lambda event: adminButton.configure(text_color="#090E18", fg_color = "#5E60CE")) 
-        adminButton.bind("<Leave>", lambda event: adminButton.configure(text_color="#5E60CE", fg_color = "#090E18")) 
+        self.adminButton.bind("<Enter>", lambda event: self.adminButton.configure(text_color="#090E18", fg_color = "#5E60CE")) 
+        self.adminButton.bind("<Leave>", lambda event: self.adminButton.configure(text_color="#5E60CE", fg_color = "#090E18")) 
 
         # Separates the Main Frame into two Sides (Left and Right)
         leftMainFrame = tk.Frame(mainFrame, bg = "#090E18")

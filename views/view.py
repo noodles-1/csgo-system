@@ -46,12 +46,20 @@ class MainWindow(tk.Tk):
         self.adminFrame.grid(row=0, column=0, sticky="nsew")
 
         self.show_frame(self.loginFrame)
+
+        self.currUser = None
         
     # Function to show Frame (Can be used by the child Classes)
     def show_frame(self, cont, changeCameraDisplay=None, cap=None, placeholder_label=None):
         if changeCameraDisplay:
             cont.setCameraDisplay(changeCameraDisplay, cap, placeholder_label)
         cont.tkraise()
+    
+    def setUser(self, user):
+        self.currUser = user
+        self.dashboardFrame.setCurrUser(user)
+        self.configFrame.applyRestrictions(user)
+        self.analyticsFrame.applyRestrictions(user)
 
 def startAsyncLoop(loop):
     loop.call_soon(loop.stop)

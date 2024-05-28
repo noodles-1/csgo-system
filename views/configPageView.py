@@ -34,10 +34,10 @@ class ConfigPage(tk.Frame):
         self.timeEntry.delete(0, tk.END)
         
         # Price Form
-        self.truckEntry.delete(0, tk.END)
-        self.busEntry.delete(0, tk.END)
-        self.motorcycleEntry.delete(0, tk.END)
-        self.carEntry.delete(0, tk.END)
+        self.truckVal.set('')
+        self.busVal.set('')
+        self.motorcycleVal.set('')
+        self.carVal.set('')
         
         # Detectables Form
         self.truckComboBox.set('')
@@ -106,19 +106,19 @@ class ConfigPage(tk.Frame):
             except:
                 return False
 
-        carDropdown = self.carComboBox.get()
-        motorDropdown = self.motorcycleComboBox.get()
-        busDropdown = self.busComboBox.get()
-        truckDropdown= self.truckComboBox.get()
+        carDropdown = self.carComboVal.get()
+        motorDropdown = self.motorcycleComboVal.get()
+        busDropdown = self.busComboVal.get()
+        truckDropdown= self.truckComboVal.get()
 
-        carPrice = self.carEntry.get()
-        motorPrice = self.motorcycleEntry.get()
-        busPrice = self.busEntry.get()
-        truckPrice = self.truckEntry.get()
+        carPrice = self.carVal.get()
+        motorPrice = self.motorcycleVal.get()
+        busPrice = self.busVal.get()
+        truckPrice = self.truckVal.get()
         
-        hourFrom = self.fromComboBox.get()
-        hourTo = self.toComboBox.get()
-        dayEntry = self.everyComboBox.get()
+        hourFrom = self.fromComboVal.get()
+        hourTo = self.toComboVal.get()
+        dayEntry = self.everyComboVal.get()
 
         selectedDate = self.dateEntry.get()
         selectedTime = self.timeEntry.get()
@@ -246,25 +246,25 @@ class ConfigPage(tk.Frame):
         
         if not selected_items or len(selected_items) != 1:
             # Config Form0
-            self.fromComboBox.set('')
-            self.toComboBox.set('')
-            self.everyComboBox.set('')
+            self.fromComboVal.set('')
+            self.toComboVal.set('')
+            self.everyComboVal.set('')
             
             # Config Form 2
             self.dateEntry.delete(0, tk.END)
             self.timeEntry.delete(0, tk.END)
             
             # Price Form
-            self.truckEntry.delete(0, tk.END)
-            self.busEntry.delete(0, tk.END)
-            self.motorcycleEntry.delete(0, tk.END)
-            self.carEntry.delete(0, tk.END)
+            self.truckVal.set('')
+            self.busVal.set('')
+            self.motorcycleVal.set('')
+            self.carVal.set('')
             
             # Detectables Form
-            self.truckComboBox.set('')
-            self.busComboBox.set('')
-            self.motorcycleComboBox.set('')
-            self.carComboBox.set('')
+            self.truckComboVal.set('')
+            self.busComboVal.set('')
+            self.motorcycleComboVal.set('')
+            self.carComboVal.set('')
 
             self.chosenId = None
             self.isCurrentSetting = None
@@ -272,25 +272,25 @@ class ConfigPage(tk.Frame):
         
         # These are all the widgets that updates whenever there is a row selection from either table.
         # Config Form
-        self.fromComboBox.set('')
-        self.toComboBox.set('')
-        self.everyComboBox.set('')
+        self.fromComboVal.set('')
+        self.toComboVal.set('')
+        self.everyComboVal.set('')
         
         # Config Form 2
         self.dateEntry.delete(0, tk.END)
         self.timeEntry.delete(0, tk.END)
         
         # Price Form
-        self.truckEntry.delete(0, tk.END)
-        self.busEntry.delete(0, tk.END)
-        self.motorcycleEntry.delete(0, tk.END)
-        self.carEntry.delete(0, tk.END)
+        self.truckVal.set('')
+        self.busVal.set('')
+        self.motorcycleVal.set('')
+        self.carVal.set('')
         
         # Detectables Form
-        self.truckComboBox.set('')
-        self.busComboBox.set('')
-        self.motorcycleComboBox.set('')
-        self.carComboBox.set('')
+        self.truckComboVal.set('')
+        self.busComboVal.set('')
+        self.motorcycleComboVal.set('')
+        self.carComboVal.set('')
         
         for item in selected_items:
             values = caller.item(item)['values']
@@ -299,20 +299,21 @@ class ConfigPage(tk.Frame):
             currTime = datetime.now().time()
 
             if caller == self.leftDatabaseTable and len(values) >= 4:
+                self.clearInput()
                 self.chosenId = int(values[0])
                 self.isCurrentSetting = True
 
                 setting = DBController.getCurrentSetting(self.chosenId)
                 
-                self.carComboBox.set('Enabled' if setting.detectCar else 'Disabled')
-                self.motorcycleComboBox.set('Enabled' if setting.detectMotorcycle else 'Disabled')
-                self.busComboBox.set('Enabled' if setting.detectBus else 'Disabled')
-                self.truckComboBox.set('Enabled' if setting.detectTruck else 'Disabled')
+                self.carComboVal.set('Enabled' if setting.detectCar else 'Disabled')
+                self.motorcycleComboVal.set('Enabled' if setting.detectMotorcycle else 'Disabled')
+                self.busComboVal.set('Enabled' if setting.detectBus else 'Disabled')
+                self.truckComboVal.set('Enabled' if setting.detectTruck else 'Disabled')
 
-                self.carEntry.insert(0, setting.carPrice)
-                self.motorcycleEntry.insert(0, setting.motorcyclePrice)
-                self.busEntry.insert(0, setting.busPrice)
-                self.truckEntry.insert(0, setting.truckPrice)
+                self.carVal.set(setting.carPrice)
+                self.motorcycleVal.set(setting.motorcyclePrice)
+                self.busVal.set(setting.busPrice)
+                self.truckVal.set(setting.truckPrice)
 
                 fromTimeStr = str(setting.hourFrom)
                 fromTimeObj = datetime.strptime(fromTimeStr, '%H:%M:%S')
@@ -322,25 +323,26 @@ class ConfigPage(tk.Frame):
                 toTimeObj = datetime.strptime(toTimeStr, '%H:%M:%S')
                 toTime = toTimeObj.strftime('%H:%M')
 
-                self.fromComboBox.set(fromTime)
-                self.toComboBox.set(toTime)
-                self.everyComboBox.set(values[3])
+                self.fromComboVal.set(fromTime)
+                self.toComboVal.set(toTime)
+                self.everyComboVal.set(values[3])
                 
             if caller == self.rightDatabaseTable and len(values) >= 5:
+                self.clearInput()
                 self.chosenId = int(values[0])
                 self.isCurrentSetting = False
 
                 setting = DBController.getFutureSetting(self.chosenId)
                 
-                self.carComboBox.set('Enabled' if setting.detectCar else 'Disabled')
-                self.motorcycleComboBox.set('Enabled' if setting.detectMotorcycle else 'Disabled')
-                self.busComboBox.set('Enabled' if setting.detectBus else 'Disabled')
-                self.truckComboBox.set('Enabled' if setting.detectTruck else 'Disabled')
+                self.carComboVal.set('Enabled' if setting.detectCar else 'Disabled')
+                self.motorcycleComboVal.set('Enabled' if setting.detectMotorcycle else 'Disabled')
+                self.busComboVal.set('Enabled' if setting.detectBus else 'Disabled')
+                self.truckComboVal.set('Enabled' if setting.detectTruck else 'Disabled')
 
-                self.carEntry.insert(0, setting.carPrice)
-                self.motorcycleEntry.insert(0, setting.motorcyclePrice)
-                self.busEntry.insert(0, setting.busPrice)
-                self.truckEntry.insert(0, setting.truckPrice)
+                self.carVal.set(setting.carPrice)
+                self.motorcycleVal.set(setting.motorcyclePrice)
+                self.busVal.set(setting.busPrice)
+                self.truckVal.set(setting.truckPrice)
 
                 fromTimeStr = str(setting.hourFrom)
                 fromTimeObj = datetime.strptime(fromTimeStr, '%H:%M:%S')
@@ -350,9 +352,9 @@ class ConfigPage(tk.Frame):
                 toTimeObj = datetime.strptime(toTimeStr, '%H:%M:%S')
                 toTime = toTimeObj.strftime('%H:%M')
 
-                self.fromComboBox.set(fromTime)
-                self.toComboBox.set(toTime)
-                self.everyComboBox.set(values[3])
+                self.fromComboVal.set(fromTime)
+                self.toComboVal.set(toTime)
+                self.everyComboVal.set(values[3])
 
                 startDateStr = str(setting.startDate)
                 startDateObj = datetime.strptime(startDateStr, '%Y-%m-%d')
@@ -364,6 +366,20 @@ class ConfigPage(tk.Frame):
 
                 self.dateEntry.insert(0, startDate)
                 self.timeEntry.insert(0, startTime)
+
+    def applyRestrictions(self, user):
+        for comboBox in [self.carComboBox, self.motorcycleComboBox, self.busComboBox, self.truckComboBox]:
+            comboBox.configure(state='disabled' if not user.canChangeDetect else 'readonly')
+
+        for entry in [self.carEntry, self.motorcycleEntry, self.busEntry, self.truckEntry]:
+            entry.configure(state='disabled' if not user.canChangePrice else 'normal')
+
+        for comboBox in [self.fromComboBox, self.toComboBox, self.everyComboBox]:
+            comboBox.configure(state='disabled' if not user.canEditHours else 'readonly')
+
+    def logout_callback(self, parent):
+        self.addNew_callback()
+        parent.show_frame(parent.loginFrame)
     
     def __init__(self, parent):
         self.selected_date = ''
@@ -559,22 +575,26 @@ class ConfigPage(tk.Frame):
         detectablesContentFrame = tk.Frame(detectablesFrame, bg = '#1B2431')
         detectablesContentFrame.pack(expand = False, fill = 'both', side = 'top', padx = 5, pady = 5)
         
-        self.carComboBox = CTkComboBox(detectablesContentFrame, values = ['Enabled', 'Disabled'], width = 200, fg_color = '#e5e5e5', dropdown_fg_color = '#e5e5e5', text_color = '#000000', dropdown_text_color = '#000000', border_color = '#FFFFFF', button_color = '#FFFFFF', state='readonly')
+        self.carComboVal = StringVar(value='')
+        self.carComboBox = CTkComboBox(detectablesContentFrame, variable=self.carComboVal, values = ['Enabled', 'Disabled'], width = 200, fg_color = '#e5e5e5', dropdown_fg_color = '#e5e5e5', text_color = '#000000', dropdown_text_color = '#000000', border_color = '#FFFFFF', button_color = '#FFFFFF', state='readonly')
         self.carComboBox.pack(side = 'right', padx = (0, 20), pady = 5)
         carLabel = CTkLabel(detectablesContentFrame, text = 'Car', anchor = 'w', font = ('Montserrat', 12), text_color = '#FFFFFF')
         carLabel.pack(side = 'right', padx = 10)
         
-        self.motorcycleComboBox = CTkComboBox(detectablesContentFrame, values = ['Enabled', 'Disabled'], width = 200, fg_color = '#e5e5e5', dropdown_fg_color = '#e5e5e5', text_color = '#000000', dropdown_text_color = '#000000', border_color = '#FFFFFF', button_color = '#FFFFFF', state='readonly')
+        self.motorcycleComboVal = StringVar(value='')
+        self.motorcycleComboBox = CTkComboBox(detectablesContentFrame, variable=self.motorcycleComboVal, values = ['Enabled', 'Disabled'], width = 200, fg_color = '#e5e5e5', dropdown_fg_color = '#e5e5e5', text_color = '#000000', dropdown_text_color = '#000000', border_color = '#FFFFFF', button_color = '#FFFFFF', state='readonly')
         self.motorcycleComboBox.pack(side = 'right', padx = (0, 20), pady = 5)
         motorcycleLabel = CTkLabel(detectablesContentFrame, text = 'Motorcycle', anchor = 'w', font = ('Montserrat', 12), text_color = '#FFFFFF')
         motorcycleLabel.pack(side = 'right', padx = 10)
         
-        self.busComboBox = CTkComboBox(detectablesContentFrame, values = ['Enabled', 'Disabled'], width = 200, fg_color = '#e5e5e5', dropdown_fg_color = '#e5e5e5', text_color = '#000000', dropdown_text_color = '#000000', border_color = '#FFFFFF', button_color = '#FFFFFF', state='readonly')
+        self.busComboVal = StringVar(value='')
+        self.busComboBox = CTkComboBox(detectablesContentFrame, variable=self.busComboVal, values = ['Enabled', 'Disabled'], width = 200, fg_color = '#e5e5e5', dropdown_fg_color = '#e5e5e5', text_color = '#000000', dropdown_text_color = '#000000', border_color = '#FFFFFF', button_color = '#FFFFFF', state='readonly')
         self.busComboBox.pack(side = 'right', padx = (0, 20), pady = 5)
         busLabel = CTkLabel(detectablesContentFrame, text = 'Bus', anchor = 'w', font = ('Montserrat', 12), text_color = '#FFFFFF')
         busLabel.pack(side = 'right', padx = 10)
         
-        self.truckComboBox = CTkComboBox(detectablesContentFrame, values = ['Enabled', 'Disabled'], width = 200, fg_color = '#e5e5e5', dropdown_fg_color = '#e5e5e5', text_color = '#000000', dropdown_text_color = '#000000', border_color = '#FFFFFF', button_color = '#FFFFFF', state='readonly')
+        self.truckComboVal = StringVar(value='')
+        self.truckComboBox = CTkComboBox(detectablesContentFrame, variable=self.truckComboVal, values = ['Enabled', 'Disabled'], width = 200, fg_color = '#e5e5e5', dropdown_fg_color = '#e5e5e5', text_color = '#000000', dropdown_text_color = '#000000', border_color = '#FFFFFF', button_color = '#FFFFFF', state='readonly')
         self.truckComboBox.pack(side = 'right', padx = (0, 20), pady = 5)
         truckLabel = CTkLabel(detectablesContentFrame, text = 'Truck', anchor = 'w', font = ('Montserrat', 12), text_color = '#FFFFFF')
         truckLabel.pack(side = 'right', padx = 10)
@@ -591,22 +611,26 @@ class ConfigPage(tk.Frame):
         priceContentFrame = tk.Frame(pricePerVehicleFrame, bg = '#1B2431')
         priceContentFrame.pack(expand = False, fill = 'both', side = 'top', padx = 5, pady = 5)
         
-        self.carEntry = CTkEntry(priceContentFrame, placeholder_text = '0.0', font = ('Montserrat', 12), text_color = '#000000', corner_radius = 15, border_color = '#FFFFFF', fg_color = '#FFFFFF')
+        self.carVal = StringVar(value='')
+        self.carEntry = CTkEntry(priceContentFrame, textvariable=self.carVal, placeholder_text = '0.0', font = ('Montserrat', 12), text_color = '#000000', corner_radius = 15, border_color = '#FFFFFF', fg_color = '#FFFFFF')
         self.carEntry.pack(side = 'right', padx = (0, 20), pady = 5)
         carLabel = CTkLabel(priceContentFrame, text = 'Car', anchor = 'w', font = ('Montserrat', 12), text_color = '#FFFFFF')
         carLabel.pack(side = 'right', padx = 10)
         
-        self.motorcycleEntry = CTkEntry(priceContentFrame, placeholder_text = '0.0', font = ('Montserrat', 12), text_color = '#000000', corner_radius = 15, border_color = '#FFFFFF', fg_color = '#FFFFFF')
+        self.motorcycleVal = StringVar(value='')
+        self.motorcycleEntry = CTkEntry(priceContentFrame, textvariable=self.motorcycleVal, placeholder_text = '0.0', font = ('Montserrat', 12), text_color = '#000000', corner_radius = 15, border_color = '#FFFFFF', fg_color = '#FFFFFF')
         self.motorcycleEntry.pack(side = 'right', padx = (0, 20), pady = 5)
         motorcycleLabel = CTkLabel(priceContentFrame, text = 'Motorcycle', anchor = 'w', font = ('Montserrat', 12), text_color = '#FFFFFF')
         motorcycleLabel.pack(side = 'right', padx = 10)
         
-        self.busEntry = CTkEntry(priceContentFrame, placeholder_text = '0.0', font = ('Montserrat', 12), text_color = '#000000', corner_radius = 15, border_color = '#FFFFFF', fg_color = '#FFFFFF')
+        self.busVal = StringVar(value='')
+        self.busEntry = CTkEntry(priceContentFrame, textvariable=self.busVal, placeholder_text = '0.0', font = ('Montserrat', 12), text_color = '#000000', corner_radius = 15, border_color = '#FFFFFF', fg_color = '#FFFFFF')
         self.busEntry.pack(side = 'right', padx = (0, 20), pady = 5)
         busLabel = CTkLabel(priceContentFrame, text = 'Bus', anchor = 'w', font = ('Montserrat', 12), text_color = '#FFFFFF')
         busLabel.pack(side = 'right', padx = 10)
         
-        self.truckEntry = CTkEntry(priceContentFrame, placeholder_text = '0.0', font = ('Montserrat', 12), text_color = '#000000', corner_radius = 15, border_color = '#FFFFFF', fg_color = '#FFFFFF')
+        self.truckVal = StringVar(value='')
+        self.truckEntry = CTkEntry(priceContentFrame, textvariable=self.truckVal, placeholder_text = '0.0', font = ('Montserrat', 12), text_color = '#000000', corner_radius = 15, border_color = '#FFFFFF', fg_color = '#FFFFFF')
         self.truckEntry.pack(side = 'right', padx = (0, 20), pady = 5)
         truckLabel = CTkLabel(priceContentFrame, text = 'Truck', anchor = 'w', font = ('Montserrat', 12), text_color = '#FFFFFF')
         truckLabel.pack(side = 'right', padx = 10)
@@ -629,7 +653,8 @@ class ConfigPage(tk.Frame):
         fromLabel = CTkLabel(configLeftContent, text = 'From', font = ('Montserrat', 12), anchor = 'w', text_color = '#FFFFFF')
         fromLabel.pack(side = 'left', padx = (10, 5), pady = 10)
         
-        self.fromComboBox = CTkComboBox(configLeftContent, values=[f'{hour:02d}:00' for hour in range(24)],
+        self.fromComboVal = StringVar(value='')
+        self.fromComboBox = CTkComboBox(configLeftContent, variable=self.fromComboVal, values=[f'{hour:02d}:00' for hour in range(24)],
                                     width = 80,
                                     fg_color = '#e5e5e5', dropdown_fg_color = '#e5e5e5', text_color = '#000000', dropdown_text_color = '#000000', border_color = '#FFFFFF', button_color = '#FFFFFF', state='readonly')
         self.fromComboBox.pack(side = 'left', padx = (0, 10))
@@ -637,7 +662,8 @@ class ConfigPage(tk.Frame):
         toLabel = CTkLabel(configLeftContent, text = 'To', font = ('Montserrat', 12), anchor = 'w', text_color = '#FFFFFF')
         toLabel.pack(side = 'left', padx = (10, 5), pady = 10)
         
-        self.toComboBox = CTkComboBox(configLeftContent, values=[f'{hour:02d}:00' for hour in range(24)],
+        self.toComboVal = StringVar(value='')
+        self.toComboBox = CTkComboBox(configLeftContent, variable=self.toComboVal, values=[f'{hour:02d}:00' for hour in range(24)],
                                     width = 80,
                                     fg_color = '#e5e5e5', dropdown_fg_color = '#e5e5e5', text_color = '#000000', dropdown_text_color = '#000000', border_color = '#FFFFFF', button_color = '#FFFFFF', state='readonly')
         self.toComboBox.pack(side = 'left', padx = (0, 10))
@@ -645,8 +671,9 @@ class ConfigPage(tk.Frame):
         everyLabel = CTkLabel(configLeftContent, text = 'Every', font = ('Montserrat', 12), anchor = 'w', text_color = '#FFFFFF')
         everyLabel.pack(side = 'left', padx = (10, 5), pady = 10)
         
+        self.everyComboVal = StringVar(value='')
         self.everyComboBox = CTkComboBox(configLeftContent,
-                                    values=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
+                                    variable=self.everyComboVal, values=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
                                             "Saturday", "Sunday"],
                                     width = 200,
                                     fg_color = '#e5e5e5', dropdown_fg_color = '#e5e5e5', text_color = '#000000', dropdown_text_color = '#000000', border_color = '#FFFFFF', button_color = '#FFFFFF', state='readonly')
@@ -744,7 +771,7 @@ class ConfigPage(tk.Frame):
         # Logout of the account. For the Assignee, make sure to dispose necessary information before logging out.
         logoutButton = CTkButton(navigationFrame,
                                 text = 'Logout',
-                                command = lambda: parent.show_frame(parent.loginFrame), 
+                                command = lambda: self.logout_callback(parent), 
                                 font = ('Montserrat', 15, "bold"),
                                 border_width = 2,
                                 corner_radius = 15,

@@ -30,14 +30,20 @@ class AnalyticsPage(tk.Frame):
     def downloadCSV(self):
         rgctrl.downloadAndProcessCSV()
     
-    def detectedVehiclesLocation_callback(self):
-        pass
+    def detectedVehiclesLocation_callback(self, location: str):
+        new_x = [4, 5, 6]
+        new_y = [7, 8, 9]
+        self.axDetected.plot(new_x, new_y)
+        self.detectedVehiclesCanvas.draw()
     
     def revenueGeneratedLocation_callback(self):
         pass
     
     def busiestTimeLocation_callback(self):
         pass
+
+    def applyRestrictions(self, user):
+        self.downloadCSVButton.configure(state='disabled' if not user.canDownload else 'normal')
     
     def __init__(self, parent):
         tk.Frame.__init__(self, parent, bg = "#090E18")
@@ -116,12 +122,12 @@ class AnalyticsPage(tk.Frame):
         
         #Insert Graph Here
         detectedVehiclesFigure = Figure()
-        ax = detectedVehiclesFigure.add_subplot()
-        ax.set_title("Number of Detected Vehicles")
+        self.axDetected = detectedVehiclesFigure.add_subplot()
+        self.axDetected.set_title("Number of Detected Vehicles")
         
-        detectedVehiclesCanvas = FigureCanvasTkAgg(detectedVehiclesFigure, numberOfDetectedVehicleInnerFrame)
-        detectedVehiclesCanvas.draw()
-        detectedVehiclesCanvas.get_tk_widget().pack(side = "top", expand = True, fill = "both")
+        self.detectedVehiclesCanvas = FigureCanvasTkAgg(detectedVehiclesFigure, numberOfDetectedVehicleInnerFrame)
+        self.detectedVehiclesCanvas.draw()
+        self.detectedVehiclesCanvas.get_tk_widget().pack(side = "top", expand = True, fill = "both")
         
         detectedVehiclesLocation = CTkComboBox(numberOfDetectedVehicleFrame,
                                                values = ['Location 1', 'Location 2', 'Location 3'],
@@ -142,8 +148,8 @@ class AnalyticsPage(tk.Frame):
         
         #Insert Graph Here
         revenueGeneratedFigure = Figure(figsize = (3,3))
-        ax = revenueGeneratedFigure.add_subplot()
-        ax.set_title("Revenue Generated")
+        axRevenue = revenueGeneratedFigure.add_subplot()
+        axRevenue.set_title("Revenue Generated")
         
         revenueGeneratedCanvas = FigureCanvasTkAgg(revenueGeneratedFigure, revenueGeneratedInnerFrame)
         revenueGeneratedCanvas.draw()
@@ -194,8 +200,8 @@ class AnalyticsPage(tk.Frame):
         
         #Insert Graph Here
         busiestTimeFigure = Figure(figsize = (3, 3))
-        ax = busiestTimeFigure.add_subplot()
-        ax.set_title("Busiest Time of the Day")
+        axBusiest = busiestTimeFigure.add_subplot()
+        axBusiest.set_title("Busiest Time of the Day")
         
         busiestTimeCanvas = FigureCanvasTkAgg(busiestTimeFigure, busiestTimeInnerFrame)
         busiestTimeCanvas.draw()
@@ -231,7 +237,7 @@ class AnalyticsPage(tk.Frame):
         dashboardButton.pack(side = 'right', padx = 5, pady = 1)
         
         # Scheduled Apply Buttom, function placeholder is print. For the assignee, update the "command"
-        downloadCSVButton = CTkButton(navigationFrame,
+        self.downloadCSVButton = CTkButton(navigationFrame,
                                 text = 'Download CSV',
                                 command = self.downloadCSV, 
                                 font = ('Montserrat', 12),
@@ -243,6 +249,6 @@ class AnalyticsPage(tk.Frame):
                                 height = 30,
                                 width = 140)
         
-        downloadCSVButton.bind("<Enter>", lambda event: downloadCSVButton.configure(text_color="#090E18", fg_color = "#5E60CE"))
-        downloadCSVButton.bind("<Leave>", lambda event: downloadCSVButton.configure(text_color="#5E60CE", fg_color = "#090E18"))
-        downloadCSVButton.pack(side = 'right', padx = 5, pady = 1)
+        self.downloadCSVButton.bind("<Enter>", lambda event: self.downloadCSVButton.configure(text_color="#090E18", fg_color = "#5E60CE"))
+        self.downloadCSVButton.bind("<Leave>", lambda event: self.downloadCSVButton.configure(text_color="#5E60CE", fg_color = "#090E18"))
+        self.downloadCSVButton.pack(side = 'right', padx = 5, pady = 1)

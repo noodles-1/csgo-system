@@ -2,6 +2,7 @@ import os
 import sys
 import re
 import csv
+import bcrypt
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -318,6 +319,26 @@ class DBController:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/dbController.py licensePlateExists() - {repr(e)}\n')
             return False
+        
+    @staticmethod
+    def getHashedPassword(password: str) -> str:
+        salt = bcrypt.gensalt()
+        hashedPassword = bcrypt.hashpw(password.encode(), salt)
+        return hashedPassword
+    
+    @staticmethod
+    def passwordMatches(id: int, inputPassword: str) -> bool:
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(User).where(User.id == id)
+                user = session.scalar(stmt)
+                inputPassword = inputPassword.encode()
+                return bcrypt.checkpw(inputPassword, user.password)
+        except Exception as e:
+            with open('logs.txt', 'a') as file:
+                now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py passwordMatches() - {repr(e)}\n')
+            return False
     
     '''
     Database transaction methods
@@ -379,7 +400,7 @@ class DBController:
                         canChangePrice=canChangePrice,
                         canEditHours=canEditHours,
                         canDownload=canDownload,
-                        password=password
+                        password=DBController.getHashedPassword(password)
                     )
                     session.add(user)
                     session.commit()
@@ -422,7 +443,7 @@ class DBController:
                 response.messages['username'] = 'Username does not exist.'
             else:
                 user = DBController.getUser(username=username)
-                if user.password != password:
+                if not DBController.passwordMatches(user.id, password):
                     response.ok = False
                     response.messages['error'] = 'Password error.'
                     response.messages['password'] = 'Passwords do not match.'
@@ -605,7 +626,7 @@ class DBController:
         
         try:
             user = DBController.getUser(email=email)
-            if currPassword and user.password != currPassword:
+            if currPassword and not DBController.passwordMatches(currPassword, user.password):
                 response.ok = False
                 response.messages['error'] = 'Password error.'
                 response.messages['password'] = 'Current password is incorrect.'
@@ -621,7 +642,7 @@ class DBController:
                 response.messages['password'] = "New password can't be the current password."
                 return response
             with Session(Connection.engine) as session:
-                stmt = update(User).where(User.email == email).values(password=newPassword)
+                stmt = update(User).where(User.email == email).values(password=DBController.getHashedPassword(newPassword))
                 session.execute(stmt)
                 session.commit()
                 response.ok = True
@@ -644,7 +665,7 @@ class DBController:
                     camera = Camera(
                         id=ip_addr,
                         name=name,
-                        location=location
+                        location=location.lower()
                     )
                     session.add(camera)
                     session.commit()
@@ -764,7 +785,7 @@ class DBController:
                         email=newEmail,
                         firstName=newFirstName,
                         lastName=newLastName,
-                        password=newPassword,
+                        password=DBController.getHashedPassword(newPassword),
                         isAdmin=isAdmin,
                         canChangeDetect=canChangeDetect,
                         canChangePrice=canChangePrice,

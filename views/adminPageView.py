@@ -34,7 +34,6 @@ class AdminPage(tk.Frame):
         self.lastNameVar.set(user.lastName)
         self.emailVar.set(user.email)
         self.usernameVar.set(user.username)
-        self.passwordVar.set(user.password) # to be hashed once user registration is finished
         self.adminVar.set(1 if user.isAdmin else 2)
         self.changePriceVar.set(1 if user.canChangePrice else 2)
         self.downloadRadioVar.set(1 if user.canDownload else 2)
