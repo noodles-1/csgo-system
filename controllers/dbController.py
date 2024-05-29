@@ -10,6 +10,7 @@ sys.path.append(parent)
 
 from collections import defaultdict
 from datetime import datetime
+from datetime import timedelta
 from models.connect import Connection
 from models.schemas import User
 from models.schemas import Camera
@@ -22,6 +23,7 @@ from sqlalchemy import or_
 from sqlalchemy import and_
 from sqlalchemy import asc
 from sqlalchemy import desc
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 class DBController:
@@ -184,10 +186,14 @@ class DBController:
             return None
         
     @staticmethod
-    def getCamera(name: str):
+    def getCamera(id=None, name=None):
         try:
             with Session(Connection.engine) as session:
-                stmt = select(Camera).where(Camera.name == name)
+                stmt = select(Camera)
+                if name:
+                    stmt = stmt.where(Camera.name == name)
+                if id:
+                    stmt = stmt.where(Camera.id == id)
                 result = session.scalar(stmt)
                 return result
         except Exception as e:
@@ -339,6 +345,23 @@ class DBController:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/dbController.py passwordMatches() - {repr(e)}\n')
             return False
+        
+    @staticmethod
+    def isDetectedRecently(licenseNumber: str) -> bool:
+        try:
+            with Session(Connection.engine) as session:
+                time_1_hour_ago = (datetime.now() - timedelta(hours=1)).time()
+                stmt = select(DetectedLicensePlate).where(and_(
+                    DetectedLicensePlate.licenseNumber == licenseNumber,
+                    time_1_hour_ago <= DetectedLicensePlate.time
+                ))
+                result = session.scalar(stmt)
+                return result is not None
+        except Exception as e:
+            with open('logs.txt', 'a') as file:
+                now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py isDetectedRecenly() - {repr(e)}\n')
+            return False
     
     '''
     Database transaction methods
@@ -446,7 +469,7 @@ class DBController:
                 if not DBController.passwordMatches(user.id, password):
                     response.ok = False
                     response.messages['error'] = 'Password error.'
-                    response.messages['password'] = 'Passwords do not match.'
+                    response.messages['password'] = 'Invalid username or password.'
                 else:
                     response.ok = True
                     response.data = user
@@ -457,7 +480,7 @@ class DBController:
         return response
     
     @staticmethod
-    def addLicensePlate(userId: int, cameraId: int, licenseNumber: str, vehicleType: str, price: float, imageUrl: str) -> Response:
+    def addLicensePlate(userId: int, settingId: int, location: str, licenseNumber: str, vehicleType: str, price: float, imageUrl: str) -> Response:
         '''
         Adds a recognized license plate number from the object detection module to the database, 
         accompanied with the user ID, camera ID, vehicle type, and the time and date when the 
@@ -475,14 +498,15 @@ class DBController:
         response = DBController.Response()
 
         try:
-            if DBController.licensePlateExists(licenseNumber):
+            if DBController.isDetectedRecently(licenseNumber=licenseNumber):
                 response.ok = False
-                response.messages['error'] = 'License plate already detected.'
+                response.messages['error'] = 'License plate has been recently detected already.'
             else:
                 with Session(Connection.engine) as session:
                     license = DetectedLicensePlate(
                         userId=userId,
-                        cameraId=cameraId,
+                        settingId=settingId,
+                        location=location.lower(),
                         licenseNumber=licenseNumber,
                         vehicleType=vehicleType,
                         price=price,
@@ -942,6 +966,7 @@ class DBController:
                     response = DBController.addCurrentSetting(setting.hourFrom, setting.hourTo, setting.day, setting.detectCar, setting.detectMotorcycle, setting.detectBus, setting.detectTruck, setting.carPrice, setting.motorcyclePrice, setting.busPrice, setting.busPrice)
                     if not response.ok:
                         break
+                response.ok = True
         except Exception as e:
             response.ok = False
             response.messages['error'] = repr(e)
@@ -998,6 +1023,41 @@ class DBController:
                 session.delete(result)
                 session.commit()
                 response.ok = True
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+
+        return response
+    
+    @staticmethod
+    def getLicenseData(location: str) -> Response:
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                time_24_hours_ago = (datetime.now() - timedelta(hours=2)).strftime('%Y-%m-%d %H:%M:%S')
+                stmt = select(DetectedLicensePlate).filter(
+                    text(f"datetime(date || ' ' || time) >= '{time_24_hours_ago}'"),
+                ).where(DetectedLicensePlate.location == location)
+                results = session.execute(stmt).all()
+                response.ok = True
+                response.data = results
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+        
+        return response
+    
+    @staticmethod
+    def getLocations() -> Response:
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(Camera.location).group_by(Camera.location)
+                results = session.execute(stmt).all()
+                response.ok = True
+                response.data = results
         except Exception as e:
             response.ok = False
             response.messages['error'] = repr(e)

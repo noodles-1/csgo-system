@@ -55,8 +55,8 @@ class DetectedLicensePlate(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     userId: Mapped[int] = mapped_column(ForeignKey('user.id'))
-    cameraId: Mapped[int] = mapped_column(ForeignKey('camera.id'))
     settingId: Mapped[int] = mapped_column(ForeignKey('current_setting.id'))
+    location: Mapped[str]
     licenseNumber: Mapped[str] = mapped_column(String(14))
     vehicleType: Mapped[str]
     price: Mapped[float]
@@ -65,7 +65,7 @@ class DetectedLicensePlate(Base):
     image: Mapped[str]
 
     def __repr__(self) -> str:
-        return f'Detection(id={self.id}, userId={self.userId}, cameraId={self.cameraId}, priceId={self.priceId}, licenseNumber={self.licenseNumber}, date={self.date}, time={self.time}, image={self.image})'
+        return f'Detection(id={self.id}, userId={self.userId}, setting={self.settingId}, location={self.location}, licenseNumber={self.licenseNumber}, vehicleType={self.vehicleType}, price={self.price}, date={self.date}, time={self.time}, image={self.image})'
     
 class CurrentSetting(Base):
     '''

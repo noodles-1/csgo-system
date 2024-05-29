@@ -11,6 +11,7 @@ from controllers.dbController import DBController
 
 class PollController:
     currSetting = None
+    analyticsShown = False
     
     @staticmethod
     def updateFutureSettings():
@@ -18,6 +19,7 @@ class PollController:
         
         if not response.ok:
             with open('logs.txt', 'a') as file:
+                print('==================================', response.messages, '============================')
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/pollController.py updateFutureSettings() - {repr(response.messages["error"])}\n')
     

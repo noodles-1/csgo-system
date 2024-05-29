@@ -6,6 +6,7 @@ parent = os.path.dirname(current)
 sys.path.append(parent)
 
 import controllers.controller as cont
+from controllers.pollController import PollController
 
 def showSettingsPage(parentFrame):
     parentFrame.show_frame(parentFrame.configFrame)
@@ -18,10 +19,12 @@ def showAdminPage(parentFrame, changeCameraDisplay, cap, placeholder_label):
 def showAnalyticsPage(parentFrame):
     parentFrame.show_frame(parentFrame.analyticsFrame)
     cont.cameraEnabled = False
+    PollController.analyticsShown = True
 
 def showDashboardPage(parentFrame):
     parentFrame.show_frame(parentFrame.dashboardFrame)
     cont.cameraEnabled = True
+    PollController.analyticsShown = False
 
 def showLoginPage(parentFrame):
     parentFrame.show_frame(parentFrame.loginFrame)

@@ -47,7 +47,10 @@ class DashboardPage(tk.Frame):
         self.master.iconify()
 
     class StartCamera:
-        def start(self, cap, placeholder_label, ip_addr, databaseTable):
+        def __init__(self, currUser):
+            self.currUser = currUser
+
+        def start(self, cap, placeholder_label, cameraId, databaseTable):
             if AIController.vehicle_detection_model.predictor:
                 AIController.vehicle_detection_model.predictor.trackers[0].reset()
 
@@ -60,12 +63,16 @@ class DashboardPage(tk.Frame):
                 
             def showFrame():
                 success, frame = cap.read()
+                currSetting = PollController.currSetting
+                AIController.setVehicleClasses(2, currSetting.detectCar if currSetting else True)
+                AIController.setVehicleClasses(3, currSetting.detectMotorcycle if currSetting else True)
+                AIController.setVehicleClasses(5, currSetting.detectBus if currSetting else True)
+                AIController.setVehicleClasses(7, currSetting.detectTruck if currSetting else True)
 
                 if cont.loggedIn and success:
                     results = AIController.detect_vehicle(frame)
                     annotated_frame = results[0].plot()
 
-                    '''
                     for result in results:
                         for boxes in result.boxes:
                             if not boxes.id:
@@ -80,69 +87,81 @@ class DashboardPage(tk.Frame):
                             detected_ids.add(id)
                             x1, y1, x2, y2 = boxes.xyxy[0]
                             cropped_vehicle = frame[int(y1.item()):int(y2.item()), int(x1.item()):int(x2.item())]
+                            extracted_lp = None
                             
-                            lp_result = AIController.detect_license_plate(frame=cropped_vehicle)
+                            if currSetting:
+                                lp_result = AIController.detect_license_plate(frame=cropped_vehicle)
 
-                            if not lp_result[0].boxes:
-                                detected_ids.remove(id)
-                                continue
+                                if not lp_result[0].boxes:
+                                    detected_ids.remove(id)
+                                    continue
 
-                            x1, y1, x2, y2 = lp_result[0].boxes[0].xyxy[0]
-                            cropped_lp = cropped_vehicle[int(y1.item()):int(y2.item()), int(x1.item()):int(x2.item())]
+                                x1, y1, x2, y2 = lp_result[0].boxes[0].xyxy[0]
+                                cropped_lp = cropped_vehicle[int(y1.item()):int(y2.item()), int(x1.item()):int(x2.item())]
 
-                            # client_socket_foggy = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                            client_socket_lowlight = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                            # client_socket_foggy.connect(('localhost', 8001))
-                            client_socket_lowlight.connect(('localhost', 8000))
+                                # client_socket_foggy = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                                client_socket_lowlight = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                                # client_socket_foggy.connect(('localhost', 8001))
+                                client_socket_lowlight.connect(('localhost', 8000))
 
-                            SocketController.sendImage(client_socket_lowlight, cropped_lp)
-                            processed_lp = SocketController.receiveImage(client_socket_lowlight)
+                                SocketController.sendImage(client_socket_lowlight, cropped_lp)
+                                processed_lp = SocketController.receiveImage(client_socket_lowlight)
 
-                            client_socket_lowlight.close()
+                                client_socket_lowlight.close()
 
-                            if processed_lp is None:
-                                detected_ids.remove(id)
-                                continue
+                                if processed_lp is None:
+                                    detected_ids.remove(id)
+                                    continue
 
-                            # Convert to grayscale
-                            gray = cv2.cvtColor(processed_lp, cv2.COLOR_BGR2GRAY)
+                                # Convert to grayscale
+                                gray = cv2.cvtColor(processed_lp, cv2.COLOR_BGR2GRAY)
 
-                            # Apply Gaussian Blur to reduce noise
-                            blur = cv2.GaussianBlur(gray, (5, 5), 0)
+                                # Apply Gaussian Blur to reduce noise
+                                blur = cv2.GaussianBlur(gray, (5, 5), 0)
 
-                            # Apply thresholding
-                            _, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+                                # Apply thresholding
+                                _, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
-                            # Apply dilation to connect text regions
-                            kernel = np.ones((2, 2), np.uint8)
-                            dilated = cv2.dilate(thresh, kernel, iterations=1)
+                                # Apply dilation to connect text regions
+                                kernel = np.ones((2, 2), np.uint8)
+                                dilated = cv2.dilate(thresh, kernel, iterations=1)
 
-                            # Optionally apply erosion to reduce noise
-                            eroded = cv2.erode(dilated, kernel, iterations=1)
-            
-                            extracted_lp_results = AIController.get_license_number_cnocr(frame=eroded)
-                            temp = [extracted_lp_results[i]['text'] for i in range(len(extracted_lp_results))]
-                            extracted_lp = ''.join(temp).replace(' ', '')
-                            
-                            if not isValidLicensePlate(extracted_lp):
-                                detected_ids.remove(id)
-                                continue
-                            
+                                # Optionally apply erosion to reduce noise
+                                eroded = cv2.erode(dilated, kernel, iterations=1)
+                
+                                extracted_lp_results = AIController.get_license_number_cnocr(frame=eroded)
+                                temp = [extracted_lp_results[i]['text'] for i in range(len(extracted_lp_results))]
+                                extracted_lp = ''.join(temp).replace(' ', '')
+                                
+                                if not isValidLicensePlate(extracted_lp):
+                                    detected_ids.remove(id)
+                                    continue
+                                
                             try:
                                 date = datetime.now().date()
                                 time = datetime.now().time()
-                                imageUrl = S3Controller().uploadImage(cropped_vehicle, f'[{date} - {time}] {classnames[vehicle_id]} - id: {id}')
-                                response = DBController.addLicensePlate(self.currUser.id, ip_addr, extracted_lp, classnames[vehicle_id], 0, imageUrl)
+                                camera = DBController.getCamera(id=cameraId)
+                                if classnames[vehicle_id] == 'car':
+                                    price = currSetting.carPrice if currSetting else 0
+                                elif classnames[vehicle_id] == 'motorcycle':
+                                    price = currSetting.motorcyclePrice if currSetting else 0
+                                elif classnames[vehicle_id] == 'bus':
+                                    price = currSetting.busPrice if currSetting else 0
+                                elif classnames[vehicle_id] == 'truck':
+                                    price = currSetting.truckPrice if currSetting else 0
+                                imageUrl = None
+                                if currSetting:
+                                    imageUrl = S3Controller().uploadImage(cropped_vehicle, f'[{date} - {time}] {classnames[vehicle_id]} - id: {id}')
+                                response = DBController.addLicensePlate(self.currUser.id, currSetting.id if currSetting else 0, camera.location, extracted_lp or 'none', classnames[vehicle_id], price, imageUrl or 'none')
 
                                 if response.ok:
-                                    databaseTable.insert('', 0, values=(extracted_lp, classnames[vehicle_id], ip_addr, time, date, 0))
+                                    databaseTable.insert('', 0, values=(extracted_lp or 'none', classnames[vehicle_id], cameraId, time, date, price))
                             except Exception as e:
                                 with open('logs.txt', 'a') as file:
                                     now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                                     file.write(f'[{now}] Error at function views/dashboardPageView.py/dbController.py StartCamera/start()/showFrame() - {repr(e)}\n')
                                     print(repr(e))
                                     return
-                        '''
 
                     resized_frame = cv2.resize(annotated_frame, (640, 360))
                     frame_rgb = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2RGB)
@@ -166,8 +185,8 @@ class DashboardPage(tk.Frame):
         ip_addr = result.id
         cameraUrl = f'rtsp://{ip_addr}:554'
 
-        self.cap = cv2.VideoCapture('https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/highway_videoplayback.mp4')
-        DashboardPage.StartCamera().start(self.cap, self.placeholder_label, ip_addr, self.databaseTable)
+        self.cap = cv2.VideoCapture('https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/IMG_9613_1.mp4')
+        DashboardPage.StartCamera(self.currUser).start(self.cap, self.placeholder_label, ip_addr, self.databaseTable)
 
     def setCurrUser(self, user):
         self.currUser = user

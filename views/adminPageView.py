@@ -246,7 +246,7 @@ class AdminPage(tk.Frame):
             self.after(3000, lambda: self.filterStatusLabel.configure(text_color="#1B2431"))
 
             for row in filterResponse.data:
-                self.databaseTable.insert('', 'end', values=(row[0].licenseNumber, row[0].vehicleType, row[0].cameraId, row[0].time, row[0].date, row[0].price))
+                self.databaseTable.insert('', 'end', values=(row[0].licenseNumber, row[0].vehicleType, row[0].location, row[0].time, row[0].date, row[0].price))
         else:
             self.filterStatusLabel.configure(text=filterResponse.messages['error'], text_color="#d62828")
             self.after(2000, lambda: self.filterStatusLabel.configure(text_color="#1B2431"))
@@ -582,7 +582,7 @@ class AdminPage(tk.Frame):
         # Dropdown for vehicle Type
         self.vehicleTypeComboVar = StringVar()
         self.vehicleTypeComboBox = CTkComboBox(upperLowerLeft,
-                                          values = ['', 'Car', 'Taxi', 'Jeepney', 'Modern Jeepney', 'Motorcycle', 'Truck', 'Bus', 'Taxi', 'Tricycle'],
+                                          values = ['', 'Car', 'Motorcycle', 'Bus', 'Truck'],
                                           variable = self.vehicleTypeComboVar,
                                           fg_color = "#FFFFFF",
                                           border_color = "#FFFFFF",
@@ -624,12 +624,12 @@ class AdminPage(tk.Frame):
         
         lowerLowerLeft = tk.Frame(lowerLeftContent, bg = "#090E18")
         databaseFrame = tk.Frame(lowerLowerLeft, bg = "#090E18")
-        self.databaseTable = ttk.Treeview(databaseFrame, columns = ('licensePlate', 'vehicleType', 'cameraID', 'time', 'date', 'price'), show = "headings", style = 'Custom.Treeview')
+        self.databaseTable = ttk.Treeview(databaseFrame, columns = ('licensePlate', 'vehicleType', 'location', 'time', 'date', 'price'), show = "headings", style = 'Custom.Treeview')
         
         filterResponse = DBController.getFilteredLicensePlates()
         if filterResponse.ok:
             for row in filterResponse.data:
-                self.databaseTable.insert('', 'end', values=(row[0].licenseNumber, row[0].vehicleType, row[0].cameraId, row[0].time, row[0].date, row[0].price))
+                self.databaseTable.insert('', 'end', values=(row[0].licenseNumber, row[0].vehicleType, row[0].location, row[0].time, row[0].date, row[0].price))
 
         self.databaseTable.bind('<<TreeviewSelect>>', self.selectDataFromTable)
         self.databaseTable.bind('<Delete>', self.deleteDataFromTable)
@@ -639,14 +639,14 @@ class AdminPage(tk.Frame):
         
         self.databaseTable.heading('licensePlate', text="License Plate", anchor='center')
         self.databaseTable.heading('vehicleType', text="Vehicle Type", anchor='center')
-        self.databaseTable.heading('cameraID', text="Camera ID", anchor='center')
+        self.databaseTable.heading('location', text="Location", anchor='center')
         self.databaseTable.heading('time', text="Time", anchor='center')
         self.databaseTable.heading('date', text="Date", anchor='center')
         self.databaseTable.heading('price', text="Price", anchor='center')
         
         self.databaseTable.column('licensePlate', width=150, anchor='center')
         self.databaseTable.column('vehicleType', width=150, anchor='center')
-        self.databaseTable.column('cameraID', width=120, anchor='center')
+        self.databaseTable.column('location', width=120, anchor='center')
         self.databaseTable.column('time', width=100, anchor='center')
         self.databaseTable.column('date', width=100, anchor='center')
         self.databaseTable.column('price', width=80, anchor='center')
