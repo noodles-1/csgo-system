@@ -17,6 +17,7 @@ from PIL import Image, ImageTk
 from controllers.dbController import DBController as db
 from sessions.userSession import UserSession
 import controllers.controller as cont
+from controllers.controller import AccountController as ac
 
 class LoginPage(tk.Frame):
     # Close Application
@@ -68,44 +69,70 @@ class LoginPage(tk.Frame):
             submit_email_button.config(state=tk.NORMAL)
         else:
             submit_email_button.config(state=tk.DISABLED)
+            
+    def generate_and_send_otp(self, receiver_email):
+        # Generate OTP and send it to the provided email
+        self.otp = ac.generate_OTP()
+        ac.send_OTP(receiver_email, self.otp)
+        print(f'self.otp = {self.otp}')
         
-    def show_otp_window(self):
+    def verify_and_show_otp_window(self, user_input_otp, email):
+        print(f'self.otp = {self.otp}, user_input_otp = {user_input_otp}')
+        if ac.verify_OTP(self.otp, user_input_otp):
+            print('matched otp')
+            self.show_password_window(email)
+        else:
+            messagebox.showerror("Error", "Invalid OTP")
+            
+    def show_otp_window(self, email):
         # Show OTP input window after email validation.
-        for widget in popup_window.winfo_children():
-            widget.destroy()
+        self.generate_and_send_otp(email)
+        
+        self.popup_window = tk.Toplevel(self)
+        self.popup_window.title("Enter OTP")
 
-        otp_label = tk.Label(popup_window, text="OTP")
+        otp_label = tk.Label(self.popup_window, text="OTP")
         otp_label.pack(pady=5)
         
-        otp_entry = tk.Entry(popup_window)
-        otp_entry.pack(pady=5)
+        self.otp_entry = tk.Entry(self.popup_window)
+        self.otp_entry.pack(pady=5)
         
-        submit_otp_button = tk.Button(popup_window, text="Submit", command=self.show_password_window)
+        # Pass a lambda function to the command attribute
+        submit_otp_button = tk.Button(self.popup_window, text="Submit", command=lambda: self.verify_and_show_otp_window(self.otp_entry.get(), email))
         submit_otp_button.pack(pady=5)
         
-    def show_password_window(self):
+    def show_password_window(self, email):
         # Show password input window after OTP validation.
+
         for widget in popup_window.winfo_children():
             widget.destroy()
-
+        
         password_label = tk.Label(popup_window, text="Password")
         password_label.pack(pady=5)
-        
+
         password_entry = tk.Entry(popup_window, show='*')
         password_entry.pack(pady=5)
 
         confirm_password_label = tk.Label(popup_window, text="Confirm Password")
         confirm_password_label.pack(pady=5)
-        
+
         confirm_password_entry = tk.Entry(popup_window, show='*')
         confirm_password_entry.pack(pady=5)
-        
+
         def submit_password():
-            if password_entry.get() == confirm_password_entry.get():
-                popup_window.destroy()
+            new_password = password_entry.get()
+            confirm_password = confirm_password_entry.get()
+            if new_password == confirm_password:
+                # Change the password using the provided function
+                response = db.changePassword(email, new_password, confirm_password)
+                if response.ok:
+                    messagebox.showinfo("Success", "Password changed successfully.")
+                    popup_window.destroy()
+                else:
+                    messagebox.showerror("Error", response.messages['error'])
             else:
                 messagebox.showerror("Error", "Passwords do not match")
-        
+
         submit_password_button = tk.Button(popup_window, text="Submit", command=submit_password)
         submit_password_button.pack(pady=5)
     
@@ -122,12 +149,20 @@ class LoginPage(tk.Frame):
         email_entry.pack(pady=5)
         email_entry.bind("<KeyRelease>", self.check_email)
         
-        submit_email_button = tk.Button(popup_window, text="Submit", state=tk.DISABLED, command=self.show_otp_window)
+        submit_email_button = tk.Button(popup_window, text="Submit", state=tk.DISABLED, command=self.validate_email_and_show_otp)
         submit_email_button.pack(pady=5)
     
+    def validate_email_and_show_otp(self):
+        email = email_entry.get()  # Accessing email_entry directly, may cause an error
+        response = db.emailResponse(email)
+        if response.ok:
+            self.show_otp_window(email)  # Pass email to the method
+        else:
+            messagebox.showerror("Error", response.messages['email'])
+            
     def __init__(self, parent):
         tk.Frame.__init__(self, parent, bg = "blue")
-        
+        self.otp = None
         # Cover Image (The Eye)
         coverPhoto = CTkImage(light_image = Image.open("views/assets/blue-iris-updated.png"),
                               dark_image = Image.open("views/assets/blue-iris-updated.png"),
