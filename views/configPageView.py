@@ -12,6 +12,7 @@ import views.switchView as switch
 from datetime import datetime
 from customtkinter import *
 from tkinter import ttk
+from tkinter import messagebox
 from PIL import Image
 from tkcalendar import Calendar
 from controllers.dbController import DBController
@@ -112,18 +113,18 @@ class ConfigPage(tk.Frame):
         for widget in [carDropdown, motorDropdown, busDropdown, truckDropdown, carPrice, motorPrice, busPrice, truckPrice, hourFrom, hourTo, dayEntry]:
             if not widget:
                 self.statusLabel.configure(text='Incomplete fields.', text_color="#d62828")
-                self.after(2000, lambda: self.statusLabel.configure(text_color="#1B2431"))
+                self.after(3500, lambda: self.statusLabel.configure(text_color="#1B2431"))
                 return
             
         for price in [carPrice, motorPrice, busPrice, truckPrice]:
             if not isPositiveFloat(price):
                 self.statusLabel.configure(text='Invalid price.', text_color="#d62828")
-                self.after(2000, lambda: self.statusLabel.configure(text_color="#1B2431"))
+                self.after(3500, lambda: self.statusLabel.configure(text_color="#1B2431"))
                 return
             
         if (not selectedDate and selectedTime) or (selectedDate and not selectedTime):
             self.statusLabel.configure(text='Either date or time cannot be empty. Leave both fields empty to apply the setting immediately.', text_color="#d62828")
-            self.after(2000, lambda: self.statusLabel.configure(text_color="#1B2431"))
+            self.after(3500, lambda: self.statusLabel.configure(text_color="#1B2431"))
             return
     
         hourFrom = datetime.strptime(hourFrom, '%H:%M').time()
@@ -134,17 +135,17 @@ class ConfigPage(tk.Frame):
             selectedTime = datetime.strptime(selectedTime, '%H:%M').time() if selectedTime else datetime.now().time()
         except:
             self.statusLabel.configure(text='Invalid date or time', text_color="#d62828")
-            self.after(2000, lambda: self.statusLabel.configure(text_color="#1B2431"))
+            self.after(3500, lambda: self.statusLabel.configure(text_color="#1B2431"))
             return
         
         if selectedDate and selectedDate < datetime.now().date():
             self.statusLabel.configure(text='Date should be the current or future date.', text_color="#d62828")
-            self.after(2000, lambda: self.statusLabel.configure(text_color="#1B2431"))
+            self.after(4000, lambda: self.statusLabel.configure(text_color="#1B2431"))
             return
 
         if hourTo <= hourFrom:
             self.statusLabel.configure(text='Ending hour cannot be less than or equal the starting hour.', text_color="#d62828")
-            self.after(2000, lambda: self.statusLabel.configure(text_color="#1B2431"))
+            self.after(4000, lambda: self.statusLabel.configure(text_color="#1B2431"))
             return
         
         if self.chosenId is None:
@@ -161,7 +162,7 @@ class ConfigPage(tk.Frame):
             self.reloadRightDatabase()
         else:
             self.statusLabel.configure(text=response.messages['error'], text_color="#d62828")
-            self.after(2000, lambda: self.statusLabel.configure(text_color="#1B2431"))
+            self.after(3000, lambda: self.statusLabel.configure(text_color="#1B2431"))
     
     def selectDate_callback(self):
         top = tk.Toplevel(bg="#090E18")

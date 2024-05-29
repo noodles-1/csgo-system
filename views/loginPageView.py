@@ -1,8 +1,10 @@
 import os
 import sys
 import tkinter as tk
+import re
 
 from customtkinter import *
+from tkinter import messagebox
 from PIL import Image
 
 current = os.path.dirname(os.path.realpath(__file__))
@@ -32,8 +34,8 @@ class LoginPage(tk.Frame):
     
     # Function that is called to go to the Forgot Password Page (Unfinished)
     def forgotPasswordFunction(self):
-        pass
-    
+        self.show_email_popup()
+        
     # Function that is called when clicking Login
     def verifyCredentials(self, usernameEntry: CTkEntry, passwordEntry: CTkEntry, incorrectLabel: CTkLabel):
         username, password = usernameEntry.get(), passwordEntry.get()
@@ -53,6 +55,75 @@ class LoginPage(tk.Frame):
 
         passwordEntry.delete(0, "end")
         usernameEntry.delete(0, "end")
+        
+    def validate_email(self, email):
+        # Validate the email using a regular expression.
+        pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+        return re.match(pattern, email)
+    
+    def check_email(self, event=None):
+        # Check email validity and enable/disable submit button.
+        email = email_entry.get()
+        if self.validate_email(email):
+            submit_email_button.config(state=tk.NORMAL)
+        else:
+            submit_email_button.config(state=tk.DISABLED)
+        
+    def show_otp_window(self):
+        # Show OTP input window after email validation.
+        for widget in popup_window.winfo_children():
+            widget.destroy()
+
+        otp_label = tk.Label(popup_window, text="OTP")
+        otp_label.pack(pady=5)
+        
+        otp_entry = tk.Entry(popup_window)
+        otp_entry.pack(pady=5)
+        
+        submit_otp_button = tk.Button(popup_window, text="Submit", command=self.show_password_window)
+        submit_otp_button.pack(pady=5)
+        
+    def show_password_window(self):
+        # Show password input window after OTP validation.
+        for widget in popup_window.winfo_children():
+            widget.destroy()
+
+        password_label = tk.Label(popup_window, text="Password")
+        password_label.pack(pady=5)
+        
+        password_entry = tk.Entry(popup_window, show='*')
+        password_entry.pack(pady=5)
+
+        confirm_password_label = tk.Label(popup_window, text="Confirm Password")
+        confirm_password_label.pack(pady=5)
+        
+        confirm_password_entry = tk.Entry(popup_window, show='*')
+        confirm_password_entry.pack(pady=5)
+        
+        def submit_password():
+            if password_entry.get() == confirm_password_entry.get():
+                popup_window.destroy()
+            else:
+                messagebox.showerror("Error", "Passwords do not match")
+        
+        submit_password_button = tk.Button(popup_window, text="Submit", command=submit_password)
+        submit_password_button.pack(pady=5)
+    
+    def show_email_popup(self):
+        global popup_window, email_entry, submit_email_button
+        
+        popup_window = tk.Toplevel(self)
+        popup_window.title("Enter Email")
+        
+        email_label = tk.Label(popup_window, text="Email")
+        email_label.pack(pady=5)
+        
+        email_entry = tk.Entry(popup_window)
+        email_entry.pack(pady=5)
+        email_entry.bind("<KeyRelease>", self.check_email)
+        
+        submit_email_button = tk.Button(popup_window, text="Submit", state=tk.DISABLED, command=self.show_otp_window)
+        submit_email_button.pack(pady=5)
     
     def __init__(self, parent):
         tk.Frame.__init__(self, parent, bg = "blue")
@@ -152,6 +223,6 @@ class LoginPage(tk.Frame):
         loginButton.bind("<Enter>", lambda event: loginButton.configure(text_color="#000000", fg_color = "#48BFE3")) 
         loginButton.bind("<Leave>", lambda event: loginButton.configure(text_color="#48BFE3", fg_color = "#000000"))  
 
-        forgotButton = CTkButton(loginFormFrame, text = 'Forgot Password?', border_color = '#000000', fg_color = '#000000', height = 5, width = 20, font = ('Montserrat', 10), command = lambda: self.forgotPasswordFunction)
+        forgotButton = CTkButton(loginFormFrame, text = 'Forgot Password?', border_color = '#000000', fg_color = '#000000', height = 5, width = 20, font = ('Montserrat', 10), command = self.forgotPasswordFunction)
         forgotButton.pack()
         # End of the Main Frame

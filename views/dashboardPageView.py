@@ -45,7 +45,27 @@ class DashboardPage(tk.Frame):
     # Minimize or Iconify the Application
     def minimizeApplicaiton(self):
         self.master.iconify()
-
+    
+    def update_uptime(self):
+        self.uptime_seconds += 1 
+        
+        hours = self.uptime_seconds // 3600
+        minutes = (self.uptime_seconds % 3600) // 60
+        seconds = self.uptime_seconds % 60
+        
+        time_string = f"{hours:02}:{minutes:02}:{seconds:02}"
+        
+        self.upTimeCount.configure(text=time_string)
+        
+        self.after(1000, self.update_uptime)
+    
+    def update_vehiclecount(self):
+        # should only increment if there is a unique detection or row insertion in the database
+        # if  () then self.vehicle_count += 1
+        
+        self.vehiclesDetectedCount.configure(text=str(self.vehicle_count))
+        self.after(1000, self.update_vehiclecount)
+    
     class StartCamera:
         def start(self, cap, placeholder_label, ip_addr, databaseTable):
             if AIController.vehicle_detection_model.predictor:
@@ -172,6 +192,9 @@ class DashboardPage(tk.Frame):
     def __init__(self, parent):
         self.cap = None
 
+        self.uptime_seconds = 0
+        self.vehicle_count = 0
+        
         tk.Frame.__init__(self, parent, bg = "#090E18")
         
         # Style definition. Can be utilized with the Change Theme from Light to Dark
@@ -345,12 +368,16 @@ class DashboardPage(tk.Frame):
         cameraIDBottomLeftFrame.pack(side = 'left', expand = True, fill = 'x')
 
         vehicleDetectedLabel = CTkLabel(vehicleDetectedBottomLeftMainFrame, text = 'Vehicles Detected: ', text_color = 'white', font = ('Montserrat', 12))
-        upTimeLabel = CTkLabel(upTimeBottomLabelLeftMainFrame, text = 'Up Time: ', text_color = 'white', font = ('Montserrat', 12))
-        cameraIDLabel = CTkLabel(cameraIDBottomLeftFrame, text = 'Camera ID: ', text_color = 'white', font = ('Montserrat', 12))
-
-        vehicleDetectedLabel.pack(side = 'left', padx = 5)
-        upTimeLabel.pack(side = 'left')
-        cameraIDLabel.pack(side = 'left')
+        self.vehiclesDetectedCount = CTkLabel(vehicleDetectedBottomLeftMainFrame, text = '', text_color = 'white', font = ('Montserrat', 12)) # This updates
+        
+        upTimeLabel = CTkLabel(upTimeBottomLabelLeftMainFrame, text = 'Detection Up Time: ', text_color = 'white', font = ('Montserrat', 12))
+        self.upTimeCount = CTkLabel(upTimeBottomLabelLeftMainFrame, text = '', text_color = 'white', font = ('Montserrat', 12)) # This updates
+        
+        vehicleDetectedLabel.pack(side = 'left', padx = 3)
+        self.vehiclesDetectedCount.pack(side = 'left', padx = (0, 5))
+        
+        upTimeLabel.pack(side = 'left', padx = 3)
+        self.upTimeCount.pack(side = 'left', padx = (0, 5))
         
         cameraFrame = CTkFrame(topLeftMainFrame, fg_color = '#1B2431')
         cameraFrame.pack(fill = 'both', expand = True, padx = 15, pady = 10)
@@ -391,16 +418,5 @@ class DashboardPage(tk.Frame):
         settingsButton.bind("<Enter>", lambda event: settingsButton.configure(text_color="#090E18", fg_color = "#48BFE3")) 
         settingsButton.bind("<Leave>", lambda event: settingsButton.configure(text_color="#48BFE3", fg_color = "#090E18")) 
 
-        '''
-        @Mendoza
-        topLeftMainFrame is the Frame where the camera should be setup and visualized.
-        How you'll do this is using frames and continuously displaying each frame.
-        Refer to oldView.py for reference.
-        If you have CCTV camera in your house use it, if not, use a webcam.1
-        '''
-
-        '''
-        @Roa
-        rightMainFrame is the Frame where the Live Database should be setup and visualized.
-        If you require specific buttons for the live database, message me immediately.
-        '''
+        self.update_uptime()
+        self.update_vehiclecount()
