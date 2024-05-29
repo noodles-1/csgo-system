@@ -2,6 +2,7 @@ import os
 import sys
 import re
 import csv
+import bcrypt
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -9,16 +10,20 @@ sys.path.append(parent)
 
 from collections import defaultdict
 from datetime import datetime
+from datetime import timedelta
 from models.connect import Connection
 from models.schemas import User
 from models.schemas import Camera
 from models.schemas import DetectedLicensePlate
-from models.schemas import Setting
+from models.schemas import CurrentSetting
+from models.schemas import FutureSetting
 from sqlalchemy import select
 from sqlalchemy import update
 from sqlalchemy import or_
 from sqlalchemy import and_
+from sqlalchemy import asc
 from sqlalchemy import desc
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 class DBController:
@@ -181,10 +186,14 @@ class DBController:
             return None
         
     @staticmethod
-    def getCamera(name: str):
+    def getCamera(id=None, name=None):
         try:
             with Session(Connection.engine) as session:
-                stmt = select(Camera).where(Camera.name == name)
+                stmt = select(Camera)
+                if name:
+                    stmt = stmt.where(Camera.name == name)
+                if id:
+                    stmt = stmt.where(Camera.id == id)
                 result = session.scalar(stmt)
                 return result
         except Exception as e:
@@ -194,16 +203,49 @@ class DBController:
             return None
         
     @staticmethod
-    def getSetting(id: int):
+    def getCurrentSetting(id: int):
         try:
             with Session(Connection.engine) as session:
-                stmt = select(Setting).where(Setting.id == id)
+                stmt = select(CurrentSetting).where(CurrentSetting.id == id)
                 result = session.scalar(stmt)
                 return result
         except Exception as e:
             with open('logs.txt', 'a') as file:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
-                file.write(f'[{now}] Error at function invocation controllers/dbController.py getSetting() - {repr(e)}\n')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py getCurrentSetting() - {repr(e)}\n')
+            return None
+    
+    @staticmethod
+    def getActiveSetting():
+        try:
+            with Session(Connection.engine) as session:
+                currTime = datetime.now().time()
+                currDay = datetime.now().strftime('%A')
+
+                stmt = select(CurrentSetting).where(and_(
+                    CurrentSetting.day == currDay,
+                    CurrentSetting.hourFrom <= currTime,
+                    currTime <= CurrentSetting.hourTo
+                ))
+                result = session.scalar(stmt)
+                return result
+        except Exception as e:
+            with open('logs.txt', 'a') as file:
+                now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py getCurrentSetting() - {repr(e)}\n')
+            return None
+
+    @staticmethod
+    def getFutureSetting(id: int):
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(FutureSetting).where(FutureSetting.id == id)
+                result = session.scalar(stmt)
+                return result
+        except Exception as e:
+            with open('logs.txt', 'a') as file:
+                now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py getFutureSetting() - {repr(e)}\n')
             return None
         
     @staticmethod
@@ -283,6 +325,43 @@ class DBController:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/dbController.py licensePlateExists() - {repr(e)}\n')
             return False
+        
+    @staticmethod
+    def getHashedPassword(password: str) -> str:
+        salt = bcrypt.gensalt()
+        hashedPassword = bcrypt.hashpw(password.encode(), salt)
+        return hashedPassword
+    
+    @staticmethod
+    def passwordMatches(id: int, inputPassword: str) -> bool:
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(User).where(User.id == id)
+                user = session.scalar(stmt)
+                inputPassword = inputPassword.encode()
+                return bcrypt.checkpw(inputPassword, user.password)
+        except Exception as e:
+            with open('logs.txt', 'a') as file:
+                now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py passwordMatches() - {repr(e)}\n')
+            return False
+        
+    @staticmethod
+    def isDetectedRecently(licenseNumber: str) -> bool:
+        try:
+            with Session(Connection.engine) as session:
+                time_1_hour_ago = (datetime.now() - timedelta(hours=1)).time()
+                stmt = select(DetectedLicensePlate).where(and_(
+                    DetectedLicensePlate.licenseNumber == licenseNumber,
+                    time_1_hour_ago <= DetectedLicensePlate.time
+                ))
+                result = session.scalar(stmt)
+                return result is not None
+        except Exception as e:
+            with open('logs.txt', 'a') as file:
+                now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+                file.write(f'[{now}] Error at function invocation controllers/dbController.py isDetectedRecenly() - {repr(e)}\n')
+            return False
     
     '''
     Database transaction methods
@@ -344,7 +423,7 @@ class DBController:
                         canChangePrice=canChangePrice,
                         canEditHours=canEditHours,
                         canDownload=canDownload,
-                        password=password
+                        password=DBController.getHashedPassword(password)
                     )
                     session.add(user)
                     session.commit()
@@ -387,10 +466,10 @@ class DBController:
                 response.messages['username'] = 'Username does not exist.'
             else:
                 user = DBController.getUser(username=username)
-                if user.password != password:
+                if not DBController.passwordMatches(user.id, password):
                     response.ok = False
                     response.messages['error'] = 'Password error.'
-                    response.messages['password'] = 'Passwords do not match.'
+                    response.messages['password'] = 'Invalid username or password.'
                 else:
                     response.ok = True
                     response.data = user
@@ -401,7 +480,7 @@ class DBController:
         return response
     
     @staticmethod
-    def addLicensePlate(userId: int, cameraId: int, licenseNumber: str, vehicleType: str, price: float, imageUrl: str) -> Response:
+    def addLicensePlate(userId: int, settingId: int, location: str, licenseNumber: str, vehicleType: str, price: float, imageUrl: str) -> Response:
         '''
         Adds a recognized license plate number from the object detection module to the database, 
         accompanied with the user ID, camera ID, vehicle type, and the time and date when the 
@@ -419,14 +498,15 @@ class DBController:
         response = DBController.Response()
 
         try:
-            if DBController.licensePlateExists(licenseNumber):
+            if DBController.isDetectedRecently(licenseNumber=licenseNumber):
                 response.ok = False
-                response.messages['error'] = 'License plate already detected.'
+                response.messages['error'] = 'License plate has been recently detected already.'
             else:
                 with Session(Connection.engine) as session:
                     license = DetectedLicensePlate(
                         userId=userId,
-                        cameraId=cameraId,
+                        settingId=settingId,
+                        location=location.lower(),
                         licenseNumber=licenseNumber,
                         vehicleType=vehicleType,
                         price=price,
@@ -570,7 +650,7 @@ class DBController:
         
         try:
             user = DBController.getUser(email=email)
-            if currPassword and user.password != currPassword:
+            if currPassword and not DBController.passwordMatches(currPassword, user.password):
                 response.ok = False
                 response.messages['error'] = 'Password error.'
                 response.messages['password'] = 'Current password is incorrect.'
@@ -586,7 +666,7 @@ class DBController:
                 response.messages['password'] = "New password can't be the current password."
                 return response
             with Session(Connection.engine) as session:
-                stmt = update(User).where(User.email == email).values(password=newPassword)
+                stmt = update(User).where(User.email == email).values(password=DBController.getHashedPassword(newPassword))
                 session.execute(stmt)
                 session.commit()
                 response.ok = True
@@ -609,7 +689,7 @@ class DBController:
                     camera = Camera(
                         id=ip_addr,
                         name=name,
-                        location=location
+                        location=location.lower()
                     )
                     session.add(camera)
                     session.commit()
@@ -729,7 +809,7 @@ class DBController:
                         email=newEmail,
                         firstName=newFirstName,
                         lastName=newLastName,
-                        password=newPassword,
+                        password=DBController.getHashedPassword(newPassword),
                         isAdmin=isAdmin,
                         canChangeDetect=canChangeDetect,
                         canChangePrice=canChangePrice,
@@ -763,35 +843,49 @@ class DBController:
         return response
     
     @staticmethod
-    def addSetting(hourFrom: datetime.time, hourTo: datetime.time, day: str, startDate: datetime.date, startTime: datetime.time, detectCar: bool, detectMotorcycle: bool, detectBus: bool, detectTruck: bool, carPrice: float, motorcyclePrice: float, busPrice: float, truckPrice: float) -> Response:
+    def addCurrentSetting(hourFrom: datetime.time, hourTo: datetime.time, day: str, detectCar: bool, detectMotorcycle: bool, detectBus: bool, detectTruck: bool, carPrice: float, motorcyclePrice: float, busPrice: float, truckPrice: float) -> Response:
         response = DBController.Response()
 
         try:
             with Session(Connection.engine) as session:
-                currDate = datetime.now().date()
-                currTime = datetime.now().time()
+                stmt = select(CurrentSetting).where(CurrentSetting.day == day)
+                results = session.execute(stmt).all()
 
-                # Remove other overlapping intervals
-                if currDate == startDate and startTime <= currTime:
-                    stmt = select(Setting).where(and_(
-                        Setting.day == day, 
-                        or_(
-                            Setting.startDate < currDate,
-                            and_(
-                                Setting.startDate == currDate,
-                                Setting.startTime <= currTime
-                            )
-                        )
-                    ))
-                    results = session.execute(stmt).all()
-
-                    for result in results:
-                        hourFrom2, hourTo2 = result[0].hourFrom, result[0].hourTo
-                        if hourFrom2 <= hourTo and hourFrom <= hourTo2:
-                            session.delete(result[0])
-                            session.commit()
+                for result in results:
+                    hourFrom2, hourTo2 = result[0].hourFrom, result[0].hourTo
+                    if hourFrom2 <= hourTo and hourFrom <= hourTo2:
+                        session.delete(result[0])
+                        session.commit()
                 
-                setting = Setting(
+                setting = CurrentSetting(
+                    hourFrom=hourFrom,
+                    hourTo=hourTo,
+                    day=day,
+                    detectCar=detectCar,
+                    detectMotorcycle=detectMotorcycle,
+                    detectBus=detectBus,
+                    detectTruck=detectTruck,
+                    carPrice=carPrice,
+                    motorcyclePrice=motorcyclePrice,
+                    busPrice=busPrice,
+                    truckPrice=truckPrice
+                )
+                session.add(setting)
+                session.commit()
+                response.ok = True
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+
+        return response
+    
+    @staticmethod
+    def addFutureSetting(hourFrom: datetime.time, hourTo: datetime.time, day: str, startDate: datetime.date, startTime: datetime.time, detectCar: bool, detectMotorcycle: bool, detectBus: bool, detectTruck: bool, carPrice: float, motorcyclePrice: float, busPrice: float, truckPrice: float) -> Response:
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                setting = FutureSetting(
                     hourFrom=hourFrom,
                     hourTo=hourTo,
                     day=day,
@@ -821,16 +915,7 @@ class DBController:
 
         try:
             with Session(Connection.engine) as session:
-                currDate = datetime.now().date()
-                currTime = datetime.now().time()
-
-                stmt = select(Setting).where(or_(
-                    Setting.startDate < currDate,
-                    and_(
-                        Setting.startDate == currDate,
-                        Setting.startTime <= currTime
-                    )
-                )).order_by(desc(Setting.startDate)).order_by(desc(Setting.startTime))
+                stmt = select(CurrentSetting)
                 results = session.execute(stmt).all()
                 response.ok = True
                 response.data = results
@@ -846,16 +931,7 @@ class DBController:
 
         try:
             with Session(Connection.engine) as session:
-                currDate = datetime.now().date()
-                currTime = datetime.now().time()
-
-                stmt = select(Setting).where(or_(
-                    currDate < Setting.startDate,
-                    and_(
-                        currDate == Setting.startDate,
-                        currTime < Setting.startTime
-                    )
-                )).order_by(desc(Setting.startDate)).order_by(desc(Setting.startTime))
+                stmt = select(FutureSetting).order_by(asc(FutureSetting.startDate)).order_by(asc(FutureSetting.startTime))
                 results = session.execute(stmt).all()
                 response.ok = True
                 response.data = results
@@ -866,17 +942,122 @@ class DBController:
         return response
     
     @staticmethod
-    def editSetting(id: int, hourFrom: datetime.time, hourTo: datetime.time, day: str, startDate: datetime.date, startTime: datetime.time, detectCar: bool, detectMotorcycle: bool, detectBus: bool, detectTruck: bool, carPrice: float, motorcyclePrice: float, busPrice: float, truckPrice: float) -> Response:
+    def updateFutureSettings() -> Response:
         response = DBController.Response()
 
         try:
             with Session(Connection.engine) as session:
-                stmt = select(Setting).where(Setting.id == id)
-                res = session.scalar(stmt)
-                session.delete(res)
-                session.commit()
+                currDate = datetime.now().date()
+                currTime = datetime.now().time()
 
-                response = DBController.addSetting(hourFrom, hourTo, day, startDate, startTime, detectCar, detectMotorcycle, detectBus, detectTruck, carPrice, motorcyclePrice, busPrice, truckPrice)
+                stmt = select(FutureSetting).where(or_(
+                    FutureSetting.startDate < currDate,
+                    and_(
+                        FutureSetting.startDate == currDate,
+                        FutureSetting.startTime <= currTime
+                    )
+                )).order_by(asc(FutureSetting.id))
+                results = session.execute(stmt).all()
+
+                for result in results:
+                    setting = result[0]
+                    session.delete(setting)
+                    session.commit()
+                    response = DBController.addCurrentSetting(setting.hourFrom, setting.hourTo, setting.day, setting.detectCar, setting.detectMotorcycle, setting.detectBus, setting.detectTruck, setting.carPrice, setting.motorcyclePrice, setting.busPrice, setting.busPrice)
+                    if not response.ok:
+                        break
+                response.ok = True
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+
+        return response
+    
+    @staticmethod
+    def editSetting(id: int, hourFrom: datetime.time, hourTo: datetime.time, day: str, detectCar: bool, detectMotorcycle: bool, detectBus: bool, detectTruck: bool, carPrice: float, motorcyclePrice: float, busPrice: float, truckPrice: float, isCurrentSetting: bool, startDate=None, startTime=None) -> Response:
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                if isCurrentSetting:
+                    setting = DBController.getCurrentSetting(id)
+                else:
+                    setting = DBController.getFutureSetting(id)
+                session.delete(setting)
+                session.commit()
+                if startDate and startTime:
+                    response = DBController.addFutureSetting(hourFrom, hourTo, day, startDate, startTime, detectCar, detectMotorcycle, detectBus, detectTruck, carPrice, motorcyclePrice, busPrice, truckPrice)
+                else:
+                    response = DBController.addCurrentSetting(hourFrom, hourTo, day, detectCar, detectMotorcycle, detectBus, detectTruck, carPrice, motorcyclePrice, busPrice, truckPrice)
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+
+        return response
+    
+    @staticmethod
+    def deleteCurrentSetting(id: int) -> Response:
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(CurrentSetting).where(CurrentSetting.id == id)
+                result = session.scalar(stmt)
+                session.delete(result)
+                session.commit()
+                response.ok = True
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+
+        return response
+    
+    @staticmethod
+    def deleteFutureSetting(id: int) -> Response:
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(FutureSetting).where(FutureSetting.id == id)
+                result = session.scalar(stmt)
+                session.delete(result)
+                session.commit()
+                response.ok = True
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+
+        return response
+    
+    @staticmethod
+    def getLicenseData(location: str) -> Response:
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                time_24_hours_ago = (datetime.now() - timedelta(hours=2)).strftime('%Y-%m-%d %H:%M:%S')
+                stmt = select(DetectedLicensePlate).filter(
+                    text(f"datetime(date || ' ' || time) >= '{time_24_hours_ago}'"),
+                ).where(DetectedLicensePlate.location == location)
+                results = session.execute(stmt).all()
+                response.ok = True
+                response.data = results
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+        
+        return response
+    
+    @staticmethod
+    def getLocations() -> Response:
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                stmt = select(Camera.location).group_by(Camera.location)
+                results = session.execute(stmt).all()
+                response.ok = True
+                response.data = results
         except Exception as e:
             response.ok = False
             response.messages['error'] = repr(e)

@@ -1,9 +1,9 @@
 import os
 import sys
-import tkinter as tk
-import random
-import string
 import datetime
+import tkinter as tk
+import asyncio
+import tk_async_execute as tk_async
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -34,7 +34,6 @@ class AdminPage(tk.Frame):
         self.lastNameVar.set(user.lastName)
         self.emailVar.set(user.email)
         self.usernameVar.set(user.username)
-        self.passwordVar.set(user.password) # to be hashed once user registration is finished
         self.adminVar.set(1 if user.isAdmin else 2)
         self.changePriceVar.set(1 if user.canChangePrice else 2)
         self.downloadRadioVar.set(1 if user.canDownload else 2)
@@ -247,7 +246,7 @@ class AdminPage(tk.Frame):
             self.after(3000, lambda: self.filterStatusLabel.configure(text_color="#1B2431"))
 
             for row in filterResponse.data:
-                self.databaseTable.insert('', 'end', values=(row[0].licenseNumber, row[0].vehicleType, row[0].cameraId, row[0].time, row[0].date, row[0].price))
+                self.databaseTable.insert('', 'end', values=(row[0].licenseNumber, row[0].vehicleType, row[0].location, row[0].time, row[0].date, row[0].price))
         else:
             self.filterStatusLabel.configure(text=filterResponse.messages['error'], text_color="#d62828")
             self.after(2000, lambda: self.filterStatusLabel.configure(text_color="#1B2431"))
@@ -289,26 +288,33 @@ class AdminPage(tk.Frame):
                 self.licensePlateEntry.insert(0, values[0])
                 self.vehicleTypeEntry.insert(0, values[1])
                 self.priceEntry.insert(0, values[5])
-        
-    def discoverCameras_callback(self):
-        self.discoverCameraButton.configure(state='disabled', text='Discovering Cameras...')
-        self.discoveredCamerasDrop.configure(state='disabled', values=[''])
-        self.addCameraButton.configure(state='disabled')
 
+    async def searchCameras(self):
         for ip, _ in RTSPController.scanNetwork():
             if RTSPController.checkRtsp(ip=ip) and RTSPController.validateRtsp(ip=ip) and not DBController.cameraExists(ip_addr=ip):
                 self.ip_cameras.add(ip)
+        
+    async def discoverCameras(self):
+        tk_async.tk_execute(self.discoverCameraButton.configure, state='disabled', text='Discovering Cameras...')
+        tk_async.tk_execute(self.discoveredCamerasDrop.configure, state='disabled', values=[''])
+        tk_async.tk_execute(self.discoveredCamerasDrop.set, '')
+        tk_async.tk_execute(self.addCameraButton.configure, state='disabled')
 
-        self.discoverCameraButton.configure(state='normal', text='Discover Cameras')
-        self.discoveredCamerasDrop.set('')
-        self.discoveredCamerasDrop.configure(state='readonly', values=list(self.ip_cameras))
-        self.addCameraButton.configure(state='normal')
+        await self.searchCameras()
+
+        tk_async.tk_execute(self.discoverCameraButton.configure, state='normal', text='Discover Cameras')
+        tk_async.tk_execute(self.discoveredCamerasDrop.configure, state='readonly', values=list(self.ip_cameras))
+        tk_async.tk_execute(self.discoveredCamerasDrop.set, '')
+        tk_async.tk_execute(self.addCameraButton.configure, state='normal')
 
         if self.ip_cameras:
-            self.addCameraStatusLabel.configure(text='New IP camera(s) discovered.', text_color="#25be8e")
+            tk_async.tk_execute(self.addCameraStatusLabel.configure, text='New IP camera(s)', text_color='#25be8e')
         else:
-            self.addCameraStatusLabel.configure(text='No IP cameras found.', text_color="#d62828")
-        self.after(2000, lambda: self.addCameraStatusLabel.configure(text_color="#1B2431"))
+            tk_async.tk_execute(self.addCameraStatusLabel.configure, text='No IP cameras found.', text_color='#d62828')
+
+    def discoverCameras_callback(self):
+        tk_async.async_execute(self.discoverCameras(), visible=False)
+        self.after(2000, lambda: self.addCameraStatusLabel.configure(text_color='#1B2431'))
 
     def addCamera_callback(self):
         cameraIpAddr = self.discoveredCamerasDrop.get()
@@ -576,7 +582,7 @@ class AdminPage(tk.Frame):
         # Dropdown for vehicle Type
         self.vehicleTypeComboVar = StringVar()
         self.vehicleTypeComboBox = CTkComboBox(upperLowerLeft,
-                                          values = ['', 'Car', 'Taxi', 'Jeepney', 'Modern Jeepney', 'Motorcycle', 'Truck', 'Bus', 'Taxi', 'Tricycle'],
+                                          values = ['', 'Car', 'Motorcycle', 'Bus', 'Truck'],
                                           variable = self.vehicleTypeComboVar,
                                           fg_color = "#FFFFFF",
                                           border_color = "#FFFFFF",
@@ -618,12 +624,12 @@ class AdminPage(tk.Frame):
         
         lowerLowerLeft = tk.Frame(lowerLeftContent, bg = "#090E18")
         databaseFrame = tk.Frame(lowerLowerLeft, bg = "#090E18")
-        self.databaseTable = ttk.Treeview(databaseFrame, columns = ('licensePlate', 'vehicleType', 'cameraID', 'time', 'date', 'price'), show = "headings", style = 'Custom.Treeview')
+        self.databaseTable = ttk.Treeview(databaseFrame, columns = ('licensePlate', 'vehicleType', 'location', 'time', 'date', 'price'), show = "headings", style = 'Custom.Treeview')
         
         filterResponse = DBController.getFilteredLicensePlates()
         if filterResponse.ok:
             for row in filterResponse.data:
-                self.databaseTable.insert('', 'end', values=(row[0].licenseNumber, row[0].vehicleType, row[0].cameraId, row[0].time, row[0].date, row[0].price))
+                self.databaseTable.insert('', 'end', values=(row[0].licenseNumber, row[0].vehicleType, row[0].location, row[0].time, row[0].date, row[0].price))
 
         self.databaseTable.bind('<<TreeviewSelect>>', self.selectDataFromTable)
         self.databaseTable.bind('<Delete>', self.deleteDataFromTable)
@@ -633,14 +639,14 @@ class AdminPage(tk.Frame):
         
         self.databaseTable.heading('licensePlate', text="License Plate", anchor='center')
         self.databaseTable.heading('vehicleType', text="Vehicle Type", anchor='center')
-        self.databaseTable.heading('cameraID', text="Camera ID", anchor='center')
+        self.databaseTable.heading('location', text="Location", anchor='center')
         self.databaseTable.heading('time', text="Time", anchor='center')
         self.databaseTable.heading('date', text="Date", anchor='center')
         self.databaseTable.heading('price', text="Price", anchor='center')
         
         self.databaseTable.column('licensePlate', width=150, anchor='center')
         self.databaseTable.column('vehicleType', width=150, anchor='center')
-        self.databaseTable.column('cameraID', width=120, anchor='center')
+        self.databaseTable.column('location', width=120, anchor='center')
         self.databaseTable.column('time', width=100, anchor='center')
         self.databaseTable.column('date', width=100, anchor='center')
         self.databaseTable.column('price', width=80, anchor='center')

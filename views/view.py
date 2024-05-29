@@ -1,6 +1,8 @@
 import os
 import sys
+import asyncio
 import tkinter as tk
+import tk_async_execute as tk_async
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -9,11 +11,11 @@ sys.path.append(parent)
 from customtkinter import *
 from loginPageView import LoginPage
 from dashboardPageView import DashboardPage
-#from configPageView import ConfigPage
 from analyticsPageView import AnalyticsPage
 from adminPageView import AdminPage
 from configPageView import ConfigPage
 from models.connect import Connection as connection
+from controllers.pollController import PollController
 
 # view.py is the starting point of the GUI. This is where each Pages are defined. (Parent Class)
 
@@ -44,14 +46,44 @@ class MainWindow(tk.Tk):
         self.adminFrame.grid(row=0, column=0, sticky="nsew")
 
         self.show_frame(self.loginFrame)
+
+        self.currUser = None
         
     # Function to show Frame (Can be used by the child Classes)
     def show_frame(self, cont, changeCameraDisplay=None, cap=None, placeholder_label=None):
         if changeCameraDisplay:
             cont.setCameraDisplay(changeCameraDisplay, cap, placeholder_label)
         cont.tkraise()
+    
+    def setUser(self, user):
+        self.currUser = user
+        self.dashboardFrame.setCurrUser(user)
+        self.configFrame.applyRestrictions(user)
+        self.analyticsFrame.applyRestrictions(user)
+
+def startAsyncLoop(loop):
+    loop.call_soon(loop.stop)
+    loop.run_forever()
+    app.after(30000, startAsyncLoop, loop)
+
+async def runAsync():
+    asyncio.create_task(poll())
+
+async def poll():
+    while True:
+        PollController.updateFutureSettings()
+        PollController.updateActiveSetting()
+        await asyncio.sleep(60)
 
 if __name__ == "__main__":
     connection.connect('database/test.db')
+
+    loop = asyncio.get_event_loop()
+    loop.create_task(runAsync())
+
     app = MainWindow()
+    app.after(30000, startAsyncLoop, loop)
+
+    tk_async.start()
     app.mainloop()
+    tk_async.stop()

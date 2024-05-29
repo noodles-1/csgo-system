@@ -4,19 +4,12 @@ import cv2
 import psutil
 import math
 import datetime
-from datetime import datetime as datetime_module
 import csv
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import tkinter as tk
-from scipy.interpolate import make_interp_spline
-from scipy.interpolate import interp1d
 import random
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 import smtplib
 import hashlib
 
@@ -24,8 +17,17 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
+from datetime import datetime as datetime_module
 from ultralytics import YOLO
 from cnocr import CnOcr
+
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from scipy.interpolate import make_interp_spline
+from scipy.interpolate import interp1d
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from controllers.dbController import DBController
 
 class AIController:
     vehicleClasses = set([2, 3, 5, 7])
@@ -202,25 +204,34 @@ class ReportGenerationController:
         return latest_dates, latest_counts
 
     @staticmethod
-    def downloadAndProcessCSV(filePath):
+    def downloadAndProcessCSV():
         """
         Description:
         - This function saves a CSV file with a modified name to the user's "Downloads" folder after downloading it from a specified path and processing it if necessary.
-
-        Arguments:
-        - filePath (str): The path to the CSV file to be downloaded and processed.
 
         Returns:
         - success (bool): Indicates whether the operation was successful.
         - output_path (str or None): If successful, returns the path to the downloaded and processed CSV file; otherwise, returns None.
         """
         try:
-            if not os.path.exists(filePath):
-                raise FileNotFoundError(f"CSV File '{filePath}' not found.")
-            
-            dataFrame = pd.read_csv(filePath)
+            results = DBController.getFilteredLicensePlates()
+            data = []
+            for result in results.data:
+                row = result[0]
+                data.append({
+                    'id': row.id,
+                    'userId': row.userId,
+                    'settingId': row.settingId,
+                    'location': row.location,
+                    'licenseNumber': row.licenseNumber,
+                    'vehicleType': row.vehicleType,
+                    'price': row.price,
+                    'date': row.date,
+                    'time': row.time,
+                    'imageUrl': row.image
+                })
 
-            # Perform processing if needed here
+            dataFrame = pd.DataFrame(data)
 
             # Get the path to the "Downloads" folder
             downloadPath = os.path.join(os.path.expanduser("~"), "Downloads")
