@@ -360,12 +360,12 @@ class AccountController:
     def send_OTP(receiver_email, otp):
         #sender_email = os.getenv('CSGO_OTP_USER')
         #password = os.getenv("CSGO_OTP_PASS")
-        credentials = dbc.getEmailCredentials(user_id=3) # Change accordingly
+        credentials = dbc.getUser(email='csgotolllesstoll@gmail.com') # Change accordingly
         if not credentials:
             raise ValueError("Failed to retrieve email credentials from the database")
         
-        sender_email = credentials['email']
-        password = credentials['password']
+        sender_email = credentials.email
+        password = credentials.password
         
         # if not sender_email or not password:
         #     raise ValueError("Email credentials are not set in Environment Variables")
