@@ -9,13 +9,10 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
-import controllers.controller as cont
-import switchView as switch
-
-from customtkinter import *
-from tkinter import ttk
-from PIL import Image, ImageTk
 from controllers.dbController import DBController as db
+from sessions.userSession import UserSession
+import controllers.controller as cont
+import views.switchView as switch
 
 class LoginPage(tk.Frame):
     # Close Application
@@ -33,8 +30,8 @@ class LoginPage(tk.Frame):
     
     # Function that is called to go to the Forgot Password Page (Unfinished)
     def forgotPasswordFunction(self):
-        pass
-    
+        self.show_email_popup()
+        
     # Function that is called when clicking Login
     def verifyCredentials(self, parent, usernameEntry: CTkEntry, passwordEntry: CTkEntry, incorrectLabel: CTkLabel):
         username, password = usernameEntry.get(), passwordEntry.get()
@@ -50,10 +47,10 @@ class LoginPage(tk.Frame):
 
         passwordEntry.delete(0, "end")
         usernameEntry.delete(0, "end")
-    
+            
     def __init__(self, parent):
         tk.Frame.__init__(self, parent, bg = "blue")
-        
+        self.otp = None
         # Cover Image (The Eye)
         coverPhoto = CTkImage(light_image = Image.open("views/assets/blue-iris-updated.png"),
                               dark_image = Image.open("views/assets/blue-iris-updated.png"),
@@ -149,6 +146,6 @@ class LoginPage(tk.Frame):
         loginButton.bind("<Enter>", lambda event: loginButton.configure(text_color="#000000", fg_color = "#48BFE3")) 
         loginButton.bind("<Leave>", lambda event: loginButton.configure(text_color="#48BFE3", fg_color = "#000000"))  
 
-        forgotButton = CTkButton(loginFormFrame, text = 'Forgot Password?', border_color = '#000000', fg_color = '#000000', height = 5, width = 20, font = ('Montserrat', 10), command = lambda: self.forgotPasswordFunction)
+        forgotButton = CTkButton(loginFormFrame, text = 'Forgot Password?', border_color = '#000000', fg_color = '#000000', height = 5, width = 20, font = ('Montserrat', 10), command = lambda: switch.showForgotPasswordPage(parent))
         forgotButton.pack()
         # End of the Main Frame

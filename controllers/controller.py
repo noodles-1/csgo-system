@@ -20,6 +20,7 @@ sys.path.append(parent)
 from datetime import datetime as datetime_module
 from ultralytics import YOLO
 from cnocr import CnOcr
+from controllers.dbController import  DBController as dbc
 
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -368,11 +369,17 @@ class AccountController:
         return otp == user_input_otp
     
     def send_OTP(receiver_email, otp):
-        sender_email = os.getenv('CSGO_OTP_USER')
-        password = os.getenv("CSGO_OTP_PASS")
+        #sender_email = os.getenv('CSGO_OTP_USER')
+        #password = os.getenv("CSGO_OTP_PASS")
+        credentials = dbc.getUser(email='csgotolllesstoll@gmail.com') # Change accordingly
+        if not credentials:
+            raise ValueError("Failed to retrieve email credentials from the database")
         
-        if not sender_email or not password:
-            raise ValueError("Email credentials are not set in Environment Variables")
+        sender_email = credentials.email
+        password = credentials.password
+        
+        # if not sender_email or not password:
+        #     raise ValueError("Email credentials are not set in Environment Variables")
         
         message = MIMEMultipart()
         message["From"] = sender_email

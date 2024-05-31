@@ -30,3 +30,8 @@ def showLoginPage(parentFrame):
     parentFrame.show_frame(parentFrame.loginFrame)
     cont.loggedIn = False
     cont.cameraEnabled = False
+    
+def showForgotPasswordPage(parentFrame):
+    parentFrame.show_frame(parentFrame.forgotFrame)
+    cont.loggedIn = False
+    cont.cameraEnabled = False

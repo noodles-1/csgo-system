@@ -14,6 +14,7 @@ from dashboardPageView import DashboardPage
 from analyticsPageView import AnalyticsPage
 from adminPageView import AdminPage
 from configPageView import ConfigPage
+from forgotPageView import ForgetPasswordPage
 from models.connect import Connection as connection
 from controllers.pollController import PollController
 
@@ -35,6 +36,7 @@ class MainWindow(tk.Tk):
         self.analyticsFrame = AnalyticsPage(self)
         self.configFrame = ConfigPage(self)
         self.adminFrame = AdminPage(self)
+        self.forgotFrame = ForgetPasswordPage(self)
 
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
@@ -44,6 +46,7 @@ class MainWindow(tk.Tk):
         self.analyticsFrame.grid(row=0, column=0, sticky="nsew")
         self.configFrame.grid(row=0, column=0, sticky="nsew")
         self.adminFrame.grid(row=0, column=0, sticky="nsew")
+        self.forgotFrame.grid(row=0, column=0, sticky="nsew")
 
         self.show_frame(self.loginFrame)
 
