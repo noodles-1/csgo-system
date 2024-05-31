@@ -725,17 +725,12 @@ class DBController:
         
         try:
             user = DBController.getUser(email=email)
-            if currPassword and not DBController.passwordMatches(currPassword, user.password):
-                response.ok = False
-                response.messages['error'] = 'Password error.'
-                response.messages['password'] = 'Current password is incorrect.'
-                return response
             if newPassword != confirmPassword:
                 response.ok = False
                 response.messages['error'] = 'Password error.'
                 response.messages['password'] = 'Passwords do not match.'
                 return response
-            if currPassword and currPassword == newPassword:
+            if DBController.passwordMatches(user.id, newPassword):
                 response.ok = False
                 response.messages['error'] = 'Password error.'
                 response.messages['password'] = "New password can't be the current password."

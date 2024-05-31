@@ -10,7 +10,6 @@ parent = os.path.dirname(current)
 sys.path.append(parent)
 
 from controllers.dbController import DBController as db
-from sessions.userSession import UserSession
 import controllers.controller as cont
 import views.switchView as switch
 

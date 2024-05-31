@@ -92,10 +92,11 @@ class TestDBControllerMethods(unittest.TestCase):
         response = db.deleteLicensePlate('AAA1111')
         self.assertTrue(response.ok)
 
+    @patch('controllers.dbController.DBController.passwordMatches')
     @patch('controllers.dbController.DBController.getHashedPassword')
     @patch('controllers.dbController.DBController.getUser')
     @patch('controllers.dbController.Session')
-    def test_change_password(self, mock_session, mock_get_user, mock_get_hashed_password):
+    def test_change_password(self, mock_session, mock_get_user, mock_get_hashed_password, mock_password_matches):
         '''
         Tests the changePassword method from DBController. Tests the password change
         of an account considering that the new password and confirm password fields
@@ -109,6 +110,7 @@ class TestDBControllerMethods(unittest.TestCase):
         mock_session.commit = MagicMock()
         mock_get_user.return_value = MagicMock(password='123')
         mock_get_hashed_password.return_value = '1'
+        mock_password_matches.return_value = False
 
         response = db.changePassword(email='a@gmail.com', newPassword='124', confirmPassword='124')
         self.assertTrue(response.ok)

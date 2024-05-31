@@ -210,7 +210,7 @@ class ForgetPasswordPage(tk.Frame):
                 cont.cameraEnabled = False
                 cont.loggedIn = False
             else:
-                messagebox.showerror("Error", response.messages['error'])
+                messagebox.showerror("Error", (response.messages['password'] or response.messages['error']))
         else:
             messagebox.showerror("Error", "Passwords do not match")
 
