@@ -55,8 +55,8 @@ class DetectedLicensePlate(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     userId: Mapped[int] = mapped_column(ForeignKey('user.id'))
-    cameraId: Mapped[int] = mapped_column(ForeignKey('camera.id'))
-    settingId: Mapped[int] = mapped_column(ForeignKey('setting.id'))
+    settingId: Mapped[int] = mapped_column(ForeignKey('current_setting.id'))
+    location: Mapped[str]
     licenseNumber: Mapped[str] = mapped_column(String(14))
     vehicleType: Mapped[str]
     price: Mapped[float]
@@ -65,13 +65,35 @@ class DetectedLicensePlate(Base):
     image: Mapped[str]
 
     def __repr__(self) -> str:
-        return f'Detection(id={self.id}, userId={self.userId}, cameraId={self.cameraId}, priceId={self.priceId}, licenseNumber={self.licenseNumber}, date={self.date}, time={self.time}, image={self.image})'
+        return f'Detection(id={self.id}, userId={self.userId}, setting={self.settingId}, location={self.location}, licenseNumber={self.licenseNumber}, vehicleType={self.vehicleType}, price={self.price}, date={self.date}, time={self.time}, image={self.image})'
     
-class Setting(Base):
+class CurrentSetting(Base):
     '''
-    Setting table that contains different settings for the congestion pricing system.
+    Setting table that contains current different settings for the congestion pricing system.
     '''
-    __tablename__ = 'setting'
+    __tablename__ = 'current_setting'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    hourFrom: Mapped[Time] = mapped_column(Time(timezone=True))
+    hourTo: Mapped[Time] = mapped_column(Time(timezone=True))
+    day: Mapped[str]
+    detectCar: Mapped[bool]
+    detectMotorcycle: Mapped[bool]
+    detectBus: Mapped[bool]
+    detectTruck: Mapped[bool]
+    carPrice: Mapped[float]
+    motorcyclePrice: Mapped[float]
+    busPrice: Mapped[float]
+    truckPrice: Mapped[float]
+
+    def __repr__(self) -> str:
+        return f'Setting(settingId={self.id}, hourFrom={self.hourFrom}, hourTo={self.hourTo}, day={self.day}, detectMotorcycle={self.detectMotorcycle}, detectBus={self.detectBus}, detectTruck={self.detectTruck}, carPrice={self.carPrice}, motorcyclePrice={self.motorcyclePrice}, busPrice={self.busPrice}, truckPrice={self.truckPrice})'
+    
+class FutureSetting(Base):
+    '''
+    Setting table that contains future different settings for the congestion pricing system.
+    '''
+    __tablename__ = 'future_setting'
 
     id: Mapped[int] = mapped_column(primary_key=True)
     hourFrom: Mapped[Time] = mapped_column(Time(timezone=True))
