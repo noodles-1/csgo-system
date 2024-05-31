@@ -1,23 +1,17 @@
 import os
 import sys
 import tkinter as tk
-import re
 
 from customtkinter import *
-from tkinter import messagebox
 from PIL import Image
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
-from customtkinter import *
-from tkinter import ttk
-from PIL import Image, ImageTk
 from controllers.dbController import DBController as db
 from sessions.userSession import UserSession
 import controllers.controller as cont
-from controllers.controller import AccountController as ac
 import views.switchView as switch
 
 class LoginPage(tk.Frame):
