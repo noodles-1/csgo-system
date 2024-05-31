@@ -906,6 +906,7 @@ class DBController:
                 file.write(f'[{now}] Error at function invocation controllers/dbController.py getEmailCredentials() - {repr(e)}\n')
         return None
     
+    @staticmethod
     def emailResponse(email) -> Response:
         '''
         Checks if the email already exists in the User table in the database.
@@ -916,7 +917,7 @@ class DBController:
         returns:
         - DBController.Response => a response object containing the status, messages, and data of the query
         '''
-        response = DBController.Response
+        response = DBController.Response()
         try:
             with Session(Connection.engine) as session:
                 stmt = select(User).where(User.email == email)

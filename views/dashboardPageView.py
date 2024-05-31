@@ -47,7 +47,8 @@ class DashboardPage(tk.Frame):
         self.master.iconify()
     
     def update_uptime(self):
-        self.uptime_seconds += 1 
+        if self.counting_enabled:
+            self.uptime_seconds += 1 
         
         hours = self.uptime_seconds // 3600
         minutes = (self.uptime_seconds % 3600) // 60
@@ -188,11 +189,15 @@ class DashboardPage(tk.Frame):
 
         self.cap = cv2.VideoCapture('test_images/morayta.mp4')
         DashboardPage.StartCamera().start(self.cap, self.placeholder_label, ip_addr, self.databaseTable)
+        
+        self.uptime_seconds = 0
+        self.counting_enabled = True
 
     def __init__(self, parent):
         self.cap = None
 
         self.uptime_seconds = 0
+        self.counting_enabled = False
         self.vehicle_count = 0
         
         tk.Frame.__init__(self, parent, bg = "#090E18")
@@ -370,7 +375,7 @@ class DashboardPage(tk.Frame):
         vehicleDetectedLabel = CTkLabel(vehicleDetectedBottomLeftMainFrame, text = 'Vehicles Detected: ', text_color = 'white', font = ('Montserrat', 12))
         self.vehiclesDetectedCount = CTkLabel(vehicleDetectedBottomLeftMainFrame, text = '', text_color = 'white', font = ('Montserrat', 12)) # This updates
         
-        upTimeLabel = CTkLabel(upTimeBottomLabelLeftMainFrame, text = 'Detection Up Time: ', text_color = 'white', font = ('Montserrat', 12))
+        upTimeLabel = CTkLabel(upTimeBottomLabelLeftMainFrame, text = 'Camera Up Time: ', text_color = 'white', font = ('Montserrat', 12))
         self.upTimeCount = CTkLabel(upTimeBottomLabelLeftMainFrame, text = '', text_color = 'white', font = ('Montserrat', 12)) # This updates
         
         vehicleDetectedLabel.pack(side = 'left', padx = 3)
