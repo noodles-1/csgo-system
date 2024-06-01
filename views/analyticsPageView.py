@@ -285,7 +285,12 @@ class AnalyticsPage(tk.Frame):
         numberOfDetectedVehicleInnerFrame.pack(padx = 50, pady = 10, side ="top", expand = True, fill = "both")
         
         response = DBController.getLocations()
-        locations = [result[0] for result in response.data]
+        if response is not None and response.ok:
+            locations = [result[0] for result in response.data]
+        else:
+            # Handle the case where response is None or not ok
+            locations = []  # Or any other appropriate handling
+
 
         #Insert Graph Here
         self.figDetected = plt.Figure()

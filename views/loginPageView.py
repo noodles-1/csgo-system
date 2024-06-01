@@ -50,6 +50,7 @@ class LoginPage(tk.Frame):
     def __init__(self, parent):
         tk.Frame.__init__(self, parent, bg = "blue")
         self.otp = None
+        
         # Cover Image (The Eye)
         coverPhoto = CTkImage(light_image = Image.open("views/assets/blue-iris-updated.png"),
                               dark_image = Image.open("views/assets/blue-iris-updated.png"),
@@ -148,3 +149,7 @@ class LoginPage(tk.Frame):
         forgotButton = CTkButton(loginFormFrame, text = 'Forgot Password?', border_color = '#000000', fg_color = '#000000', height = 5, width = 20, font = ('Montserrat', 10), command = lambda: switch.showForgotPasswordPage(parent))
         forgotButton.pack()
         # End of the Main Frame
+        
+        self.usernameEntry = usernameEntry
+        self.passwordEntry = passwordEntry
+        self.incorrectLabel = incorrectLabel

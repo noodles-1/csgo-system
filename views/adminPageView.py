@@ -690,18 +690,31 @@ class AdminPage(tk.Frame):
         self.selectUserComboVar = StringVar()
 
         users = DBController.getUsers()
-
-        self.selectUserCombo = CTkComboBox(selectUserFrame,
-                                      values = [user[0].username for user in users.data],
-                                      command = self.selectUserCombo_callback,
-                                      variable = self.selectUserComboVar,
-                                      fg_color = "#FFFFFF",
-                                      border_color = "#FFFFFF",
-                                      text_color = "#000000",
-                                      button_color = "#FFFFFF",
-                                      dropdown_fg_color = "#FFFFFF",
-                                      dropdown_text_color = "#000000",
-                                      dropdown_font = ('Montserrat', 12))
+        if users is not None and users.data is not None:
+            # Proceed with creating the CTkComboBox
+            self.selectUserCombo = CTkComboBox(selectUserFrame,
+                                        values=[user[0].username for user in users.data],
+                                        command=self.selectUserCombo_callback,
+                                        variable=self.selectUserComboVar,
+                                        fg_color="#FFFFFF",
+                                        border_color="#FFFFFF",
+                                        text_color="#000000",
+                                        button_color="#FFFFFF",
+                                        dropdown_fg_color="#FFFFFF",
+                                        dropdown_text_color="#000000",
+                                        dropdown_font=('Montserrat', 12))
+        else:
+            self.selectUserCombo = CTkComboBox(selectUserFrame,
+                                        values=['None'],
+                                        command=self.selectUserCombo_callback,
+                                        variable=self.selectUserComboVar,
+                                        fg_color="#FFFFFF",
+                                        border_color="#FFFFFF",
+                                        text_color="#000000",
+                                        button_color="#FFFFFF",
+                                        dropdown_fg_color="#FFFFFF",
+                                        dropdown_text_color="#000000",
+                                        dropdown_font=('Montserrat', 12))
         
         rightUpperRight = tk.Frame(upperRight, bg = "#1B2431")
         addUserButton = CTkButton(rightUpperRight, text = "Add User", font = ('Montserrat', 12, 'bold'), text_color = "#000000", fg_color = "#FFFFFF",
