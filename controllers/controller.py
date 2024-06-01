@@ -3,15 +3,10 @@ import sys
 import cv2
 import psutil
 import math
-import datetime
 import csv
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import tkinter as tk
 import random
 import smtplib
-import hashlib
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -20,14 +15,9 @@ sys.path.append(parent)
 from datetime import datetime as datetime_module
 from ultralytics import YOLO
 from cnocr import CnOcr
-from controllers.dbController import  DBController as dbc
 
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from scipy.interpolate import make_interp_spline
-from scipy.interpolate import interp1d
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from controllers.dbController import DBController
 
 class AIController:
@@ -80,34 +70,9 @@ def bounding_box(frame, box, color, classNames):
 
     cv2.putText(frame, classNames[cls] + ' ' + str(confidence), org, font, fontScale, (255, 255, 255), thickness)
 
-def generateRevenueReport():
-    curr_date = datetime.date.today().strftime('%Y-%m-%d')
-    df = pd.read_csv('dummy_data/data.csv')
-    curr_date_revenue = df.loc[df['Date'] == curr_date]['Price'].sum()
-
-    curr_month = datetime.date.today().strftime('%Y-%m')
-    curr_month_revenue = df.loc[df['Date'].str[:7] == curr_month]['Price'].sum()
-    
-    curr_year = datetime.date.today().strftime('%Y')
-    curr_year_revenue = df.loc[df['Date'].str[:4] == curr_year]['Price'].sum()
-    
-    with open('reports/revenue.csv', 'w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow([f'Revenue today ({curr_date})', f'Revenue this month ({curr_month})', f'Revenue this year ({curr_year})'])
-        writer.writerow([curr_date_revenue, curr_month_revenue, curr_year_revenue])
-
-def generateBusiestTimeReport():
-    df = pd.read_csv('dummy_data/data.csv')
-    times = [int(time.split(':')[0]) for time in df['Time'].tolist()]
-    _, ax = plt.subplots()
-    _, bins, _ = ax.hist(times, bins=23, edgecolor='gray')
-    ax.set_xticks(bins)
-    plt.xlabel('times in 24-hour format')
-    plt.ylabel('no. of detected vehicles')
-    plt.savefig('reports/busiest_times.jpg')
-
 class ReportGenerationController:
-    def busiestTimeReport(self, file_path):
+    @staticmethod
+    def busiestTimeReport(file_path):
         """
         Description:
         - This function generates a report of the busiest time based on the data provided in the specified CSV file for the current date.
@@ -142,7 +107,8 @@ class ReportGenerationController:
 
         return xData, yData
     
-    def revenueReport(self, file_path):
+    @staticmethod
+    def revenueReport(file_path):
         """
         Description:
         - This function generates a report of the revenue based on the data provided in the specified CSV file for the latest 15 dates.
@@ -175,7 +141,8 @@ class ReportGenerationController:
 
         return latest_dates, latest_revenues
     
-    def vehiclesDetectedReport(self, file_path):
+    @staticmethod
+    def vehiclesDetectedReport(file_path):
         """
         Description:
         - This function generates a report of the vehicles detected based on the data provided in the specified CSV file for the latest 15 dates.
@@ -250,128 +217,30 @@ class ReportGenerationController:
             print(f"Error: {e}")
             return False, None
         
+    @staticmethod
     def get_cpu_usage():
         cpu_percent = psutil.cpu_percent(interval=1)
         return [], [cpu_percent]
 
+    @staticmethod
     def get_memory_usage():
         memory_percent = psutil.virtual_memory().percent
         return [], [memory_percent]
 
 class AccountController:
-    '''
-        With the restrictions functions, I can make some of it shorter, but I still dont know how to retrieve the user's restriction
-        or how they are stored/saved in the system.
-        
-        Once that is known, the functions may change in the future, but the logic would still remain the same.
-        
-        If a user ID that's currently in session has a 1 restriction for n widgets, n widgets' state = normal.
-        If a user ID that's currently in session has a 0 restriction for n widgets, n widget's state = disabled.
-        
-        Functions are called in the __init__ method of the pages(config, dashboard, and analytics)
-    '''
     @staticmethod
-    def admin_page_restriction(adminButton, userType):
-        if userType == "admin":
-            adminButton.config(state = 'normal')
-        else:
-            adminButton.config(state = 'disabled')
-    
-    @staticmethod
-    def analytics_page_restriction(downloadButton, userType):
-        if userType == "admin":
-            downloadButton.config(state = 'normal')
-        else:
-            downloadButton.config(state = 'disabled')
-    
-    @staticmethod
-    def config_page_restriction(carTrueRadioButton, carFalseRadioButton, truckTrueRadioButton,
-                                truckFalseRadioButton, jeepneyTrueRadioButton, jeepneyFalseRadioButton,
-                                busTrueRadioButton, busFalseRadioButton, motorTrueRadioButton,
-                                motorFalseRadioButton, tricycleTrueRadioButton, tricycleFalseRadioButton,
-                                vanTrueRadioButton, vanFalseRadioButton, taxiTrueRadioButton,
-                                taxiFalseRadioButton, mJeepneyTrueRadioButton, mJeepneyFalseRadioButton,
-                                carEntry, truckEntry, jeepneyEntry,
-                                busEntry, motorcycleEntry, tricycleEntry,
-                                vanEntry, taxiEntry, mjeepneyEntry,
-                                fromComboBox, toComboBox, everyComboBox,
-                                addButton, userType):
-        
-        if userType == "admin":
-            carTrueRadioButton.config(state='normal')
-            carFalseRadioButton.config(state='normal')
-            truckTrueRadioButton.config(state='normal')
-            truckFalseRadioButton.config(state='normal')
-            jeepneyTrueRadioButton.config(state='normal')
-            jeepneyFalseRadioButton.config(state='normal')
-            busTrueRadioButton.config(state='normal')
-            busFalseRadioButton.config(state='normal')
-            motorTrueRadioButton.config(state='normal')
-            motorFalseRadioButton.config(state='normal')
-            tricycleTrueRadioButton.config(state='normal')
-            tricycleFalseRadioButton.config(state='normal')
-            vanTrueRadioButton.config(state='normal')
-            vanFalseRadioButton.config(state='normal')
-            taxiTrueRadioButton.config(state='normal')
-            taxiFalseRadioButton.config(state='normal')
-            mJeepneyTrueRadioButton.config(state='normal')
-            mJeepneyFalseRadioButton.config(state='normal')
-            carEntry.config(state='normal')
-            truckEntry.config(state='normal')
-            jeepneyEntry.config(state='normal')
-            busEntry.config(state='normal')
-            motorcycleEntry.config(state='normal')
-            tricycleEntry.config(state='normal')
-            vanEntry.config(state='normal')
-            taxiEntry.config(state='normal')
-            mjeepneyEntry.config(state='normal')
-            fromComboBox.config(state='normal')
-            toComboBox.config(state='normal')
-            everyComboBox.config(state='normal')
-            addButton.config(state='normal')
-        else:
-            carTrueRadioButton.config(state='disabled')
-            carFalseRadioButton.config(state='disabled')
-            truckTrueRadioButton.config(state='disabled')
-            truckFalseRadioButton.config(state='disabled')
-            jeepneyTrueRadioButton.config(state='disabled')
-            jeepneyFalseRadioButton.config(state='disabled')
-            busTrueRadioButton.config(state='disabled')
-            busFalseRadioButton.config(state='disabled')
-            motorTrueRadioButton.config(state='disabled')
-            motorFalseRadioButton.config(state='disabled')
-            tricycleTrueRadioButton.config(state='disabled')
-            tricycleFalseRadioButton.config(state='disabled')
-            vanTrueRadioButton.config(state='disabled')
-            vanFalseRadioButton.config(state='disabled')
-            taxiTrueRadioButton.config(state='disabled')
-            taxiFalseRadioButton.config(state='disabled')
-            mJeepneyTrueRadioButton.config(state='disabled')
-            mJeepneyFalseRadioButton.config(state='disabled')
-            carEntry.config(state='disabled')
-            truckEntry.config(state='disabled')
-            jeepneyEntry.config(state='disabled')
-            busEntry.config(state='disabled')
-            motorcycleEntry.config(state='disabled')
-            tricycleEntry.config(state='disabled')
-            vanEntry.config(state='disabled')
-            taxiEntry.config(state='disabled')
-            mjeepneyEntry.config(state='disabled')
-            fromComboBox.config(state='disabled')
-            toComboBox.config(state='disabled')
-            everyComboBox.config(state='disabled')
-            addButton.config(state='disabled')
-    
     def generate_OTP():
         return str(random.randint(100000, 999999))
     
+    @staticmethod
     def verify_OTP(otp, user_input_otp):
         return otp == user_input_otp
     
+    @staticmethod
     def send_OTP(receiver_email, otp):
         #sender_email = os.getenv('CSGO_OTP_USER')
         #password = os.getenv("CSGO_OTP_PASS")
-        credentials = dbc.getUser(email='csgotolllesstoll@gmail.com') # Change accordingly
+        credentials = DBController.getUser(email='csgotolllesstoll@gmail.com') # Change accordingly
         if not credentials:
             raise ValueError("Failed to retrieve email credentials from the database")
         
@@ -413,41 +282,3 @@ class AccountController:
             print("OTP sent successfully")
         except Exception as e:
             print(f"Failed to send OTP: {e}")
-    
-    def update_user_credentials():
-        pass
-            
-class EnvironmentController:
-    def encrypt_variable():
-        pass
-    
-    def decrypt_variable():
-        pass
-    
-    def verify_variable():
-        pass
-      
-def get_memory_usage():
-    memory_percent = psutil.virtual_memory().percent
-    return [], [memory_percent]
-
-def updateVehiclePrice(vehicleType, newPrice):
-    global vehiclePrices
-    
-    # vehicleType Jeepney, jeepney, jEepney, etc. != to each other
-    vehicleType = vehicleType.upper() # any input ni user will be all uppercase
-    
-    if vehicleType not in vehiclePrices:
-        print("Error: Vehicle type not found.")
-        return
-    
-    if not isinstance(newPrice, float):
-        print("Error: Price should be a whole number") # 0 - Infinity
-        return
-    
-    if newPrice < 0:
-        print("Error: Price should be non-negative.")
-        return
-    
-    vehiclePrices[vehicleType] = newPrice # Simple assignment to the dictionary
-    print(f"Price for {vehicleType} updated to {newPrice}.")
