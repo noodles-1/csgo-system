@@ -10,6 +10,7 @@ parent = os.path.dirname(current)
 sys.path.append(parent)
 
 import views.switchView as switch
+import controllers.controller as cont
 
 from customtkinter import *
 from tkinter import ttk
@@ -17,6 +18,7 @@ from tkcalendar import Calendar
 from PIL import Image
 from controllers.dbController import DBController
 from controllers.rtspController import RTSPController
+from controllers.s3controller import S3Controller
 
 class AdminPage(tk.Frame):
     # Close Application
@@ -87,6 +89,7 @@ class AdminPage(tk.Frame):
             users = DBController.getUsers()
             self.selectUserCombo.configure(values=[user[0].username for user in users.data])
             self.clearFieldButton_callback()
+            self.s3.updateAuditLog('Register user', f'Registered new user (email={email}, username={username}, full name={f"{firstName} {lastName}"}, is admin?={isAdmin}, can change vehicle price?={canChangePrice}, can download CSV?={canDownload}, can change vehicles to detect?={canChangeDetect}, can edit hours in settings?={canEditHours})', cont.currUser)
         else:
             self.editUserStatusLabel.configure(text=(response.messages['email'] or response.messages['username'] or response.messages['error']), text_color="#d62828")
             self.after(2000, lambda: self.editUserStatusLabel.configure(text_color="#1B2431"))
@@ -119,6 +122,7 @@ class AdminPage(tk.Frame):
             users = DBController.getUsers()
             self.selectUserCombo.configure(values=[user[0].username for user in users.data])
             self.clearFieldButton_callback()
+            self.s3.updateAuditLog('Edit user', f'Edited new user (old username={user}, email={email}, new username={username}, full name={f"{firstName} {lastName}"}, is admin?={isAdmin}, can change vehicle price?={canChangePrice}, can download CSV?={canDownload}, can change vehicles to detect?={canChangeDetect}, can edit hours in settings?={canEditHours})', cont.currUser)
         else:
             self.editUserStatusLabel.configure(text=(response.messages['email'] or response.messages['username'] or response.messages['error']), text_color="#d62828")
             self.after(2000, lambda: self.editUserStatusLabel.configure(text_color="#1B2431"))
@@ -140,6 +144,7 @@ class AdminPage(tk.Frame):
             users = DBController.getUsers()
             self.selectUserCombo.configure(values=[user[0].username for user in users.data])
             self.clearFieldButton_callback()
+            self.s3.updateAuditLog('Delete user', f'Deleted registered user (username={user})', cont.currUser)
         else:
             self.editUserStatusLabel.configure(text=response.messages['error'], text_color="#d62828")
             self.after(2000, lambda: self.editUserStatusLabel.configure(text_color="#1B2431"))
@@ -309,8 +314,10 @@ class AdminPage(tk.Frame):
 
         if self.ip_cameras:
             tk_async.tk_execute(self.addCameraStatusLabel.configure, text='New IP camera(s)', text_color='#25be8e')
+            self.s3.updateAuditLog('Discover camera', 'Discovered new IP camera(s)', cont.currUser)
         else:
             tk_async.tk_execute(self.addCameraStatusLabel.configure, text='No IP cameras found.', text_color='#d62828')
+            self.s3.updateAuditLog('Discover camera', 'Did not discover new IP cameras', cont.currUser)
 
     def discoverCameras_callback(self):
         tk_async.async_execute(self.discoverCameras(), visible=False)
@@ -340,6 +347,7 @@ class AdminPage(tk.Frame):
             self.discoveredCamerasDrop.configure(values=list(self.ip_cameras))
             self.changeCameraDisplay.set('(NONE)')
             self.changeCameraDisplay.configure(values=values)
+            self.s3.updateAuditLog('Register camera', f'Registered new camera (name={cameraName}, location={cameraLocation})', cont.currUser)
             if self.cap:
                 self.cap.release()
                 self.placeholder_label.configure(text='(Change cameras below)')
@@ -376,6 +384,7 @@ class AdminPage(tk.Frame):
             self.savedCamerasDrop.configure(values=values)
             self.changeCameraDisplay.set('(NONE)')
             self.changeCameraDisplay.configure(values=values)
+            self.s3.updateAuditLog('Edit camera', f'Edited registered camera (old name={cameraOldName}, new name={cameraNewName}, new location={cameraNewLocation})', cont.currUser)
             if self.cap:
                 self.cap.release()
                 self.placeholder_label.configure(text='(Change cameras below)')
@@ -405,6 +414,7 @@ class AdminPage(tk.Frame):
             self.savedCamerasDrop.configure(values=values)
             self.changeCameraDisplay.set('(NONE)')
             self.changeCameraDisplay.configure(values=values)
+            self.s3.updateAuditLog('Delete camera', f'Deleted registered camera (name={cameraToDelete})', cont.currUser)
             if self.cap:
                 self.cap.release()
                 self.placeholder_label.configure(text='(Change cameras below)')
@@ -447,7 +457,7 @@ class AdminPage(tk.Frame):
         if response.ok:
             self.updateStatusLabel.configure(text='Successfully updated.', text_color='#25be8e')
             self.after(3000, lambda: self.updateStatusLabel.configure(text_color='#1b2431'))
-
+            self.s3.updateAuditLog('Edit detected license plate', f'Edited detected license plate (old license plate={licensePlate}, new license plate={newLicensePlate}, new vehicle type={newVehicleType.lower()}, new price={newPrice})', cont.currUser)
             for row in self.databaseTable.get_children():
                 self.databaseTable.delete(row)
 
@@ -474,6 +484,7 @@ class AdminPage(tk.Frame):
         self.changeCameraDisplay = None
         self.placeholder_label = None
         self.cap = None
+        self.s3 = S3Controller()
 
         tk.Frame.__init__(self, parent, bg = "#090E18")
         
@@ -690,18 +701,31 @@ class AdminPage(tk.Frame):
         self.selectUserComboVar = StringVar()
 
         users = DBController.getUsers()
-
-        self.selectUserCombo = CTkComboBox(selectUserFrame,
-                                      values = [user[0].username for user in users.data],
-                                      command = self.selectUserCombo_callback,
-                                      variable = self.selectUserComboVar,
-                                      fg_color = "#FFFFFF",
-                                      border_color = "#FFFFFF",
-                                      text_color = "#000000",
-                                      button_color = "#FFFFFF",
-                                      dropdown_fg_color = "#FFFFFF",
-                                      dropdown_text_color = "#000000",
-                                      dropdown_font = ('Montserrat', 12))
+        if users is not None and users.data is not None:
+            # Proceed with creating the CTkComboBox
+            self.selectUserCombo = CTkComboBox(selectUserFrame,
+                                        values=[user[0].username for user in users.data],
+                                        command=self.selectUserCombo_callback,
+                                        variable=self.selectUserComboVar,
+                                        fg_color="#FFFFFF",
+                                        border_color="#FFFFFF",
+                                        text_color="#000000",
+                                        button_color="#FFFFFF",
+                                        dropdown_fg_color="#FFFFFF",
+                                        dropdown_text_color="#000000",
+                                        dropdown_font=('Montserrat', 12))
+        else:
+            self.selectUserCombo = CTkComboBox(selectUserFrame,
+                                        values=['None'],
+                                        command=self.selectUserCombo_callback,
+                                        variable=self.selectUserComboVar,
+                                        fg_color="#FFFFFF",
+                                        border_color="#FFFFFF",
+                                        text_color="#000000",
+                                        button_color="#FFFFFF",
+                                        dropdown_fg_color="#FFFFFF",
+                                        dropdown_text_color="#000000",
+                                        dropdown_font=('Montserrat', 12))
         
         rightUpperRight = tk.Frame(upperRight, bg = "#1B2431")
         addUserButton = CTkButton(rightUpperRight, text = "Add User", font = ('Montserrat', 12, 'bold'), text_color = "#000000", fg_color = "#FFFFFF",

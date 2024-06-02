@@ -52,6 +52,7 @@ class AIController:
 
 cameraEnabled = False
 loggedIn = False
+currUser = None
 
 def bounding_box(frame, box, color, classNames):
     x1, y1, x2, y2 = box.xyxy[0]

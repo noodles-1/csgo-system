@@ -806,7 +806,7 @@ class DBController:
                     if newName:
                         stmt = stmt.values(name=newName)
                     if newLocation:
-                        stmt = stmt.values(location=newLocation)
+                        stmt = stmt.values(location=newLocation.lower())
                     session.execute(stmt)
                     session.commit()
                     response.ok = True
@@ -1318,57 +1318,4 @@ class DBController:
             response.ok = False
             response.messages['error'] = repr(e)
 
-        return response
-    
-    @staticmethod
-    def getEmailCredentials(user_id) -> dict:
-        '''
-        Retrieves email credentials from the User table in the database based on the user ID.
-
-        params:
-        - user_id: int => the ID of the user whose email credentials are to be fetched
-
-        returns:
-        - dict => contains 'email' and 'password' keys with their respective values
-        '''
-        try:
-            with Session(Connection.engine) as session:
-                stmt = select(User.email, User.password).where(User.id == user_id)
-                result = session.execute(stmt).fetchone()
-                if result:
-                    return {'email': result[0], 'password': result[1]}
-        except Exception as e:
-            with open('logs.txt', 'a') as file:
-                now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
-                file.write(f'[{now}] Error at function invocation controllers/dbController.py getEmailCredentials() - {repr(e)}\n')
-        return None
-    
-    @staticmethod
-    def emailResponse(email) -> Response:
-        '''
-        Checks if the email already exists in the User table in the database.
-
-        params:
-        - email: str => the email which will be checked for existence in the database
-
-        returns:
-        - DBController.Response => a response object containing the status, messages, and data of the query
-        '''
-        response = DBController.Response()
-        try:
-            with Session(Connection.engine) as session:
-                stmt = select(User).where(User.email == email)
-                result = session.scalar(stmt)
-                if result:
-                    response.ok = True
-                    response.data = result
-                else:
-                    response.ok = False
-                    response.messages['email'] = "Email does not exist."
-        except Exception as e:
-            response.ok = False
-            response.messages['error'] = "An error occurred while checking the email."
-            with open('logs.txt', 'a') as file:
-                now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
-                file.write(f'[{now}] Error at function invocation controllers/dbController.py emailExists() - {repr(e)}\n')
         return response

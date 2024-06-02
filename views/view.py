@@ -9,12 +9,12 @@ parent = os.path.dirname(current)
 sys.path.append(parent)
 
 from customtkinter import *
-from loginPageView import LoginPage
-from dashboardPageView import DashboardPage
-from analyticsPageView import AnalyticsPage
-from adminPageView import AdminPage
-from configPageView import ConfigPage
-from forgotPageView import ForgetPasswordPage
+from views.loginPageView import LoginPage
+from views.dashboardPageView import DashboardPage
+from views.analyticsPageView import AnalyticsPage
+from views.adminPageView import AdminPage
+from views.configPageView import ConfigPage
+from views.forgotPageView import ForgetPasswordPage
 from models.connect import Connection as connection
 from controllers.pollController import PollController
 

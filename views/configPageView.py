@@ -16,6 +16,7 @@ from tkinter import messagebox
 from PIL import Image
 from tkcalendar import Calendar
 from controllers.dbController import DBController
+from controllers.s3controller import S3Controller
 
 class ConfigPage(tk.Frame):
     def closeApplication(self):
@@ -68,6 +69,7 @@ class ConfigPage(tk.Frame):
                     id = int(values[0])
                     response = DBController.deleteCurrentSetting(id)
                     if response.ok:
+                        self.s3.updateAuditLog('Delete setting', f'Deleted current setting (starting hour={values[1]}, ending hour={values[2]}, day={values[3]})', cont.currUser)
                         self.leftDatabaseTable.delete(i)
                     
             elif caller == self.rightDatabaseTable:
@@ -76,6 +78,7 @@ class ConfigPage(tk.Frame):
                     id = int(values[0])
                     response = DBController.deleteFutureSetting(id)
                     if response.ok:
+                        self.s3.updateAuditLog('Delete setting', f'Deleted future setting (starting hour={values[1]}, ending hour={values[2]}, day={values[3]}, starting date={values[4]})', cont.currUser)
                         self.rightDatabaseTable.delete(i)
     
     def cancelButton_callback(self):
@@ -176,6 +179,7 @@ class ConfigPage(tk.Frame):
             response = DBController.editSetting(self.chosenId, hourFrom, hourTo, dayEntry, carDropdown == 'Enabled', motorDropdown == 'Enabled', busDropdown == 'Enabled', truckDropdown == 'Enabled', float(carPrice), float(motorPrice), float(busPrice), float(truckPrice), self.isCurrentSetting, startDate=selectedDate, startTime=selectedTime)
 
         if response.ok:
+            self.s3.updateAuditLog('Update setting', f'Updated settings with new setting (starting hour={hourFrom}, ending hour={hourTo}, day-{dayEntry}, {f"starting date={selectedDate}" if selectedDate else ""}, {f"starting time={selectedTime}" if selectedTime else ""}, can detect cars?={carDropdown}, can detect motorcycles?={motorDropdown}, can detect buses?={busDropdown}, can detect trucks?={truckDropdown}, car charge={carPrice}, motorcycle charge={motorPrice}, bus charge={busPrice}, truck charge={truckPrice})', cont.currUser)
             self.statusLabel.configure(text='Setting successfully saved.', text_color="#25be8e")
             self.after(3000, lambda: self.statusLabel.configure(text_color="#1B2431"))
             self.clearInput()
@@ -380,6 +384,9 @@ class ConfigPage(tk.Frame):
 
     def logout_callback(self, parent):
         self.addNew_callback()
+        cont.loggedIn = False
+        cont.cameraEnabled = False
+        cont.currUser = None
         parent.show_frame(parent.loginFrame)
     
     def __init__(self, parent):
@@ -387,6 +394,7 @@ class ConfigPage(tk.Frame):
         self.selected_time = ''
         self.chosenId = None
         self.isCurrentSetting = None
+        self.s3 = S3Controller()
         
         tk.Frame.__init__(self, parent, bg = "#090E18")
         
