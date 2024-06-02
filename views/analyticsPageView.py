@@ -16,6 +16,7 @@ parent = os.path.dirname(current)
 sys.path.append(parent)
 
 import views.switchView as switch
+import controllers.controller as cont
 
 from datetime import datetime, timedelta
 from customtkinter import *
@@ -26,6 +27,7 @@ from matplotlib.figure import Figure
 from controllers.controller import ReportGenerationController as rgctrl
 from controllers.dbController import DBController
 from controllers.pollController import PollController
+from controllers.s3controller import S3Controller
 
 class AnalyticsPage(tk.Frame):
     # Close Application
@@ -37,6 +39,8 @@ class AnalyticsPage(tk.Frame):
         self.master.iconify()
     
     def downloadCSV(self):
+        s3 = S3Controller()
+        s3.updateAuditLog('Download CSV', 'User downloaded CSV for analytics', cont.currUser)
         rgctrl.downloadAndProcessCSV()
 
     def processDataDetected(self, df, hours):
@@ -101,14 +105,15 @@ class AnalyticsPage(tk.Frame):
                     'time': row.time
                 })
 
-            df = pd.DataFrame(data)
-            counts = self.processDataDetected(df, 24)
-            
-            self.axDetected.plot(counts.index, counts.values, color='blue')
-            self.axDetected.relim()
-            self.axDetected.autoscale_view()
-            self.figDetected.canvas.draw()
-            self.figDetected.canvas.flush_events()
+            if data:
+                df = pd.DataFrame(data)
+                counts = self.processDataDetected(df, 24)
+                
+                self.axDetected.plot(counts.index, counts.values, color='blue')
+                self.axDetected.relim()
+                self.axDetected.autoscale_view()
+                self.figDetected.canvas.draw()
+                self.figDetected.canvas.flush_events()
         self.detectedVehiclesTimer = self.master.after(30000, self.detectedVehiclesPoll, location)
 
     def revenuePoll(self, location):
@@ -134,14 +139,15 @@ class AnalyticsPage(tk.Frame):
                     'time': row.time
                 })
 
-            df = pd.DataFrame(data)
-            counts = self.processDataRevenue(df, 2)
-            
-            self.axRevenue.plot(counts.index, counts.values, color='blue')
-            self.axRevenue.relim()
-            self.axRevenue.autoscale_view()
-            self.figRevenue.canvas.draw()
-            self.figRevenue.canvas.flush_events()
+            if data:
+                df = pd.DataFrame(data)
+                counts = self.processDataRevenue(df, 2)
+                
+                self.axRevenue.plot(counts.index, counts.values, color='blue')
+                self.axRevenue.relim()
+                self.axRevenue.autoscale_view()
+                self.figRevenue.canvas.draw()
+                self.figRevenue.canvas.flush_events()
         self.revenueTimer = self.master.after(30000, self.revenuePoll, location)
 
     def busiestPoll(self, location):
@@ -167,14 +173,15 @@ class AnalyticsPage(tk.Frame):
                     'time': row.time
                 })
 
-            df = pd.DataFrame(data)
-            counts = self.processDataDetected(df, 2)
-            
-            self.axBusiest.plot(counts.index, counts.values, color='blue')
-            self.axBusiest.relim()
-            self.axBusiest.autoscale_view()
-            self.figBusiest.canvas.draw()
-            self.figBusiest.canvas.flush_events()
+            if data:
+                df = pd.DataFrame(data)
+                counts = self.processDataDetected(df, 2)
+                
+                self.axBusiest.plot(counts.index, counts.values, color='blue')
+                self.axBusiest.relim()
+                self.axBusiest.autoscale_view()
+                self.figBusiest.canvas.draw()
+                self.figBusiest.canvas.flush_events()
         self.busiestTimer = self.master.after(30000, self.busiestPoll, location)
     
     def detectedVehiclesLocation_callback(self, location: str):

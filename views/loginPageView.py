@@ -40,6 +40,7 @@ class LoginPage(tk.Frame):
             parent.setUser(response.data)
             switch.showDashboardPage(parent)
             cont.loggedIn = True
+            cont.currUser = response.data
         else:
             incorrectLabel.configure(text=(response.messages['username'] or response.messages['password']))
             self.incorrectCredentials(incorrectLabel)

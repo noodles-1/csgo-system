@@ -1,9 +1,10 @@
-import tkinter as tk
-from tkinter import messagebox
 import re
 import os
 import sys
 import time
+import tkinter as tk
+
+from tkinter import messagebox
 from customtkinter import *
 from PIL import Image
 
@@ -11,9 +12,11 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
-from controllers.dbController import DBController as db
 import controllers.controller as cont
+
 from controllers.controller import AccountController as ac
+from controllers.dbController import DBController as db
+from controllers.s3controller import S3Controller
 
 class ForgetPasswordPage(tk.Frame):
     # Close Application
@@ -25,6 +28,8 @@ class ForgetPasswordPage(tk.Frame):
         self.master.iconify()
         
     def __init__(self, parent):
+        self.s3 = S3Controller()
+
         tk.Frame.__init__(self, parent)
 
         closePhoto = CTkImage(light_image = Image.open("views/icons/icon_close_darkmode.png"),
@@ -123,8 +128,10 @@ class ForgetPasswordPage(tk.Frame):
         email = self.email_entry.get()
         if self.email_in_database(email):
             if time.time() - self.otp_sent_time >= self.timer_value:
+                user = db.getUser(email=email)
+                self.s3.updateAuditLog('OTP request', f'User {user.email} requested for OTP', user)
                 self.clear_main_widgets()
-                self.ask_otp(email)
+                self.ask_otp(email, user)
             else:
                 messagebox.showerror("Error", "Please wait before requesting another OTP")
         else:
@@ -134,7 +141,7 @@ class ForgetPasswordPage(tk.Frame):
         for widget in self.innerMainFrame.winfo_children():
             widget.pack_forget()
 
-    def ask_otp(self, receiver_email):
+    def ask_otp(self, receiver_email, user):
         self.otp = ac.generate_OTP()
         self.otp_sent_time = time.time()  # Record the time when OTP is sent
         ac.send_OTP(receiver_email, self.otp)
@@ -144,7 +151,7 @@ class ForgetPasswordPage(tk.Frame):
         self.otp_entry = CTkEntry(self.innerMainFrame, placeholder_text="123456", text_color='#000000', fg_color='#FFFFFF', corner_radius=15, font=('Montserrat', 12))
         self.otp_entry.pack(pady=(0, 5))
 
-        self.submit_button.configure(text="Submit", command=lambda: self.submit_otp(receiver_email))
+        self.submit_button.configure(text="Submit", command=lambda: self.submit_otp(receiver_email, user))
         self.submit_button.pack()
 
         # Timer Label
@@ -174,15 +181,17 @@ class ForgetPasswordPage(tk.Frame):
         self.clear_main_widgets()
         self.ask_otp(self.email_entry.get())
 
-    def submit_otp(self, email):
+    def submit_otp(self, email, user):
         otp = self.otp_entry.get()
         if self.otp_matches(otp) and time.time() - self.otp_sent_time <= 300:  # Check if OTP is submitted within 5 minutes
+            self.s3.updateAuditLog('OTP match', f'User {user.email} inputted correct OTP', user)
             self.clear_main_widgets()
-            self.change_password(email)
+            self.change_password(email, user)
         else:
+            self.s3.updateAuditLog('OTP mismatch', f'User {user.email} inputted incorrect or invalid OTP', user)
             messagebox.showerror("Error", "Invalid OTP or OTP expired")
 
-    def change_password(self, email):
+    def change_password(self, email, user):
         self.new_password_label = CTkLabel(self.innerMainFrame, text="New Password:", font=('Montserrat', 15), text_color='#FFFFFF')
         self.new_password_label.pack(pady=(5, 0))
 
@@ -195,16 +204,17 @@ class ForgetPasswordPage(tk.Frame):
         self.confirm_password_entry = CTkEntry(self.innerMainFrame, show="*", font=('Montserrat', 12), text_color='#000000', fg_color='#FFFFFF', corner_radius=15)
         self.confirm_password_entry.pack(pady=(0, 5))
 
-        self.submit_button.configure(text="Submit", command=lambda: self.submit_password(email))
+        self.submit_button.configure(text="Submit", command=lambda: self.submit_password(email, user))
         self.submit_button.pack(pady=15)
 
-    def submit_password(self, email):
+    def submit_password(self, email, user):
         new_password = self.new_password_entry.get()
         confirm_password = self.confirm_password_entry.get()
 
         if new_password == confirm_password:
             response = db.changePassword(email, new_password, confirm_password)
             if response.ok:
+                self.s3.updateAuditLog('Password change (forgot password)', f'User {user.email} changed password', user)
                 messagebox.showinfo("Success", "Password changed successfully")
                 self.master.show_frame(self.master.loginFrame)
                 cont.cameraEnabled = False
@@ -215,11 +225,11 @@ class ForgetPasswordPage(tk.Frame):
             messagebox.showerror("Error", "Passwords do not match")
 
     def email_in_database(self, email):
-        response = db.emailResponse(email)
-        if response.ok:
+        result = db.emailExists(email=email)
+        if result:
             return True
         else:
-            messagebox.showerror("Error", response.messages['email'])
+            messagebox.showerror("Error", 'Email does not exist.')
             return False
 
     def otp_matches(self, otp):
