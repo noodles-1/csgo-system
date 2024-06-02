@@ -60,18 +60,12 @@ class DashboardPage(tk.Frame):
         
         self.after(1000, self.update_uptime)
     
-    def update_vehiclecount(self):
-        # should only increment if there is a unique detection or row insertion in the database
-        # if  () then self.vehicle_count += 1
-        
-        self.vehiclesDetectedCount.configure(text=str(self.vehicle_count))
-        self.after(1000, self.update_vehiclecount)
-    
     class StartCamera:
         def __init__(self, currUser):
             self.currUser = currUser
+            self.vehicleCount = 0
 
-        def start(self, cap, placeholder_label, cameraId, databaseTable):
+        def start(self, cap, placeholder_label, cameraId, databaseTable, vehiclesDetectedCount):
             if AIController.vehicle_detection_model.predictor:
                 AIController.vehicle_detection_model.predictor.trackers[0].reset()
 
@@ -101,6 +95,9 @@ class DashboardPage(tk.Frame):
 
                             id = int(boxes.id.item())
                             vehicle_id = int(boxes.cls.item())
+
+                            self.vehicleCount = max(self.vehicleCount, id)
+                            vehiclesDetectedCount.configure(text=f'{self.vehicleCount}')
                             
                             if id in detected_ids:
                                 continue
@@ -207,7 +204,7 @@ class DashboardPage(tk.Frame):
         cameraUrl = f'rtsp://{ip_addr}:554'
 
         self.cap = cv2.VideoCapture('https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/IMG_9613_1.mp4')
-        DashboardPage.StartCamera(self.currUser).start(self.cap, self.placeholder_label, ip_addr, self.databaseTable)
+        DashboardPage.StartCamera(self.currUser).start(self.cap, self.placeholder_label, ip_addr, self.databaseTable, self.vehiclesDetectedCount)
         
         self.uptime_seconds = 0
         self.counting_enabled = True
@@ -448,4 +445,3 @@ class DashboardPage(tk.Frame):
         settingsButton.bind("<Leave>", lambda event: settingsButton.configure(text_color="#48BFE3", fg_color = "#090E18")) 
 
         self.update_uptime()
-        self.update_vehiclecount()
