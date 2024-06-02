@@ -26,10 +26,6 @@ class LoginPage(tk.Frame):
     def incorrectCredentials(self, incorrectLabel: CTkLabel):
         incorrectLabel.configure(text_color = "#d62828")
         self.after(2000, lambda: incorrectLabel.configure(text_color="#000000"))
-    
-    # Function that is called to go to the Forgot Password Page (Unfinished)
-    def forgotPasswordFunction(self):
-        self.show_email_popup()
         
     # Function that is called when clicking Login
     def verifyCredentials(self, parent, usernameEntry: CTkEntry, passwordEntry: CTkEntry, incorrectLabel: CTkLabel):

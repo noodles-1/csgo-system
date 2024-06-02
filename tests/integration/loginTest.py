@@ -11,7 +11,6 @@ root = os.path.dirname(parent)
 sys.path.append(root)
 
 from views.loginPageView import LoginPage
-from controllers import dbController as db
 
 '''
 Mock Classes:
@@ -25,6 +24,10 @@ TestLoginPage Class:
         & Arrange: Sets up the mock response for a valid login and initializes the necessary UI elements.
         & Action: Calls the verifyCredentials method to test the login functionality.
         & Assert: Verifies that the user data is correctly set and the dashboard frame is displayed.
+    > test_invalid_login:
+        & Arrange: Sets up the mock response for an invalid login and initializes the necessary UI elements.
+        & Action: Calls the verifyCredentials method to test the login functionality.
+        & Assert: Verifies that the appropriate error message is displayed and the dashboard frame is not shown.
 
 Notes:
     > MockParent class includes a show_frame method to avoid errors when verifyCredentials calls switch.showDashboardPage.
@@ -79,6 +82,25 @@ class TestLoginPage(unittest.TestCase):
         
         self.assertEqual(self.mock_parent.currUser, {'username': 'valid_user'})
         self.assertTrue(self.mock_parent.dashboardFrame.winfo_ismapped())
+
+    @patch('controllers.dbController.DBController.loginUser')
+    def test_invalid_login(self, mock_login_user):
+        mock_response = MagicMock()
+        mock_response.ok = False
+        mock_response.data = {'error': 'Invalid credentials'}
+        mock_login_user.return_value = mock_response
+        
+        usernameEntry = CTkEntry(self.root)
+        passwordEntry = CTkEntry(self.root)
+        incorrectLabel = CTkLabel(self.root, text="")
+        
+        usernameEntry.insert(0, 'invalid_user')
+        passwordEntry.insert(0, 'invalid_password')
+
+        self.login_page.verifyCredentials(self.mock_parent, usernameEntry, passwordEntry, incorrectLabel)
+        
+        self.assertIsNone(self.mock_parent.currUser)
+        self.assertFalse(self.mock_parent.dashboardFrame.winfo_ismapped())
 
 if __name__ == '__main__':
     unittest.main()
