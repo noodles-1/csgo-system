@@ -26,17 +26,19 @@ class ForgetPasswordPage(tk.Frame):
     # Minimize or Iconify the Application
     def minimizeApplication(self):
         self.master.iconify()
-        
+    
     def __init__(self, parent):
         self.s3 = S3Controller()
 
         tk.Frame.__init__(self, parent)
-
+        self.initializePage()
+        
+    def initializePage(self):
         closePhoto = CTkImage(light_image = Image.open("views/icons/icon_close_darkmode.png"),
                               dark_image = Image.open("views/icons/icon_close_darkmode.png"),
                               size = (20, 20))
 
-        # Minimize Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
+        # Minimize Icon (Currently Set to darkmode, if possible change to lightmode when the changes)
         minimizePhoto = CTkImage(light_image = Image.open("views/icons/icon_minimize_darkmode.png"),
                               dark_image = Image.open("views/icons/icon_minimize_darkmode.png"),
                               size = (20, 20))
@@ -97,15 +99,7 @@ class ForgetPasswordPage(tk.Frame):
         cancelButton.bind("<Leave>", lambda event: cancelButton.configure(text_color="#5E60CE", fg_color = "#090E18")) 
 
         # Email Entry and Submit Button
-        self.email_label = CTkLabel(self.innerMainFrame, text="Email Address", text_color="#FFFFFF", font=('Montserrat', 15))
-        self.email_label.pack(pady=(5, 0))
-
-        self.email_entry = CTkEntry(self.innerMainFrame, placeholder_text="juandelacruz@domain.com", text_color="#000000", fg_color="#FFFFFF", corner_radius=15, width=250, height=30)
-        self.email_entry.pack(pady=(0, 5))
-        self.email_entry.bind("<KeyRelease>", self.validate_email)
-
-        self.submit_button = CTkButton(self.innerMainFrame, text="Submit", state="disabled", command=self.submit_email, corner_radius=15, fg_color="#FFFFFF", text_color="#000000", height=30)
-        self.submit_button.pack(pady=(10,5))
+        self.show_email()
 
         self.otp_label = None
         self.otp_entry = None
@@ -117,6 +111,18 @@ class ForgetPasswordPage(tk.Frame):
         self.timer_value = 30 
         self.otp_sent_time = 0
 
+    def show_email(self):
+        # Email Entry and Submit Button
+        self.email_label = CTkLabel(self.innerMainFrame, text="Email Address", text_color="#FFFFFF", font=('Montserrat', 15))
+        self.email_label.pack(pady=(5, 0))
+
+        self.email_entry = CTkEntry(self.innerMainFrame, placeholder_text="juandelacruz@domain.com", text_color="#000000", fg_color="#FFFFFF", corner_radius=15, width=250, height=30)
+        self.email_entry.pack(pady=(0, 5))
+        self.email_entry.bind("<KeyRelease>", self.validate_email)
+
+        self.submit_button = CTkButton(self.innerMainFrame, text="Submit", state="disabled", command=self.submit_email, corner_radius=15, fg_color="#FFFFFF", text_color="#000000", height=30)
+        self.submit_button.pack(pady=(10,5))
+    
     def validate_email(self, event):
         email = self.email_entry.get()
         if re.match(r"[^@]+@[^@]+\.[^@]+", email):
@@ -177,9 +183,10 @@ class ForgetPasswordPage(tk.Frame):
             self.timer_label.configure(text="")
             self.timer_value = 30  # Reset cooldown timer
 
-    def request_another_otp(self):
+    def request_another_otp(self, email):
         self.clear_main_widgets()
-        self.ask_otp(self.email_entry.get())
+        self.timer_value = 30  # Reset the timer value
+        self.ask_otp(email)
 
     def submit_otp(self, email, user):
         otp = self.otp_entry.get()
@@ -216,6 +223,7 @@ class ForgetPasswordPage(tk.Frame):
             if response.ok:
                 self.s3.updateAuditLog('Password change (forgot password)', f'User {user.email} changed password', user)
                 messagebox.showinfo("Success", "Password changed successfully")
+                self.reset_page()
                 self.master.show_frame(self.master.loginFrame)
                 cont.cameraEnabled = False
                 cont.loggedIn = False
@@ -236,6 +244,23 @@ class ForgetPasswordPage(tk.Frame):
         return self.otp == otp
     
     def cancelButton_callback(self):
+        self.reset_page()
         self.master.show_frame(self.master.loginFrame)
         cont.cameraEnabled = False
         cont.loggedIn = False
+        
+    def reset_page(self):
+        self.email_entry.delete(0, tk.END)
+        self.email_entry.configure(state="normal")
+        self.submit_button.configure(state="disabled")
+        self.clear_main_widgets()
+        self.timer_value = 30
+        self.otp_label = None
+        self.otp_entry = None
+        self.new_password_label = None
+        self.new_password_entry = None
+        self.confirm_password_label = None
+        self.confirm_password_entry = None
+        self.timer_label = None
+        self.otp_sent_time = 0
+        self.show_email()

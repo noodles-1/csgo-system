@@ -260,6 +260,7 @@ class AccountController:
         <html>
             <body>
                 <p>We have received a request to access the account {receiver_email}.</p>
+                <p>This code is only valid for 5 minutes</p>
                 <p>Your Security code is:</p>
                 <br>
                 <p style = "text-align:center; font-size:20px; font-weight:bold;">{otp}</p>

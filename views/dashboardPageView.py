@@ -196,6 +196,7 @@ class DashboardPage(tk.Frame):
     
     # Function to change the camera displayed
     def changeCameraDisplay_callback(self, cameraName):
+        print("Callback called with camera name:", cameraName)
         if self.cap:
             self.cap.release()
 
@@ -292,7 +293,7 @@ class DashboardPage(tk.Frame):
         # Goes to the Admin Page (Should be disabled unless the user logged in is an Admin)
         self.adminButton = CTkButton(bottomFrame,
                                 text = 'Admin',
-                                command = lambda: switch.showAdminPage(parent, changeCameraDisplay, self.cap, self.placeholder_label), 
+                                command = lambda: switch.showAdminPage(parent, self.changeCameraDisplay, self.cap, self.placeholder_label), 
                                 font = ('Montserrat', 15),
                                 border_width = 2,
                                 corner_radius = 15,
@@ -418,9 +419,9 @@ class DashboardPage(tk.Frame):
 
         cameras = DBController.getCameras()
         
-        changeCameraDisplay = CTkComboBox(dropdownFrame, values=[camera[0].name for camera in cameras.data], command=self.changeCameraDisplay_callback, width=100, state='readonly')
-        changeCameraDisplay.set('(NONE)')
-        changeCameraDisplay.pack(side = "right")
+        self.changeCameraDisplay = CTkComboBox(dropdownFrame, values=[camera[0].name for camera in cameras.data], command=self.changeCameraDisplay_callback, width=100, state='readonly')
+        self.changeCameraDisplay.set('(NONE)')
+        self.changeCameraDisplay.pack(side = "right")
         
         changeCameraLabel = CTkLabel(dropdownFrame, text = "Change Camera", font = ('Montserrat', 13), text_color = "#FFFFFF")
         changeCameraLabel.pack(side = "right", padx = 10)
