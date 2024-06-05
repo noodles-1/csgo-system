@@ -65,17 +65,18 @@ class DashboardPage(tk.Frame):
             self.currUser = currUser
             self.vehicleCount = 0
 
+        @staticmethod
+        def isValidLicensePlate(licensePlate: str) -> bool:
+            regex1 = r'^[A-Z]{3}\d{3,4}$'
+            regex2 = r'^\d{3,4}[A-Z]{3}$'
+            return re.fullmatch(regex1, licensePlate) is not None or re.fullmatch(regex2, licensePlate) is not None
+        
         def start(self, cap, placeholder_label, cameraId, databaseTable, vehiclesDetectedCount):
             if AIController.vehicle_detection_model.predictor:
                 AIController.vehicle_detection_model.predictor.trackers[0].reset()
 
             detected_ids = set()
 
-            def isValidLicensePlate(licensePlate: str) -> bool:
-                regex1 = r'^[A-Z]{3}\d{3,4}$'
-                regex2 = r'^\d{3,4}[A-Z]{3}$'
-                return re.fullmatch(regex1, licensePlate) is not None or re.fullmatch(regex2, licensePlate) is not None
-                
             def showFrame():
                 success, frame = cap.read()
                 currSetting = PollController.currSetting
@@ -151,7 +152,7 @@ class DashboardPage(tk.Frame):
                                 temp = [extracted_lp_results[i]['text'] for i in range(len(extracted_lp_results))]
                                 extracted_lp = ''.join(temp).replace(' ', '')
                                 
-                                if not isValidLicensePlate(extracted_lp):
+                                if not DashboardPage.StartCamera.isValidLicensePlate(extracted_lp):
                                     detected_ids.remove(id)
                                     continue
                                 

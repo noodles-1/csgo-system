@@ -76,7 +76,7 @@ async def poll():
     while True:
         PollController.updateFutureSettings()
         PollController.updateActiveSetting()
-        await asyncio.sleep(60)
+        await asyncio.sleep(30)
 
 if __name__ == "__main__":
     connection.connect('database/test.db')
