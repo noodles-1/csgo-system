@@ -107,6 +107,7 @@ class DashboardPage(tk.Frame):
                             x1, y1, x2, y2 = boxes.xyxy[0]
                             cropped_vehicle = frame[int(y1.item()):int(y2.item()), int(x1.item()):int(x2.item())]
                             extracted_lp = None
+
                             
                             if currSetting:
                                 lp_result = AIController.detect_license_plate(frame=cropped_vehicle)

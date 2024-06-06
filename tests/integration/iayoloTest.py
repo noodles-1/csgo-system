@@ -10,6 +10,7 @@ sys.path.append(root)
 
 from unittest.mock import Mock, MagicMock, patch
 from views.dashboardPageView import DashboardPage
+from views.dashboardPageView import socket
 
 class TestIAYOLO(unittest.TestCase):
     @patch('views.dashboardPageView.ImageTk')
@@ -22,7 +23,7 @@ class TestIAYOLO(unittest.TestCase):
     @patch('views.dashboardPageView.SocketController')
     @patch('views.dashboardPageView.socket.socket')
     @patch('views.dashboardPageView.AIController')
-    @patch('views.dashboardPageView.PollController.currSetting', Mock())
+    @patch('views.dashboardPageView.PollController.currSetting', Mock(id=Mock(return_value=1)))
     @patch('views.dashboardPageView.cont.loggedIn', True)
     @patch('views.dashboardPageView.cont.cameraEnabled', True)
     @patch('views.dashboardPageView.AIController.vehicle_detection_model.predictor', False)
@@ -45,11 +46,7 @@ class TestIAYOLO(unittest.TestCase):
         mock_lp_result.boxes = [mock_lp_box]
         mock_ai_controller.detect_license_plate.return_value = [mock_lp_result]
 
-        mock_socket.return_value = Mock()
-        mock_socket.connect = MagicMock()
-        mock_socket_controller.sendImage = MagicMock()
-        mock_socket.controller.receiveImage.return_value = [Mock(return_value=1)]
-        mock_socket.close = MagicMock()
+        mock_socket_controller.receiveImage.return_value = [Mock(return_value=1)]
 
         mock_cv2.resize.return_value = [Mock(return_value=1)]
         mock_cv2.cvtColor.return_value = [Mock(return_value=2)]
@@ -69,10 +66,15 @@ class TestIAYOLO(unittest.TestCase):
         mock_image.fromarray.return_value = Mock(return_value=1)
         mock_image_tk.PhotoImage.return_value = Mock(return_value=2)
 
-        start_camera = DashboardPage.StartCamera({'id': 0})
+        start_camera = DashboardPage.StartCamera(Mock(id=Mock(return_value=1)))
         start_camera.start(mock_cap, Mock(), 1, Mock(), Mock())
+        
         self.assertEqual(start_camera.vehicleCount, 1)
         self.assertEqual(mock_ai_controller.setVehicleClasses.call_count, 4)
+        mock_socket.return_value.connect.assert_called_once()
+        mock_socket_controller.sendImage.assert_called_once()
+        mock_socket_controller.receiveImage.assert_called_once()
+        mock_socket.return_value.close.assert_called_once()
 
 if __name__ == '__main__':
     unittest.main()
