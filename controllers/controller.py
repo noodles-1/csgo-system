@@ -51,6 +51,7 @@ class AIController:
                 AIController.vehicleClasses.remove(id)
 
 cameraEnabled = False
+dipModule = 0
 loggedIn = False
 currUser = None
 

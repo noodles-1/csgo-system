@@ -8,9 +8,8 @@ parent = os.path.dirname(current)
 root = os.path.dirname(parent)
 sys.path.append(root)
 
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock, patch
 from views.dashboardPageView import DashboardPage
-from views.dashboardPageView import socket
 
 class TestIAYOLO(unittest.TestCase):
     @patch('views.dashboardPageView.ImageTk')
@@ -24,6 +23,7 @@ class TestIAYOLO(unittest.TestCase):
     @patch('views.dashboardPageView.socket.socket')
     @patch('views.dashboardPageView.AIController')
     @patch('views.dashboardPageView.PollController.currSetting', Mock(id=Mock(return_value=1)))
+    @patch('views.dashboardPageView.cont.dipModule', 2)
     @patch('views.dashboardPageView.cont.loggedIn', True)
     @patch('views.dashboardPageView.cont.cameraEnabled', True)
     @patch('views.dashboardPageView.AIController.vehicle_detection_model.predictor', False)

@@ -119,22 +119,23 @@ class DashboardPage(tk.Frame):
                                 x1, y1, x2, y2 = lp_result[0].boxes[0].xyxy[0]
                                 cropped_lp = cropped_vehicle[int(y1.item()):int(y2.item()), int(x1.item()):int(x2.item())]
 
-                                # client_socket_foggy = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                                client_socket_lowlight = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                                # client_socket_foggy.connect(('localhost', 8001))
-                                client_socket_lowlight.connect(('localhost', 8000))
+                                if cont.dipModule == 2:
+                                    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                                    client_socket.connect(('localhost', 8001))
+                                elif cont.dipModule == 1:
+                                    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                                    client_socket.connect(('localhost', 8000))
+                                if cont.dipModule != 0:
+                                    SocketController.sendImage(client_socket, cropped_lp)
+                                    processed_lp = SocketController.receiveImage(client_socket)
+                                    client_socket.close()
 
-                                SocketController.sendImage(client_socket_lowlight, cropped_lp)
-                                processed_lp = SocketController.receiveImage(client_socket_lowlight)
-
-                                client_socket_lowlight.close()
-
-                                if processed_lp is None:
-                                    detected_ids.remove(id)
-                                    continue
+                                    if processed_lp is None:
+                                        detected_ids.remove(id)
+                                        continue
 
                                 # Convert to grayscale
-                                gray = cv2.cvtColor(processed_lp, cv2.COLOR_BGR2GRAY)
+                                gray = cv2.cvtColor(processed_lp if cont.dipModule != 0 else cropped_lp, cv2.COLOR_BGR2GRAY)
 
                                 # Apply Gaussian Blur to reduce noise
                                 blur = cv2.GaussianBlur(gray, (5, 5), 0)
@@ -215,6 +216,9 @@ class DashboardPage(tk.Frame):
     def setCurrUser(self, user):
         self.currUser = user
         self.adminButton.configure(state='disabled' if not user.isAdmin else 'normal')
+    
+    def dipModuleRadio_callback(self):
+        cont.dipModule = self.dipModuleVar.get()
 
     def __init__(self, parent):
         self.cap = None
@@ -382,6 +386,9 @@ class DashboardPage(tk.Frame):
         
         topLeftMainFrame = tk.Frame(leftMainFrame, bg = "#090E18")
         middleLeftMainFrame = tk.Frame(leftMainFrame, bg = "#090E18")
+        middleLeftMainFrameInner = tk.Frame(middleLeftMainFrame, bg = '#090E18')
+        middleLeftMainFrameInnerUpper = tk.Frame(middleLeftMainFrameInner, bg = '#090E18')
+        middleLeftMainFrameInnerLower = tk.Frame(middleLeftMainFrameInner, bg = '#090E18')
         bottomLeftMainFrame = tk.Frame(leftMainFrame, bg = "#090E18")
 
         bottomLeftMainFrame.pack(side = 'bottom', fill = 'both', padx = 10)
@@ -442,7 +449,25 @@ class DashboardPage(tk.Frame):
                                     corner_radius = 15,
                                     font = ('Montserrat', 15))
         
+        self.dipModuleVar = IntVar(value = 0)
+
+        dipModuleLabel = CTkLabel(middleLeftMainFrameInnerUpper, text = 'Select filter', font = ('Montserrat', 12))
+        noneRadioButton = CTkRadioButton(master=middleLeftMainFrameInnerLower, text="Remove filter",
+                                            value=0, variable = self.dipModuleVar, command = self.dipModuleRadio_callback)
+        lowLightRadioButton = CTkRadioButton(master=middleLeftMainFrameInnerLower, text="Lowlight filter",
+                                            value=1, variable = self.dipModuleVar, command = self.dipModuleRadio_callback)
+        foggyRadioButton = CTkRadioButton(master=middleLeftMainFrameInnerLower, text="Foggy filter",
+                                            value=2, variable = self.dipModuleVar, command = self.dipModuleRadio_callback)
+
+        
         settingsButton.pack(side = 'left', padx = 5, pady = 20)
+        middleLeftMainFrameInner.pack(side = tk.RIGHT, padx = 5, pady = 5)
+        middleLeftMainFrameInnerUpper.pack(side = tk.TOP)
+        middleLeftMainFrameInnerLower.pack(side = tk.TOP)
+        dipModuleLabel.pack(expand = True, fill = 'x', padx = 5, pady = 0)
+        noneRadioButton.pack(padx=20, pady=5, side=tk.LEFT)
+        lowLightRadioButton.pack(padx=20, pady=5, side=tk.LEFT)
+        foggyRadioButton.pack(padx=20, pady=5, side=tk.LEFT)
         
         settingsButton.bind("<Enter>", lambda event: settingsButton.configure(text_color="#090E18", fg_color = "#48BFE3")) 
         settingsButton.bind("<Leave>", lambda event: settingsButton.configure(text_color="#48BFE3", fg_color = "#090E18")) 
