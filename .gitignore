@@ -11,6 +11,7 @@ venv38
 userSession
 
 logs.txt
+.venv
 .pt
 *.jpg
 **/.env
@@ -22,4 +23,5 @@ logs.txt
 
 .vscode/settings.json
 tests/unit/test_vehicle_pricing_app.py
+metrics/cnocr/images
 database/test.db
