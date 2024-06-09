@@ -3,8 +3,8 @@ import sys
 import tkinter as tk
 
 current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-sys.path.append(parent)
+parent_dir = os.path.dirname(current)
+sys.path.append(parent_dir)
 
 import controllers.controller as cont
 import views.switchView as switch
@@ -12,7 +12,6 @@ import views.switchView as switch
 from datetime import datetime
 from customtkinter import *
 from tkinter import ttk
-from tkinter import messagebox
 from PIL import Image
 from tkcalendar import Calendar
 from controllers.dbController import DBController
@@ -403,13 +402,13 @@ class ConfigPage(tk.Frame):
         style.theme_use('forest-dark')
         
         # Close Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
-        closePhoto = CTkImage(light_image = Image.open("views/icons/icon_close_lightmode.png"),
-                            dark_image = Image.open("views/icons/icon_close_darkmode.png"),
+        closePhoto = CTkImage(light_image = Image.open(os.path.join(parent_dir, "views/icons/icon_close_lightmode.png")),
+                            dark_image = Image.open(os.path.join(parent_dir, "views/icons/icon_close_darkmode.png")),
                             size = (20, 20))
 
         # Minimize Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
-        minimizePhoto = CTkImage(light_image = Image.open("views/icons/icon_minimize_lightmode.png"),
-                            dark_image = Image.open("views/icons/icon_minimize_darkmode.png"),
+        minimizePhoto = CTkImage(light_image = Image.open(os.path.join(parent_dir, "views/icons/icon_minimize_lightmode.png")),
+                            dark_image = Image.open(os.path.join(parent_dir, "views/icons/icon_minimize_darkmode.png")),
                             size = (20, 20))
         
         # Top-most Frame that holds the Close and Minimize buttons.

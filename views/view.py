@@ -5,8 +5,8 @@ import tkinter as tk
 import tk_async_execute as tk_async
 
 current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-sys.path.append(parent)
+parent_dir = os.path.dirname(current)
+sys.path.append(parent_dir)
 
 from customtkinter import *
 from views.loginPageView import LoginPage
@@ -25,9 +25,9 @@ class MainWindow(tk.Tk):
         super().__init__()
         self.title("Toll-less Toll by CSGO")
         self.attributes('-fullscreen', True)
-        self.tk.call('source', 'views/assets/theme/forest-dark.tcl')
+        self.tk.call('source', os.path.join(parent_dir, 'views/assets/theme/forest-dark.tcl'))
         
-        icon = tk.PhotoImage(file = 'views/assets/app-icon.png')
+        icon = tk.PhotoImage(file = os.path.join(parent_dir, 'views/assets/app-icon.png'))
         
         self.iconphoto(True, icon)
         
@@ -79,7 +79,7 @@ async def poll():
         await asyncio.sleep(30)
 
 if __name__ == "__main__":
-    connection.connect('database/test.db')
+    connection.connect(os.path.join(parent_dir, 'database/test.db'))
 
     loop = asyncio.get_event_loop()
     loop.create_task(runAsync())

@@ -27,4 +27,3 @@ logs.txt
 .vscode/settings.json
 tests/unit/test_vehicle_pricing_app.py
 metrics/cnocr/images
-database/test.db

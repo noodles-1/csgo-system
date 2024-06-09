@@ -12,8 +12,8 @@ from tkinter import ttk
 from PIL import Image, ImageTk
 
 current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-sys.path.append(parent)
+parent_dir = os.path.dirname(current)
+sys.path.append(parent_dir)
 
 import controllers.controller as cont
 import views.switchView as switch
@@ -235,13 +235,13 @@ class DashboardPage(tk.Frame):
         style.theme_use('forest-dark')
         
         # Close Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
-        closePhoto = CTkImage(light_image = Image.open("views/icons/icon_close_darkmode.png"),
-                              dark_image = Image.open("views/icons/icon_close_darkmode.png"),
+        closePhoto = CTkImage(light_image = Image.open(os.path.join(parent_dir, "views/icons/icon_close_darkmode.png")),
+                              dark_image = Image.open(os.path.join(parent_dir, "views/icons/icon_close_darkmode.png")),
                               size = (20, 20))
 
         # Minimize Icon (Currently Set to darkmode, if possible change to lightmode when the the changes)
-        minimizePhoto = CTkImage(light_image = Image.open("views/icons/icon_minimize_darkmode.png"),
-                              dark_image = Image.open("views/icons/icon_minimize_darkmode.png"),
+        minimizePhoto = CTkImage(light_image = Image.open(os.path.join(parent_dir, "views/icons/icon_minimize_darkmode.png")),
+                              dark_image = Image.open(os.path.join(parent_dir, "views/icons/icon_minimize_darkmode.png")),
                               size = (20, 20))
 
         # Top-most Frame that holds the Close and Minimize buttons.

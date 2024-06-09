@@ -23,8 +23,8 @@ from controllers.dbController import DBController
 
 class AIController:
     vehicleClasses = set([2, 3, 5, 7])
-    vehicle_detection_model = YOLO('yolov8n.pt')
-    lp_detection_model = YOLO('trained_models/lp_detection/trained_yolov8n_3.pt')
+    vehicle_detection_model = YOLO(os.path.join(parent, 'yolov8n.pt'))
+    lp_detection_model = YOLO(os.path.join(parent, 'trained_models/lp_detection/trained_yolov8n_3.pt'))
     cnocr = CnOcr(det_model_name='en_PP-OCRv3_det', rec_model_name='en_PP-OCRv3')
     device = '0' if torch.cuda.is_available() else 'cpu'
 

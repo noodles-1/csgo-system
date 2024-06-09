@@ -8,13 +8,11 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
-import controllers.controller as cont
-
 from datetime import datetime
 from dotenv import load_dotenv
 from models.schemas import User
 
-load_dotenv(dotenv_path='.env')
+load_dotenv(dotenv_path=os.path.join(parent, '.env'))
 AWS_ACCESS_KEY = os.getenv('AWS_ACCESS_KEY_ID')
 AWS_SECRET_KEY = os.getenv('AWS_SECRET_KEY_ID')
 AWS_REGION = os.getenv('AWS_REGION')
@@ -48,7 +46,7 @@ class S3Controller:
         success, buffer = cv2.imencode('.jpg', image)
 
         if not success:
-            with open('logs.txt', 'a') as file:
+            with open(os.path.join(parent, 'logs.txt', 'a')) as file:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/s3controller.py uploadImage() - failed to encode image {image_name}\n')
             return None
@@ -69,17 +67,17 @@ class S3Controller:
         s3_key = f'{AWS_BUCKET_AUDIT_LOG_FOLDER}/audit-log.csv'
     
         try:
-            self.s3.download_file(AWS_BUCKET, s3_key, 'tempReports/auditLog.csv')
+            self.s3.download_file(AWS_BUCKET, s3_key, os.path.join(parent, 'tempReports/auditLog.csv'))
 
-            with open('tempReports/auditLog.csv', 'a', newline='') as file:
+            with open(os.path.join(parent, 'tempReports/auditLog.csv'), 'a', newline='') as file:
                 writer = csv.writer(file)
                 writer.writerow([datetime.now().strftime('%m/%d/%Y %H:%M:%S'), event, desc, user.id, user.username, user.email])
             
-            self.s3.upload_file('tempReports/auditLog.csv', AWS_BUCKET, s3_key)
-            os.remove('tempReports/auditLog.csv')
+            self.s3.upload_file(os.path.join(parent, 'tempReports/auditLog.csv'), AWS_BUCKET, s3_key)
+            os.remove(os.path.join(parent, 'tempReports/auditLog.csv'))
             return True
         except Exception as e:
-            with open('logs.txt', 'a') as file:
+            with open(os.path.join(parent, 'logs.txt'), 'a') as file:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/s3controller.py updateAuditLog() - {repr(e)}\n')
             return False
