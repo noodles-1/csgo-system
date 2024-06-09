@@ -1270,7 +1270,7 @@ class DBController:
         return response
     
     @staticmethod
-    def getLicenseData(location: str) -> Response:
+    def getLicenseData(location: str, hours: int) -> Response:
         '''
         Retrieves detected vehicles 2 hours from the current time on a
         location where they were detected.
@@ -1285,7 +1285,7 @@ class DBController:
 
         try:
             with Session(Connection.engine) as session:
-                time_24_hours_ago = (datetime.now() - timedelta(hours=2)).strftime('%Y-%m-%d %H:%M:%S')
+                time_24_hours_ago = (datetime.now() - timedelta(hours=hours)).strftime('%Y-%m-%d %H:%M:%S')
                 stmt = select(DetectedLicensePlate).filter(
                     text(f"datetime(date || ' ' || time) >= '{time_24_hours_ago}'"),
                 ).where(DetectedLicensePlate.location == location)

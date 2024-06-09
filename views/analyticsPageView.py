@@ -91,7 +91,7 @@ class AnalyticsPage(tk.Frame):
             self.axDetected.tick_params(axis='x', rotation=45)
             self.figDetected.tight_layout()
 
-            results = DBController.getLicenseData(location=location)
+            results = DBController.getLicenseData(location=location, hours=24)
             data = []
             for result in results.data:
                 row = result[0]
@@ -125,7 +125,7 @@ class AnalyticsPage(tk.Frame):
             self.axRevenue.tick_params(axis='x', rotation=45)
             self.figRevenue.tight_layout()
 
-            results = DBController.getLicenseData(location=location)
+            results = DBController.getLicenseData(location=location, hours=2)
             data = []
             for result in results.data:
                 row = result[0]
@@ -159,7 +159,7 @@ class AnalyticsPage(tk.Frame):
             self.axBusiest.tick_params(axis='x', rotation=45)
             self.figBusiest.tight_layout()
 
-            results = DBController.getLicenseData(location=location)
+            results = DBController.getLicenseData(location=location, hours=2)
             data = []
             for result in results.data:
                 row = result[0]
