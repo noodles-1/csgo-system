@@ -7,6 +7,7 @@ import csv
 import pandas as pd
 import random
 import smtplib
+import torch
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -25,14 +26,15 @@ class AIController:
     vehicle_detection_model = YOLO('yolov8n.pt')
     lp_detection_model = YOLO('trained_models/lp_detection/trained_yolov8n_3.pt')
     cnocr = CnOcr(det_model_name='en_PP-OCRv3_det', rec_model_name='en_PP-OCRv3')
+    device = '0' if torch.cuda.is_available() else 'cpu'
 
     @staticmethod
     def detect_vehicle(frame):
-        return AIController.vehicle_detection_model.track(source=frame, verbose=False, persist=True, device=0, workers=0, classes=list(AIController.vehicleClasses))
+        return AIController.vehicle_detection_model.track(source=frame, verbose=False, persist=True, classes=list(AIController.vehicleClasses), device=AIController.device)
 
     @staticmethod
     def detect_license_plate(frame):
-        return AIController.lp_detection_model.predict(source=frame, verbose=False, device=0, workers=0)
+        return AIController.lp_detection_model.predict(source=frame, verbose=False, device=AIController.device)
     
     @staticmethod
     def get_license_number_cnocr(frame):

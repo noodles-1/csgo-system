@@ -9,10 +9,13 @@ localFolder
 venv
 venv38
 userSession
+build
+dist
 
 logs.txt
 .venv
 .pt
+.spec
 *.jpg
 **/.env
 **/test_script.py
