@@ -20,6 +20,7 @@ class Connection:
         - False => if connection failed to establish
         '''
         try:
+            print(path)
             Connection.engine = create_engine(f'sqlite:///{path}', echo=True)
             return True
         except Exception as e:
