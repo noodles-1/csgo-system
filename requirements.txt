@@ -19,8 +19,4 @@ scikit_learn==1.4.1.post1
 SQLAlchemy==2.0.29
 tkcalendar==1.6.1
 tkinter_async_execute==1.2.0
-torch==2.4.0.dev20240607+cu124
-torchaudio==2.4.0.dev20240607+cu124
-torchmetrics==1.4.0.post0
-torchvision==0.19.0.dev20240608+cu124
 ultralytics==8.1.24
