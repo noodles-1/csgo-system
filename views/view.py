@@ -1,6 +1,7 @@
 import os
 import sys
 import asyncio
+import multiprocessing
 import tkinter as tk
 import tk_async_execute as tk_async
 
@@ -79,6 +80,7 @@ async def poll():
         await asyncio.sleep(30)
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()
     connection.connect(os.path.join(parent_dir, 'database/test.db'))
 
     loop = asyncio.get_event_loop()
