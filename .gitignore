@@ -14,8 +14,8 @@ dist
 
 logs.txt
 .venv
-.pt
-.spec
+*.pt
+*.spec
 *.jpg
 **/.env
 **/test_script.py
