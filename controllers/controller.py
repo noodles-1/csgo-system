@@ -56,6 +56,7 @@ cameraEnabled = False
 dipModule = 0
 loggedIn = False
 currUser = None
+ec2ip = ''
 
 def bounding_box(frame, box, color, classNames):
     x1, y1, x2, y2 = box.xyxy[0]
