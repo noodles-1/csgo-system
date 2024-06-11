@@ -285,7 +285,7 @@ class DashboardPage(tk.Frame):
 
         # Goes to the Analytics Page
         analyticsButton = CTkButton(bottomFrame,
-                                    text = 'Analytics',
+                                    text = 'Reports',
                                     command = lambda: switch.showAnalyticsPage(parent),
                                     font = ('Montserrat', 15),
                                     border_width = 2,

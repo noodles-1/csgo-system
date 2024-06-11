@@ -168,7 +168,7 @@ class ForgetPasswordPage(tk.Frame):
         self.update_timer()
 
         # Request Another OTP Button
-        self.request_otp_button = CTkButton(self.innerMainFrame, text="Request Another OTP", state="disabled", command=lambda: self.request_another_otp(receiver_email), corner_radius=15, text_color='#000000', fg_color='#FFFFFF', height=30)
+        self.request_otp_button = CTkButton(self.innerMainFrame, text="Request Another OTP", state="disabled", command=lambda: self.request_another_otp(receiver_email, user), corner_radius=15, text_color='#000000', fg_color='#FFFFFF', height=30)
         self.request_otp_button.pack(pady=(0,5))
 
     def update_timer(self):
@@ -183,10 +183,10 @@ class ForgetPasswordPage(tk.Frame):
             self.timer_label.configure(text="")
             self.timer_value = 30  # Reset cooldown timer
 
-    def request_another_otp(self, email):
+    def request_another_otp(self, email, user):
         self.clear_main_widgets()
         self.timer_value = 30  # Reset the timer value
-        self.ask_otp(email)
+        self.ask_otp(email, user)
 
     def submit_otp(self, email, user):
         otp = self.otp_entry.get()
