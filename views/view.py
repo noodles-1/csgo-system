@@ -68,7 +68,7 @@ class MainWindow(tk.Tk):
 def startAsyncLoop(loop):
     loop.call_soon(loop.stop)
     loop.run_forever()
-    app.after(30000, startAsyncLoop, loop)
+    app.after(15000, startAsyncLoop, loop)
 
 async def runAsync():
     asyncio.create_task(poll())
@@ -77,7 +77,7 @@ async def poll():
     while True:
         PollController.updateFutureSettings()
         PollController.updateActiveSetting()
-        await asyncio.sleep(30)
+        await asyncio.sleep(15)
 
 if __name__ == "__main__":
     multiprocessing.freeze_support()
@@ -87,7 +87,7 @@ if __name__ == "__main__":
     loop.create_task(runAsync())
 
     app = MainWindow()
-    app.after(30000, startAsyncLoop, loop)
+    app.after(15000, startAsyncLoop, loop)
 
     tk_async.start()
     app.mainloop()

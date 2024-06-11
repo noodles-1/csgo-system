@@ -121,10 +121,10 @@ class DashboardPage(tk.Frame):
 
                                 if cont.dipModule == 2:
                                     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                                    client_socket.connect(('13.215.248.157', 8001))
+                                    client_socket.connect(('54.151.155.120', 8001))
                                 elif cont.dipModule == 1:
                                     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                                    client_socket.connect(('13.215.248.157', 8000))
+                                    client_socket.connect(('54.151.155.120', 8000))
                                 if cont.dipModule != 0:
                                     SocketController.sendImage(client_socket, cropped_lp)
                                     processed_lp = SocketController.receiveImage(client_socket)
