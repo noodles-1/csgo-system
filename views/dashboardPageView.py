@@ -205,9 +205,9 @@ class DashboardPage(tk.Frame):
 
         result = DBController.getCamera(name=cameraName)
         ip_addr = result.id
-        cameraUrl = f'rtsp://{ip_addr}:554'
+        cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/IMG_9613_1.mp4' if cameraName == 'test_cam' else f'rtsp://{ip_addr}:554'
 
-        self.cap = cv2.VideoCapture('https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/IMG_9613_1.mp4')
+        self.cap = cv2.VideoCapture(cameraUrl)
         DashboardPage.StartCamera(self.currUser).start(self.cap, self.placeholder_label, ip_addr, self.databaseTable, self.vehiclesDetectedCount)
         
         self.uptime_seconds = 0

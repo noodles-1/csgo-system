@@ -1,30 +1,26 @@
 import cv2
 import socket
-from scapy.layers.l2 import ARP, Ether
-from scapy.sendrecv import srp
+import subprocess
+import re
 
 class RTSPController:
     @staticmethod
     def scanNetwork() -> list[tuple]:
         '''
-        Identifies all devices on the IP range of the current device.
+        Identifies all devices on the IP range of the current device by reading the ARP cache.
 
         returns:
         - devices: list(tuple) => a list containing a 2-element tuple having the IP and MAC address of
-        the detected device
+        the detected device, filtered to include only dynamic entries.
         '''
-        hostname = socket.gethostname()
-        ip_addr = socket.gethostbyname(hostname)
-        ip_range = f'{ip_addr}/24'
-        arp = ARP(pdst=ip_range)
-        ether = Ether(dst='ff:ff:ff:ff:ff:ff')
-        packet = ether/arp
-        result = srp(packet, timeout=2, verbose=0)[0]
-        devices = [(received.psrc, received.hwsrc) for _, received in result]
+        arp_output = subprocess.check_output(['arp', '-a'], text=True)
+        arp_pattern = re.compile(r'([\d.]+)\s+([\dA-Fa-f-]+)\s+dynamic')       
+        devices = re.findall(arp_pattern, arp_output)
+        devices = [(device[0], device[1]) for device in devices]
         return devices
     
     @staticmethod
-    def checkRtsp(ip: str, port=554, timeout=1) -> bool:
+    def checkRtsp(ip: str, port=554, timeout=2) -> bool:
         '''
         Establishes a socket connection and tests for the handshake to verify
         whether the RTSP server is available for the specified IP address.

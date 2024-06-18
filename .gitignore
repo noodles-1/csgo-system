@@ -15,6 +15,7 @@ dist
 logs.txt
 .venv
 *.pt
+*.exe
 *.spec
 *.jpg
 **/.env
