@@ -81,7 +81,7 @@ async def poll():
 
 if __name__ == "__main__":
     multiprocessing.freeze_support()
-    connection.connect(os.path.join(parent_dir, 'database/test.db'))
+    connection.connect()
 
     loop = asyncio.get_event_loop()
     loop.create_task(runAsync())

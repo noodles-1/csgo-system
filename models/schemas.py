@@ -19,7 +19,7 @@ class User(Base):
     __tablename__ = 'user'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    email: Mapped[str]
+    email: Mapped[str] = mapped_column(String(100))
     username: Mapped[str] = mapped_column(String(50))
     firstName: Mapped[str] = mapped_column(String(80))
     lastName: Mapped[str] = mapped_column(String(80))
@@ -28,7 +28,7 @@ class User(Base):
     canChangePrice: Mapped[bool]
     canEditHours: Mapped[bool]
     canDownload: Mapped[bool]
-    password: Mapped[str]
+    password: Mapped[str] = mapped_column(String(255))
 
     def __repr__(self) -> str:
         return f'User(userId={self.id}, email={self.email}, username={self.username}, fullName={self.firstName} {self.lastName}, isAdmin={self.isAdmin})'
@@ -39,9 +39,9 @@ class Camera(Base):
     '''
     __tablename__ = 'camera'
 
-    id: Mapped[str] = mapped_column(primary_key=True)
-    name: Mapped[str]
-    location: Mapped[str]
+    id: Mapped[str] = mapped_column(String(50), primary_key=True)
+    name: Mapped[str] = mapped_column(String(255))
+    location: Mapped[str] = mapped_column(String(50))
 
     def __repr__(self) -> str:
         return f'Camera(cameraId={self.id}, name={self.name}, location={self.location})'
@@ -53,16 +53,16 @@ class DetectedLicensePlate(Base):
     '''
     __tablename__ = 'detected_license_plate'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(String(50), primary_key=True)
     userId: Mapped[int] = mapped_column(ForeignKey('user.id'))
     settingId: Mapped[int] = mapped_column(ForeignKey('current_setting.id'))
-    location: Mapped[str]
+    location: Mapped[str] = mapped_column(String(255))
     licenseNumber: Mapped[str] = mapped_column(String(14))
-    vehicleType: Mapped[str]
+    vehicleType: Mapped[str] = mapped_column(String(20))
     price: Mapped[float]
     date: Mapped[Date] = mapped_column(Date())
     time: Mapped[Time] = mapped_column(Time(timezone=True))
-    image: Mapped[str]
+    image: Mapped[str] = mapped_column(String(255))
 
     def __repr__(self) -> str:
         return f'Detection(id={self.id}, userId={self.userId}, setting={self.settingId}, location={self.location}, licenseNumber={self.licenseNumber}, vehicleType={self.vehicleType}, price={self.price}, date={self.date}, time={self.time}, image={self.image})'
@@ -76,7 +76,7 @@ class CurrentSetting(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     hourFrom: Mapped[Time] = mapped_column(Time(timezone=True))
     hourTo: Mapped[Time] = mapped_column(Time(timezone=True))
-    day: Mapped[str]
+    day: Mapped[str] = mapped_column(String(20))
     detectCar: Mapped[bool]
     detectMotorcycle: Mapped[bool]
     detectBus: Mapped[bool]
@@ -98,7 +98,7 @@ class FutureSetting(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     hourFrom: Mapped[Time] = mapped_column(Time(timezone=True))
     hourTo: Mapped[Time] = mapped_column(Time(timezone=True))
-    day: Mapped[str]
+    day: Mapped[str] = mapped_column(String(20))
     startDate: Mapped[Date] = mapped_column(Date())
     startTime: Mapped[Time] = mapped_column(Time(timezone=True))
     detectCar: Mapped[bool]

@@ -24,12 +24,9 @@ class Connection:
     engine = None
 
     @staticmethod
-    def createConnection(path) -> bool:
+    def createConnection() -> bool:
         '''
         Creates a connection between the system and the database.
-
-        params:
-        - path: str => the path of the database (.db) file relative to the project's root directory
 
         returns:
         - True => if connection is successfully established
@@ -44,19 +41,16 @@ class Connection:
             return False
     
     @staticmethod
-    def connect(path) -> bool:
+    def connect() -> bool:
         '''
         Establishes a connection first. If successful, creates ORM and maps the tables 
         from models/schemas.py to the database.
-
-        params:
-        - path: str => the path of the database (.db) file relative to the project's root directory
 
         returns:
         - True => if connection is successfully established
         - False => if connection failed to establish 
         '''
-        if Connection.createConnection(path):
+        if Connection.createConnection():
             Base.metadata.create_all(Connection.engine)
             return True
         else:
