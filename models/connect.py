@@ -1,5 +1,21 @@
+import os
+import sys
+
 from .schemas import Base
 from sqlalchemy import create_engine
+
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
+
+from dotenv import load_dotenv
+
+load_dotenv(dotenv_path=os.path.join(parent, '.env'))
+RDS_ENDPOINT = os.getenv('RDS_ENDPOINT')
+RDS_PORT = os.getenv('RDS_PORT')
+RDS_DB = os.getenv('RDS_DB')
+RDS_USER = os.getenv('RDS_USER')
+RDS_PASSWORD = os.getenv('RDS_PASSWORD')
 
 class Connection:
     '''
@@ -20,8 +36,8 @@ class Connection:
         - False => if connection failed to establish
         '''
         try:
-            print(path)
-            Connection.engine = create_engine(f'sqlite:///{path}', echo=True)
+            url = f'mysql+pymysql://{RDS_USER}:{RDS_PASSWORD}@{RDS_ENDPOINT}/{RDS_DB}'
+            Connection.engine = create_engine(url, echo=True)
             return True
         except Exception as e:
             print(e)

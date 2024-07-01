@@ -67,7 +67,7 @@ class DBController:
                 result = session.scalar(stmt)
                 return result is not None
         except Exception as e:
-            with open(os.path.join(parent, 'logs.txt', 'a')) as file:
+            with open(os.path.join(parent, 'logs.txt'), 'a') as file:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/dbController.py emailExists() - {repr(e)}\n')
             return False
@@ -92,7 +92,7 @@ class DBController:
                 result = session.scalar(stmt)
                 return result is not None
         except Exception as e:
-            with open(os.path.join(parent, 'logs.txt', 'a')) as file:
+            with open(os.path.join(parent, 'logs.txt'), 'a') as file:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/dbController.py emailExists() - {repr(e)}\n')
             return False
@@ -115,7 +115,7 @@ class DBController:
                 result = session.scalar(stmt)
                 return result is not None
         except Exception as e:
-            with open(os.path.join(parent, 'logs.txt', 'a')) as file:
+            with open(os.path.join(parent, 'logs.txt'), 'a') as file:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/dbController.py usernameExists() - {repr(e)}\n')
             return False
@@ -140,7 +140,7 @@ class DBController:
                 result = session.scalar(stmt)
                 return result is not None
         except Exception as e:
-            with open(os.path.join(parent, 'logs.txt', 'a')) as file:
+            with open(os.path.join(parent, 'logs.txt'), 'a') as file:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/dbController.py emailExists() - {repr(e)}\n')
             return False
@@ -167,7 +167,7 @@ class DBController:
                 result = session.scalar(stmt)
                 return result is not None
         except Exception as e:
-            with open(os.path.join(parent, 'logs.txt', 'a')) as file:
+            with open(os.path.join(parent, 'logs.txt'), 'a') as file:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/dbController.py cameraExists() - {repr(e)}\n')
             return False
@@ -191,7 +191,7 @@ class DBController:
                 result = session.scalar(stmt)
                 return result
         except Exception as e:
-            with open(os.path.join(parent, 'logs.txt', 'a')) as file:
+            with open(os.path.join(parent, 'logs.txt'), 'a') as file:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/dbController.py getUser() - {repr(e)}\n')
             return None
@@ -219,7 +219,7 @@ class DBController:
                 result = session.scalar(stmt)
                 return result
         except Exception as e:
-            with open(os.path.join(parent, 'logs.txt', 'a')) as file:
+            with open(os.path.join(parent, 'logs.txt'), 'a') as file:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/dbController.py getCamera() - {repr(e)}\n')
             return None
@@ -242,7 +242,7 @@ class DBController:
                 result = session.scalar(stmt)
                 return result
         except Exception as e:
-            with open(os.path.join(parent, 'logs.txt', 'a')) as file:
+            with open(os.path.join(parent, 'logs.txt'), 'a') as file:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/dbController.py getCurrentSetting() - {repr(e)}\n')
             return None
@@ -270,7 +270,7 @@ class DBController:
                 result = session.scalar(stmt)
                 return result
         except Exception as e:
-            with open(os.path.join(parent, 'logs.txt', 'a')) as file:
+            with open(os.path.join(parent, 'logs.txt'), 'a') as file:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/dbController.py getCurrentSetting() - {repr(e)}\n')
             return None
@@ -293,7 +293,7 @@ class DBController:
                 result = session.scalar(stmt)
                 return result
         except Exception as e:
-            with open(os.path.join(parent, 'logs.txt', 'a')) as file:
+            with open(os.path.join(parent, 'logs.txt'), 'a') as file:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/dbController.py getFutureSetting() - {repr(e)}\n')
             return None
@@ -371,7 +371,7 @@ class DBController:
                 result = session.scalar(stmt)
                 return result is not None
         except Exception as e:
-            with open(os.path.join(parent, 'logs.txt', 'a')) as file:
+            with open(os.path.join(parent, 'logs.txt'), 'a') as file:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/dbController.py licensePlateExists() - {repr(e)}\n')
             return False
@@ -408,9 +408,9 @@ class DBController:
                 stmt = select(User).where(User.id == id)
                 user = session.scalar(stmt)
                 inputPassword = inputPassword.encode()
-                return bcrypt.checkpw(inputPassword, user.password)
+                return bcrypt.checkpw(inputPassword, user.password.encode())
         except Exception as e:
-            with open(os.path.join(parent, 'logs.txt', 'a')) as file:
+            with open(os.path.join(parent, 'logs.txt'), 'a') as file:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/dbController.py passwordMatches() - {repr(e)}\n')
             return False

@@ -18,7 +18,7 @@ class PollController:
         response = DBController.updateFutureSettings()
         
         if not response.ok:
-            with open(os.path.join(parent, 'logs.txt', 'a')) as file:
+            with open(os.path.join(parent, 'logs.txt'), 'a') as file:
                 now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
                 file.write(f'[{now}] Error at function invocation controllers/pollController.py updateFutureSettings() - {repr(response.messages["error"])}\n')
     

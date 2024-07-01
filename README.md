@@ -1,5 +1,5 @@
 # This is the repository of the system for the Thesis of the Group Computer Science Global Offensive
-## This Branch is currently in Version 1.37.0
+## This Branch is currently in Version 1.38.0
 
 Members of the thesis group are:
   - **Pagtalunan, John Gabriel T.**
