@@ -42,9 +42,11 @@ class Camera(Base):
     id: Mapped[str] = mapped_column(String(50), primary_key=True)
     name: Mapped[str] = mapped_column(String(255))
     location: Mapped[str] = mapped_column(String(50))
+    originCoords: Mapped[str] = mapped_column(String(255))
+    destCoords: Mapped[str] = mapped_column(String(255))
 
     def __repr__(self) -> str:
-        return f'Camera(cameraId={self.id}, name={self.name}, location={self.location})'
+        return f'Camera(cameraId={self.id}, name={self.name}, location={self.location}, origin={self.originCoords}, destination={self.destCoords})'
 
 class DetectedLicensePlate(Base):
     '''
