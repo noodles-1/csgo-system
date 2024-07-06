@@ -114,3 +114,20 @@ class FutureSetting(Base):
 
     def __repr__(self) -> str:
         return f'Setting(settingId={self.id}, hourFrom={self.hourFrom}, hourTo={self.hourTo}, day={self.day}, startDate={self.startDate}, detectCar={self.detectCar}, detectMotorcycle={self.detectMotorcycle}, detectBus={self.detectBus}, detectTruck={self.detectTruck}, carPrice={self.carPrice}, motorcyclePrice={self.motorcyclePrice}, busPrice={self.busPrice}, truckPrice={self.truckPrice})'
+    
+class Congestion(Base):
+    '''
+    Congestion table that contains the congestion rate (from 0 to 1) of a location
+    along with its timestamp.
+    '''
+
+    __tablename__ = 'congestion'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    location: Mapped[str] = mapped_column(String(50))
+    congestion: Mapped[float]
+    date: Mapped[Date] = mapped_column(Date())
+    time: Mapped[Time] = mapped_column(Time(timezone=True))
+
+    def __repr__(self) -> str:
+        return f'Congestion(id={self.id}, location={self.location}, congestion={self.congestion}, date={self.date}, time={self.time})'
