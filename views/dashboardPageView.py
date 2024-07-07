@@ -37,6 +37,34 @@ classnames = [
     "teddy bear", "hair drier", "toothbrush"
 ]
 
+class HorizontalColorProgressBar(tk.Canvas):
+    def __init__(self, master, width=300, height=5):
+        super().__init__(master, width=width, height=height, bg='#1B2431', highlightthickness=0)
+        self.configure(highlightbackground='#1B2431')
+
+        self.max_width = width
+        self.bar = self.create_rectangle(0, 0, 0, height, fill='green', outline='green')
+
+    def update_bar(self, value):
+        # Ensure value is within the range 0.0 to 1.0
+        value = max(0.0, min(1.0, value))
+
+        # Calculate color based on value
+        if value <= 0.5:
+            red = int(255 * (value * 2))
+            green = 255
+        else:
+            red = 255
+            green = int(255 * (1 - value) * 2)
+
+        # Convert to hexadecimal color code
+        color = f'#{red:02x}{green:02x}00'
+
+        # Update bar width
+        bar_width = int(self.max_width * value)
+        self.itemconfig(self.bar, fill=color)
+        self.coords(self.bar, 0, 0, bar_width, self.winfo_height())
+
 class DashboardPage(tk.Frame):
     # Close Application
     def closeApplication(self):
@@ -45,7 +73,7 @@ class DashboardPage(tk.Frame):
     # Minimize or Iconify the Application
     def minimizeApplicaiton(self):
         self.master.iconify()
-    
+
     def update_uptime(self):
         if self.counting_enabled:
             self.uptime_seconds += 1 
@@ -216,9 +244,27 @@ class DashboardPage(tk.Frame):
     def setCurrUser(self, user):
         self.currUser = user
         self.adminButton.configure(state='disabled' if not user.isAdmin else 'normal')
+
+    # Used for Testing without connection to DB        
+    # def setCurrUser(self, user):
+    #     self.currUser = user
+    #     if isinstance(user, dict):
+    #         self.adminButton.configure(state='disabled' if not user.get('isAdmin', False) else 'normal')
+    #     else:
+    #         self.adminButton.configure(state='disabled' if not user.isAdmin else 'normal')
+
     
     def dipModuleRadio_callback(self):
         cont.dipModule = self.dipModuleVar.get()
+        
+        self.simulateCongestionBar()
+
+    def simulateCongestionBar(self):
+        # Simulate congestion state by updating the congestion state bar
+        for i in range(11):
+            self.congestionBar.update_bar(i / 10)
+            self.update()
+            self.after(500)
 
     def __init__(self, parent):
         self.cap = None
@@ -227,7 +273,9 @@ class DashboardPage(tk.Frame):
         self.uptime_seconds = 0
         self.counting_enabled = False
         self.vehicle_count = 0
-        
+
+        self.maxCongestionBarWidth = 300
+
         tk.Frame.__init__(self, parent, bg = "#090E18")
         
         # Style definition. Can be utilized with the Change Theme from Light to Dark
@@ -429,12 +477,28 @@ class DashboardPage(tk.Frame):
         cameras = DBController.getCameras()
         
         self.changeCameraDisplay = CTkComboBox(dropdownFrame, values=[camera[0].name for camera in cameras.data], command=self.changeCameraDisplay_callback, width=100, state='readonly')
+        # Used for Testing without connection to DB
+        # self.changeCameraDisplay = CTkComboBox(dropdownFrame, values=['(NONE)'], command=self.changeCameraDisplay_callback, width=100, state='readonly')
         self.changeCameraDisplay.set('(NONE)')
         self.changeCameraDisplay.pack(side = "right")
         
         changeCameraLabel = CTkLabel(dropdownFrame, text = "Change Camera", font = ('Montserrat', 13), text_color = "#FFFFFF")
         changeCameraLabel.pack(side = "right", padx = 10)
         
+        congestionBarFrame = tk.Frame(middleLeftMainFrame, bg = '#090E18')
+        congestionBarFrame.pack(fill = 'both', side = 'top', padx = 20)
+
+        # Creating canvas to hold the progress bar
+        self.congestionBarCanvas = tk.Canvas(congestionBarFrame, width=self.maxCongestionBarWidth, height=5, bg="#090E18", highlightthickness=0)
+        self.congestionBarCanvas.pack(side = 'top')
+
+        # Creating and packing the progress bar
+        self.congestionBar = HorizontalColorProgressBar(self.congestionBarCanvas, width=self.maxCongestionBarWidth, height=10)
+        self.congestionBar.pack()
+
+        congestionBarLabel = CTkLabel(congestionBarFrame, text = "Congestion State", font = ('Montserrat', 13), text_color = "#FFFFFF")
+        congestionBarLabel.pack(side = "top", fill = 'both', expand = True)
+
         # Goes to the Config Page
         settingsButton = CTkButton(middleLeftMainFrame,
                                     text = 'Settings',

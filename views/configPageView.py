@@ -381,6 +381,24 @@ class ConfigPage(tk.Frame):
         for comboBox in [self.fromComboBox, self.toComboBox, self.everyComboBox]:
             comboBox.configure(state='disabled' if not user.canEditHours else 'readonly')
 
+    # Used for Testing without connection to DB
+    # def applyRestrictions(self, user):
+    #     self.currUser = user
+        
+    #     # Check if user is a dictionary and use get method to safely access attributes
+    #     canChangeDetect = user.get('canChangeDetect', False) if isinstance(user, dict) else user.canChangeDetect
+    #     canChangePrice = user.get('canChangePrice', False) if isinstance(user, dict) else user.canChangePrice
+    #     canEditHours = user.get('canEditHours', False) if isinstance(user, dict) else user.canEditHours
+        
+    #     for comboBox in [self.carComboBox, self.motorcycleComboBox, self.busComboBox, self.truckComboBox]:
+    #         comboBox.configure(state='disabled' if not canChangeDetect else 'readonly')
+
+    #     for entry in [self.carEntry, self.motorcycleEntry, self.busEntry, self.truckEntry]:
+    #         entry.configure(state='disabled' if not canChangePrice else 'normal')
+
+    #     for comboBox in [self.fromComboBox, self.toComboBox, self.everyComboBox]:
+    #         comboBox.configure(state='disabled' if not canEditHours else 'readonly')
+
     def logout_callback(self, parent):
         self.addNew_callback()
         cont.loggedIn = False

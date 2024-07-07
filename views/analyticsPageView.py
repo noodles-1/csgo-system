@@ -207,6 +207,16 @@ class AnalyticsPage(tk.Frame):
     def applyRestrictions(self, user):
         self.downloadCSVButton.configure(state='disabled' if not user.canDownload else 'normal')
         self.updatePercentages()
+
+    # Used for Testing without connection to DB
+    # def applyRestrictions(self, user):
+    #     if isinstance(user, dict):
+    #         canDownload = user.get('canDownload', False)
+    #     else:
+    #         canDownload = getattr(user, 'canDownload', False)
+
+    #     self.downloadCSVButton.configure(state='disabled' if not canDownload else 'normal')
+    #     self.updatePercentages()
     
     def __init__(self, parent):
         self.detectedVehiclesTimer = None
