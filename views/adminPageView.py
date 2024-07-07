@@ -62,6 +62,7 @@ class AdminPage(tk.Frame):
         email = self.emailVar.get()
         username = self.usernameVar.get()
         password = self.passwordVar.get()
+        confirmPassword = self.confirmPasswordVar.get()
 
         isAdmin = self.adminVar.get() != 0
         canChangePrice = self.changePriceVar.get() != 0
@@ -69,8 +70,13 @@ class AdminPage(tk.Frame):
         canChangeDetect = self.detectableRadioVar.get() != 0
         canEditHours = self.activeHoursRadioVar.get() != 0
 
-        if not firstName or not lastName or not email or not username or not password or not isAdmin or not canChangePrice or not canDownload or not canChangeDetect or not canEditHours:
+        if not firstName or not lastName or not email or not username or not password or not confirmPassword or not isAdmin or not canChangePrice or not canDownload or not canChangeDetect or not canEditHours:
             self.editUserStatusLabel.configure(text='Incomplete fields.', text_color="#d62828")
+            self.after(2000, lambda: self.editUserStatusLabel.configure(text_color="#1B2431"))
+            return
+        
+        if password != confirmPassword:
+            self.editUserStatusLabel.configure(text='Passwords does not match.', text_color="#d62828")
             self.after(2000, lambda: self.editUserStatusLabel.configure(text_color="#1B2431"))
             return
         
@@ -576,6 +582,8 @@ class AdminPage(tk.Frame):
         manageCamerasSecondRow = tk.Frame(upperLeftContent, bg = "#1B2431")
         
         self.savedCamerasDrop = CTkComboBox(manageCamerasSecondRow, values=[camera[0].name for camera in cameras.data], font = ('Montserrat', 12), fg_color = "#FFFFFF", dropdown_fg_color = "#FFFFFF", dropdown_text_color = "#000000", border_color = "#FFFFFF", button_color = "#FFFFFF", text_color = "#000000", state='readonly')
+        # Used for Testing without connection to DB
+        # self.savedCamerasDrop = CTkComboBox(manageCamerasSecondRow, values=['(NONE)'], font = ('Montserrat', 12), fg_color = "#FFFFFF", dropdown_fg_color = "#FFFFFF", dropdown_text_color = "#000000", border_color = "#FFFFFF", button_color = "#FFFFFF", text_color = "#000000", state='readonly')
         self.savedCameraID = CTkEntry(manageCamerasSecondRow, placeholder_text = "Change Name", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
         self.savedCameraLocation = CTkEntry(manageCamerasSecondRow, placeholder_text = "Change Location", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
         
@@ -755,16 +763,22 @@ class AdminPage(tk.Frame):
         self.emailVar = StringVar(value='')
         self.emailEntry = CTkEntry(emailInner, textvariable=self.emailVar, placeholder_text = "Ex. juancruz@domain.com", font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF")
         
-        usernamePasswordOuter = tk.Frame(upperMiddleRight, bg = "#1B2431")
-        usernameInner = tk.Frame(usernamePasswordOuter, bg = "#1B2431")
+        usernameOuter = tk.Frame(upperMiddleRight, bg = "#1B2431")
+        usernameInner = tk.Frame(usernameOuter, bg = "#1B2431")
         usernameLabel = CTkLabel(usernameInner, text = "Username", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
         self.usernameVar = StringVar(value='')
-        self.usernameEntry = CTkEntry(usernameInner, textvariable=self.usernameVar, font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF")
-        
-        passwordInner = tk.Frame(usernamePasswordOuter, bg = "#1B2431")
+        self.usernameEntry = CTkEntry(usernameInner, textvariable=self.usernameVar, placeholder_text = "Ex. juancruz@domain.com", font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF")
+
+        passwordOuter = tk.Frame(upperMiddleRight, bg = "#1B2431")
+        passwordInner = tk.Frame(passwordOuter, bg = "#1B2431")
         passwordLabel = CTkLabel(passwordInner, text = "Password", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
         self.passwordVar = StringVar(value='')
         self.passwordEntry = CTkEntry(passwordInner, textvariable=self.passwordVar, font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF", show = "*")
+
+        confirmPasswordInner = tk.Frame(passwordOuter, bg = "#1B2431")
+        confirmPasswordLabel = CTkLabel(confirmPasswordInner, text = "Confirm Password", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
+        self.confirmPasswordVar = StringVar(value='')
+        self.confirmPasswordEntry = CTkEntry(confirmPasswordInner, textvariable=self.confirmPasswordVar, font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF", show = "*")
         
         lowerMiddleRight = tk.Frame(middleRight, bg = "#1B2431")
         
@@ -951,13 +965,20 @@ class AdminPage(tk.Frame):
         emailLabel.pack(side = "top", fill = "x", padx = 20, pady = (5,0))
         self.emailEntry.pack(side = "top", fill = "x", padx = 10, pady = (0,5))
         
-        usernamePasswordOuter.pack(side = "top", fill = "both", expand = True, padx = 10, pady = 2)
-        usernameInner.pack(side = "left", padx = 10, pady = 10, fill = "both", expand = True)
+        usernameOuter.pack(side = "top", fill = "both", expand = True, padx = 10, pady = 2)
+        usernameInner.pack(side = "top", padx = 10, pady = 10, fill = "both", expand = False)
         usernameLabel.pack(side = "top", fill = "x", padx = 20, pady = (5,0))
         self.usernameEntry.pack(side = "top", fill = "x", padx = 10, pady = (0,5))
+
+        passwordOuter.pack(side = "top", fill = "both", expand = True, padx = 10, pady = 2)
+
         passwordInner.pack(side = "left", padx = 10, pady = 10, fill = "both", expand = True)
         passwordLabel.pack(side = "top", fill = "x", padx = 20, pady = (5,0))
         self.passwordEntry.pack(side = "top", fill = "x", padx = 10, pady = (0,5))
+
+        confirmPasswordInner.pack(side = "left", padx = 10, pady = 10, fill = "both", expand = True)
+        confirmPasswordLabel.pack(side = "top", fill = "x", padx = 20, pady = (5,0))
+        self.confirmPasswordEntry.pack(side = "top", fill = "x", padx = 10, pady = (0,5))
         
         lowerMiddleRight.pack(side = "top", fill = "both", expand = True, padx = 5, pady = 2)
         accessLabel.pack(side = "top", fill = "x", padx = 5, pady = 5)
