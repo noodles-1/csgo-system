@@ -37,7 +37,7 @@ classnames = [
     "teddy bear", "hair drier", "toothbrush"
 ]
 
-class HorizontalColorProgressBar(tk.Canvas):
+class CongestionStateBar(tk.Canvas):
     def __init__(self, master, width=300, height=5):
         super().__init__(master, width=width, height=height, bg='#1B2431', highlightthickness=0)
         self.configure(highlightbackground='#1B2431')
@@ -45,7 +45,7 @@ class HorizontalColorProgressBar(tk.Canvas):
         self.max_width = width
         self.bar = self.create_rectangle(0, 0, 0, height, fill='green', outline='green')
 
-    def update_bar(self, value):
+    def updateBar(self, value):
         # Ensure value is within the range 0.0 to 1.0
         value = max(0.0, min(1.0, value))
 
@@ -262,7 +262,7 @@ class DashboardPage(tk.Frame):
     def simulateCongestionBar(self):
         # Simulate congestion state by updating the congestion state bar
         for i in range(11):
-            self.congestionBar.update_bar(i / 10)
+            self.congestionBar.updateBar(i / 10)
             self.update()
             self.after(500)
 
@@ -493,7 +493,7 @@ class DashboardPage(tk.Frame):
         self.congestionBarCanvas.pack(side = 'top')
 
         # Creating and packing the progress bar
-        self.congestionBar = HorizontalColorProgressBar(self.congestionBarCanvas, width=self.maxCongestionBarWidth, height=10)
+        self.congestionBar = CongestionStateBar(self.congestionBarCanvas, width=self.maxCongestionBarWidth, height=10)
         self.congestionBar.pack()
 
         congestionBarLabel = CTkLabel(congestionBarFrame, text = "Congestion State", font = ('Montserrat', 13), text_color = "#FFFFFF")
