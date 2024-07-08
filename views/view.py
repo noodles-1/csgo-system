@@ -81,7 +81,7 @@ async def poll():
 
 if __name__ == "__main__":
     multiprocessing.freeze_support()
-    #connection.connect()
+    connection.connect()
 
     loop = asyncio.get_event_loop()
     loop.create_task(runAsync())
