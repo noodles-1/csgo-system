@@ -16,6 +16,7 @@ from PIL import Image
 from tkcalendar import Calendar
 from controllers.dbController import DBController
 from controllers.s3controller import S3Controller
+from views.tooltip import ToolTip as tt
 
 class ConfigPage(tk.Frame):
     def closeApplication(self):
@@ -381,6 +382,24 @@ class ConfigPage(tk.Frame):
         for comboBox in [self.fromComboBox, self.toComboBox, self.everyComboBox]:
             comboBox.configure(state='disabled' if not user.canEditHours else 'readonly')
 
+    # Used for Testing without connection to DB
+    # def applyRestrictions(self, user):
+    #     self.currUser = user
+        
+    #     # Check if user is a dictionary and use get method to safely access attributes
+    #     canChangeDetect = user.get('canChangeDetect', False) if isinstance(user, dict) else user.canChangeDetect
+    #     canChangePrice = user.get('canChangePrice', False) if isinstance(user, dict) else user.canChangePrice
+    #     canEditHours = user.get('canEditHours', False) if isinstance(user, dict) else user.canEditHours
+        
+    #     for comboBox in [self.carComboBox, self.motorcycleComboBox, self.busComboBox, self.truckComboBox]:
+    #         comboBox.configure(state='disabled' if not canChangeDetect else 'readonly')
+
+    #     for entry in [self.carEntry, self.motorcycleEntry, self.busEntry, self.truckEntry]:
+    #         entry.configure(state='disabled' if not canChangePrice else 'normal')
+
+    #     for comboBox in [self.fromComboBox, self.toComboBox, self.everyComboBox]:
+    #         comboBox.configure(state='disabled' if not canEditHours else 'readonly')
+
     def logout_callback(self, parent):
         self.addNew_callback()
         cont.loggedIn = False
@@ -388,6 +407,9 @@ class ConfigPage(tk.Frame):
         cont.currUser = None
         parent.show_frame(parent.loginFrame)
     
+    def dynamicCongestionWindow(self):
+        dynamicWindowState = self.dynamicVar.get()
+        
     def __init__(self, parent):
         self.selected_date = ''
         self.selected_time = ''
@@ -570,7 +592,39 @@ class ConfigPage(tk.Frame):
                                     font = ('Montserrat', 12),
                                     text_color = '#FFFFFF')
         delLabel.pack(expand = False, side = 'left', padx = 10, pady = 0)
+
+        dynamicCongestionFrame = CTkFrame(mainContentFrame, fg_color = '#1B2431', corner_radius = 15)
+        dynamicCongestionFrame.pack(expand = False, fill = 'x', side = 'top', pady = 10)
         
+        dynamicRadioFrame = CTkFrame(dynamicCongestionFrame, fg_color = '#1B2431', corner_radius = 15)
+        dynamicRadioFrame.pack(expand = True, fill = 'x', side = 'left', pady = 10)
+
+        self.dynamicVar = IntVar(value = 0)
+        dynamicOn = CTkRadioButton(dynamicRadioFrame, text = 'On', command = self.dynamicCongestionWindow, variable = self.dynamicVar, value = 1)
+        dynamicOff = CTkRadioButton(dynamicRadioFrame, text = 'Off', command = self.dynamicCongestionWindow, variable = self.dynamicVar, value = 0)
+
+        dynamicOff.pack(expand = False, side = 'right', padx = 10, pady = 0)
+        dynamicOn.pack(expand = False, side = 'right', pady = 0)
+
+        dynamicLabelFrame = CTkFrame(dynamicCongestionFrame, fg_color = '#1B2431', corner_radius = 15)
+        dynamicLabelFrame.pack(expand = True, fill = 'x', side = 'left')
+
+        tooltipImage = CTkImage(light_image = Image.open(os.path.join(parent_dir, "views/icons/icons_info.png")),
+                            dark_image = Image.open(os.path.join(parent_dir, "views/icons/icons_info.png")),
+                            size = (15, 15))
+        
+        tooltipLabel = CTkLabel(dynamicLabelFrame, image=tooltipImage, text = "")
+        tooltipLabel.image = tooltipImage
+        tooltipLabel.pack(pady=0, side = "left")
+
+        self.tooltip = tt(tooltipLabel, "Congestion Pricing Window (Start and End) will be based on the congestion state of the highway if there is no active pre-defined congestion pricing window.", bg = "#FFFFFF", fg = "#000000")
+
+        dynamicLabel = CTkLabel(dynamicLabelFrame,
+                                    text = 'Dynamic Congestion Pricing Window',
+                                    font = ('Montserrat', 12),
+                                    text_color = '#FFFFFF')
+        dynamicLabel.pack(expand = False, side = 'left', padx = 10, pady = 0)
+
         detectablesFrame = CTkFrame(mainContentFrame, fg_color = '#1B2431', corner_radius = 15)
         detectablesFrame.pack(expand = False, fill = 'x', side = 'top', pady = 10)
         

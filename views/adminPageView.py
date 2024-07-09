@@ -18,6 +18,7 @@ from PIL import Image
 from controllers.dbController import DBController
 from controllers.rtspController import RTSPController
 from controllers.s3controller import S3Controller
+from views.tooltip import ToolTip as tt
 
 class AdminPage(tk.Frame):
     # Close Application
@@ -62,6 +63,7 @@ class AdminPage(tk.Frame):
         email = self.emailVar.get()
         username = self.usernameVar.get()
         password = self.passwordVar.get()
+        confirmPassword = self.confirmPasswordVar.get()
 
         isAdmin = self.adminVar.get() != 0
         canChangePrice = self.changePriceVar.get() != 0
@@ -69,8 +71,13 @@ class AdminPage(tk.Frame):
         canChangeDetect = self.detectableRadioVar.get() != 0
         canEditHours = self.activeHoursRadioVar.get() != 0
 
-        if not firstName or not lastName or not email or not username or not password or not isAdmin or not canChangePrice or not canDownload or not canChangeDetect or not canEditHours:
+        if not firstName or not lastName or not email or not username or not password or not confirmPassword or not isAdmin or not canChangePrice or not canDownload or not canChangeDetect or not canEditHours:
             self.editUserStatusLabel.configure(text='Incomplete fields.', text_color="#d62828")
+            self.after(2000, lambda: self.editUserStatusLabel.configure(text_color="#1B2431"))
+            return
+        
+        if password != confirmPassword:
+            self.editUserStatusLabel.configure(text='Passwords does not match.', text_color="#d62828")
             self.after(2000, lambda: self.editUserStatusLabel.configure(text_color="#1B2431"))
             return
         
@@ -566,6 +573,18 @@ class AdminPage(tk.Frame):
         self.addCameraButton = CTkButton(manageCamerasFirstRow, text = "Add Camera", fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5, font = ('Montserrat', 12, 'bold'), command = self.addCamera_callback)
         self.assignLocation = CTkEntry(manageCamerasFirstRow, placeholder_text = "Assign Location", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
         
+        manageCamerasFirstRowCoordFrame = tk.Frame(upperLeftContent, bg="#1B2431")
+        tooltipImage = CTkImage(light_image = Image.open(os.path.join(parent_dir, "views/icons/icons_info.png")),
+                            dark_image = Image.open(os.path.join(parent_dir, "views/icons/icons_info.png")),
+                            size = (15, 15))
+        tooltipLabel = CTkLabel(manageCamerasFirstRowCoordFrame, image=tooltipImage, text = "")
+        tooltipLabel.image = tooltipImage
+        self.tooltip = tt(tooltipLabel, "Coordinates are used for the Dynamic Congestion Pricing Window Setting. The 2 Coordinates must be 500 meters apart. Leave blank if not going to use.", bg = "#FFFFFF", fg = "#000000")
+        self.firstCoordinateNEntry = CTkEntry(manageCamerasFirstRowCoordFrame, placeholder_text = "First Coordinate N", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        self.firstCoordinateEEntry = CTkEntry(manageCamerasFirstRowCoordFrame, placeholder_text = "First Coordinate E", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        self.secondCoordinateNEntry = CTkEntry(manageCamerasFirstRowCoordFrame, placeholder_text = "Second Coordinate N", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        self.secondCoordinateEEntry = CTkEntry(manageCamerasFirstRowCoordFrame, placeholder_text = "Second Coordinate E", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+
         manageCamerasFirstRowStatus = tk.Frame(upperLeftContent, bg="#1B2431")
         self.addCameraStatusLabel = CTkLabel(manageCamerasFirstRowStatus, text='Camera successfully added.', font = ('Monteserrat', 13, 'italic'), anchor = "w", text_color = "#1B2431")
 
@@ -576,12 +595,20 @@ class AdminPage(tk.Frame):
         manageCamerasSecondRow = tk.Frame(upperLeftContent, bg = "#1B2431")
         
         self.savedCamerasDrop = CTkComboBox(manageCamerasSecondRow, values=[camera[0].name for camera in cameras.data], font = ('Montserrat', 12), fg_color = "#FFFFFF", dropdown_fg_color = "#FFFFFF", dropdown_text_color = "#000000", border_color = "#FFFFFF", button_color = "#FFFFFF", text_color = "#000000", state='readonly')
+        # Used for Testing without connection to DB
+        # self.savedCamerasDrop = CTkComboBox(manageCamerasSecondRow, values=['(NONE)'], font = ('Montserrat', 12), fg_color = "#FFFFFF", dropdown_fg_color = "#FFFFFF", dropdown_text_color = "#000000", border_color = "#FFFFFF", button_color = "#FFFFFF", text_color = "#000000", state='readonly')
         self.savedCameraID = CTkEntry(manageCamerasSecondRow, placeholder_text = "Change Name", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
         self.savedCameraLocation = CTkEntry(manageCamerasSecondRow, placeholder_text = "Change Location", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
         
         updateSavedCameraButton = CTkButton(manageCamerasSecondRow, text = "Update Camera", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5, command = self.updateSavedCamera_callback)
         deleteSavedCameraButton = CTkButton(manageCamerasSecondRow, text = "Delete Camera", font = ('Montserrat', 12, 'bold'), fg_color = "#D62828", text_color = "#FFFFFF", corner_radius = 5, command = self.deleteSavedCamera_callback)
         
+        manageCamerasSecondRowCoordFrame = tk.Frame(upperLeftContent, bg="#1B2431")
+        self.savedFirstCoordinateNEntry = CTkEntry(manageCamerasSecondRowCoordFrame, placeholder_text = "First Coordinate N", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        self.savedFirstCoordinateEEntry = CTkEntry(manageCamerasSecondRowCoordFrame, placeholder_text = "First Coordinate E", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        self.savedSecondCoordinateNEntry = CTkEntry(manageCamerasSecondRowCoordFrame, placeholder_text = "Second Coordinate N", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        self.savedSecondCoordinateEEntry = CTkEntry(manageCamerasSecondRowCoordFrame, placeholder_text = "Second Coordinate E", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+
         manageCamerasSecondRowStatus = tk.Frame(upperLeftContent, bg="#1B2431")
         self.secondRowStatusLabel = CTkLabel(manageCamerasSecondRowStatus, text='Camera successfully added.', font = ('Monteserrat', 13, 'italic'), anchor = "w", text_color = "#1B2431")
 
@@ -755,16 +782,22 @@ class AdminPage(tk.Frame):
         self.emailVar = StringVar(value='')
         self.emailEntry = CTkEntry(emailInner, textvariable=self.emailVar, placeholder_text = "Ex. juancruz@domain.com", font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF")
         
-        usernamePasswordOuter = tk.Frame(upperMiddleRight, bg = "#1B2431")
-        usernameInner = tk.Frame(usernamePasswordOuter, bg = "#1B2431")
+        usernameOuter = tk.Frame(upperMiddleRight, bg = "#1B2431")
+        usernameInner = tk.Frame(usernameOuter, bg = "#1B2431")
         usernameLabel = CTkLabel(usernameInner, text = "Username", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
         self.usernameVar = StringVar(value='')
-        self.usernameEntry = CTkEntry(usernameInner, textvariable=self.usernameVar, font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF")
-        
-        passwordInner = tk.Frame(usernamePasswordOuter, bg = "#1B2431")
+        self.usernameEntry = CTkEntry(usernameInner, textvariable=self.usernameVar, placeholder_text = "Ex. juancruz@domain.com", font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF")
+
+        passwordOuter = tk.Frame(upperMiddleRight, bg = "#1B2431")
+        passwordInner = tk.Frame(passwordOuter, bg = "#1B2431")
         passwordLabel = CTkLabel(passwordInner, text = "Password", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
         self.passwordVar = StringVar(value='')
         self.passwordEntry = CTkEntry(passwordInner, textvariable=self.passwordVar, font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF", show = "*")
+
+        confirmPasswordInner = tk.Frame(passwordOuter, bg = "#1B2431")
+        confirmPasswordLabel = CTkLabel(confirmPasswordInner, text = "Confirm Password", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
+        self.confirmPasswordVar = StringVar(value='')
+        self.confirmPasswordEntry = CTkEntry(confirmPasswordInner, textvariable=self.confirmPasswordVar, font = ('Montserrat', 12), text_color = "#000000", fg_color = "#FFFFFF", show = "*")
         
         lowerMiddleRight = tk.Frame(middleRight, bg = "#1B2431")
         
@@ -851,25 +884,41 @@ class AdminPage(tk.Frame):
         addCamerasLabel.pack(side = "top", fill = "x", padx = 10, pady = (5,0))
         
         manageCamerasFirstRow.pack(side = "top", fill = "x", padx = 10, pady = (2, 10))
+        manageCamerasFirstRowCoordFrame.pack(side = "top", fill = "x", padx = 10, pady = (2, 10))
         manageCamerasFirstRowStatus.pack(side = "top", fill = "x", padx = 15, pady = (2))
+
         self.discoverCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
         self.discoveredCamerasDrop.pack(side = "left", fill = "x", expand = True, padx = 15)
         self.assignID.pack(side = "left", fill = "x", expand = True, padx = 15)
 
         self.assignLocation.pack(side = "left", fill = "x", expand = True, padx = 15)
         self.addCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
+        
+        tooltipLabel.pack(side = 'left', fill = 'x', expand = False, padx = (15, 5))
+        self.firstCoordinateNEntry.pack(side='left', pady = 10, expand = True, fill = "x", padx = 15)
+        self.firstCoordinateEEntry.pack(side='left', pady = 10, expand = True, fill = "x", padx = 15)
+        self.secondCoordinateNEntry.pack(side='left', pady = 10, expand = True, fill = "x", padx = 15)
+        self.secondCoordinateEEntry.pack(side='left', pady = 10, expand = True, fill = "x", padx = 15)
+        
         self.addCameraStatusLabel.pack(side='left', pady = 10, expand = True, fill = "x")
         
         manageCamerasLabel.pack(side = "top", fill = "x", padx = 10, pady = (5,0))
         
         manageCamerasSecondRow.pack(side = "top", fill = "x", padx = 10, pady = (2, 10))
+        manageCamerasSecondRowCoordFrame.pack(side = "top", fill = "x", padx = 10, pady = (2, 10))
         manageCamerasSecondRowStatus.pack(side = "top", fill = "x", padx = 15, pady = (2))
+
         self.savedCamerasDrop.pack(side = "left", fill = "x", expand = True, padx = 15)
         self.savedCameraID.pack(side = "left", fill = "x", expand = True, padx = 15)
         self.savedCameraLocation.pack(side = "left", fill = "x", expand = True, padx = 15)
         updateSavedCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
         deleteSavedCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
         
+        self.savedFirstCoordinateNEntry.pack(side='left', pady = 10, expand = True, fill = "x", padx = 15)
+        self.savedFirstCoordinateEEntry.pack(side='left', pady = 10, expand = True, fill = "x", padx = 15)
+        self.savedSecondCoordinateNEntry.pack(side='left', pady = 10, expand = True, fill = "x", padx = 15)
+        self.savedSecondCoordinateEEntry.pack(side='left', pady = 10, expand = True, fill = "x", padx = 15)
+
         self.secondRowStatusLabel.pack(side='left', pady = 10, expand = True, fill = "x")
 
         lowerLeftContent.pack(side = "top", expand = True, fill = "both", padx = 10, pady = 10, ipadx = 10, ipady = 10)
@@ -951,13 +1000,20 @@ class AdminPage(tk.Frame):
         emailLabel.pack(side = "top", fill = "x", padx = 20, pady = (5,0))
         self.emailEntry.pack(side = "top", fill = "x", padx = 10, pady = (0,5))
         
-        usernamePasswordOuter.pack(side = "top", fill = "both", expand = True, padx = 10, pady = 2)
-        usernameInner.pack(side = "left", padx = 10, pady = 10, fill = "both", expand = True)
+        usernameOuter.pack(side = "top", fill = "both", expand = True, padx = 10, pady = 2)
+        usernameInner.pack(side = "top", padx = 10, pady = 10, fill = "both", expand = False)
         usernameLabel.pack(side = "top", fill = "x", padx = 20, pady = (5,0))
         self.usernameEntry.pack(side = "top", fill = "x", padx = 10, pady = (0,5))
+
+        passwordOuter.pack(side = "top", fill = "both", expand = True, padx = 10, pady = 2)
+
         passwordInner.pack(side = "left", padx = 10, pady = 10, fill = "both", expand = True)
         passwordLabel.pack(side = "top", fill = "x", padx = 20, pady = (5,0))
         self.passwordEntry.pack(side = "top", fill = "x", padx = 10, pady = (0,5))
+
+        confirmPasswordInner.pack(side = "left", padx = 10, pady = 10, fill = "both", expand = True)
+        confirmPasswordLabel.pack(side = "top", fill = "x", padx = 20, pady = (5,0))
+        self.confirmPasswordEntry.pack(side = "top", fill = "x", padx = 10, pady = (0,5))
         
         lowerMiddleRight.pack(side = "top", fill = "both", expand = True, padx = 5, pady = 2)
         accessLabel.pack(side = "top", fill = "x", padx = 5, pady = 5)

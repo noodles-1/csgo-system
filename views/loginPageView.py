@@ -26,7 +26,27 @@ class LoginPage(tk.Frame):
     def incorrectCredentials(self, incorrectLabel: CTkLabel):
         incorrectLabel.configure(text_color = "#d62828")
         self.after(2000, lambda: incorrectLabel.configure(text_color="#000000"))
-        
+
+    # Used for Testing without connection to DB        
+    # def fakeVerifyCredentials(self, parent, usernameEntry: CTkEntry, passwordEntry: CTkEntry, incorrectLabel: CTkLabel):
+    #     # Simulate a user object based on registration details
+    #     simulated_user = {
+    #         'email': 'test@example.com',
+    #         'username': usernameEntry.get(),
+    #         'firstName': 'John',
+    #         'lastName': 'Doe',
+    #         'isAdmin': True,
+    #         'canChangePrice': True,
+    #         'canDownload': True,
+    #         'canChangeDetect': True,
+    #         'canEditHours': True,
+    #     }
+
+    #     parent.setUser(simulated_user)
+    #     switch.showDashboardPage(parent)
+    #     cont.loggedIn = True
+    #     cont.currUser = simulated_user
+
     # Function that is called when clicking Login
     def verifyCredentials(self, parent, usernameEntry: CTkEntry, passwordEntry: CTkEntry, incorrectLabel: CTkLabel):
         username, password = usernameEntry.get(), passwordEntry.get()
