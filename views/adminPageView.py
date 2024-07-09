@@ -18,6 +18,7 @@ from PIL import Image
 from controllers.dbController import DBController
 from controllers.rtspController import RTSPController
 from controllers.s3controller import S3Controller
+from views.tooltip import ToolTip as tt
 
 class AdminPage(tk.Frame):
     # Close Application
@@ -572,6 +573,18 @@ class AdminPage(tk.Frame):
         self.addCameraButton = CTkButton(manageCamerasFirstRow, text = "Add Camera", fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5, font = ('Montserrat', 12, 'bold'), command = self.addCamera_callback)
         self.assignLocation = CTkEntry(manageCamerasFirstRow, placeholder_text = "Assign Location", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
         
+        manageCamerasFirstRowCoordFrame = tk.Frame(upperLeftContent, bg="#1B2431")
+        tooltipImage = CTkImage(light_image = Image.open(os.path.join(parent_dir, "views/icons/icons_info.png")),
+                            dark_image = Image.open(os.path.join(parent_dir, "views/icons/icons_info.png")),
+                            size = (15, 15))
+        tooltipLabel = CTkLabel(manageCamerasFirstRowCoordFrame, image=tooltipImage, text = "")
+        tooltipLabel.image = tooltipImage
+        self.tooltip = tt(tooltipLabel, "Coordinates are used for the Dynamic Congestion Pricing Window Setting. The 2 Coordinates must be 500 meters apart. Leave blank if not going to use.", bg = "#FFFFFF", fg = "#000000")
+        self.firstCoordinateNEntry = CTkEntry(manageCamerasFirstRowCoordFrame, placeholder_text = "First Coordinate N", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        self.firstCoordinateEEntry = CTkEntry(manageCamerasFirstRowCoordFrame, placeholder_text = "First Coordinate E", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        self.secondCoordinateNEntry = CTkEntry(manageCamerasFirstRowCoordFrame, placeholder_text = "Second Coordinate N", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        self.secondCoordinateEEntry = CTkEntry(manageCamerasFirstRowCoordFrame, placeholder_text = "Second Coordinate E", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+
         manageCamerasFirstRowStatus = tk.Frame(upperLeftContent, bg="#1B2431")
         self.addCameraStatusLabel = CTkLabel(manageCamerasFirstRowStatus, text='Camera successfully added.', font = ('Monteserrat', 13, 'italic'), anchor = "w", text_color = "#1B2431")
 
@@ -590,6 +603,12 @@ class AdminPage(tk.Frame):
         updateSavedCameraButton = CTkButton(manageCamerasSecondRow, text = "Update Camera", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5, command = self.updateSavedCamera_callback)
         deleteSavedCameraButton = CTkButton(manageCamerasSecondRow, text = "Delete Camera", font = ('Montserrat', 12, 'bold'), fg_color = "#D62828", text_color = "#FFFFFF", corner_radius = 5, command = self.deleteSavedCamera_callback)
         
+        manageCamerasSecondRowCoordFrame = tk.Frame(upperLeftContent, bg="#1B2431")
+        self.savedFirstCoordinateNEntry = CTkEntry(manageCamerasSecondRowCoordFrame, placeholder_text = "First Coordinate N", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        self.savedFirstCoordinateEEntry = CTkEntry(manageCamerasSecondRowCoordFrame, placeholder_text = "First Coordinate E", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        self.savedSecondCoordinateNEntry = CTkEntry(manageCamerasSecondRowCoordFrame, placeholder_text = "Second Coordinate N", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        self.savedSecondCoordinateEEntry = CTkEntry(manageCamerasSecondRowCoordFrame, placeholder_text = "Second Coordinate E", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+
         manageCamerasSecondRowStatus = tk.Frame(upperLeftContent, bg="#1B2431")
         self.secondRowStatusLabel = CTkLabel(manageCamerasSecondRowStatus, text='Camera successfully added.', font = ('Monteserrat', 13, 'italic'), anchor = "w", text_color = "#1B2431")
 
@@ -865,25 +884,41 @@ class AdminPage(tk.Frame):
         addCamerasLabel.pack(side = "top", fill = "x", padx = 10, pady = (5,0))
         
         manageCamerasFirstRow.pack(side = "top", fill = "x", padx = 10, pady = (2, 10))
+        manageCamerasFirstRowCoordFrame.pack(side = "top", fill = "x", padx = 10, pady = (2, 10))
         manageCamerasFirstRowStatus.pack(side = "top", fill = "x", padx = 15, pady = (2))
+
         self.discoverCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
         self.discoveredCamerasDrop.pack(side = "left", fill = "x", expand = True, padx = 15)
         self.assignID.pack(side = "left", fill = "x", expand = True, padx = 15)
 
         self.assignLocation.pack(side = "left", fill = "x", expand = True, padx = 15)
         self.addCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
+        
+        tooltipLabel.pack(side = 'left', fill = 'x', expand = False, padx = (15, 5))
+        self.firstCoordinateNEntry.pack(side='left', pady = 10, expand = True, fill = "x", padx = 15)
+        self.firstCoordinateEEntry.pack(side='left', pady = 10, expand = True, fill = "x", padx = 15)
+        self.secondCoordinateNEntry.pack(side='left', pady = 10, expand = True, fill = "x", padx = 15)
+        self.secondCoordinateEEntry.pack(side='left', pady = 10, expand = True, fill = "x", padx = 15)
+        
         self.addCameraStatusLabel.pack(side='left', pady = 10, expand = True, fill = "x")
         
         manageCamerasLabel.pack(side = "top", fill = "x", padx = 10, pady = (5,0))
         
         manageCamerasSecondRow.pack(side = "top", fill = "x", padx = 10, pady = (2, 10))
+        manageCamerasSecondRowCoordFrame.pack(side = "top", fill = "x", padx = 10, pady = (2, 10))
         manageCamerasSecondRowStatus.pack(side = "top", fill = "x", padx = 15, pady = (2))
+
         self.savedCamerasDrop.pack(side = "left", fill = "x", expand = True, padx = 15)
         self.savedCameraID.pack(side = "left", fill = "x", expand = True, padx = 15)
         self.savedCameraLocation.pack(side = "left", fill = "x", expand = True, padx = 15)
         updateSavedCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
         deleteSavedCameraButton.pack(side = "left", fill = "x", expand = True, padx = 15)
         
+        self.savedFirstCoordinateNEntry.pack(side='left', pady = 10, expand = True, fill = "x", padx = 15)
+        self.savedFirstCoordinateEEntry.pack(side='left', pady = 10, expand = True, fill = "x", padx = 15)
+        self.savedSecondCoordinateNEntry.pack(side='left', pady = 10, expand = True, fill = "x", padx = 15)
+        self.savedSecondCoordinateEEntry.pack(side='left', pady = 10, expand = True, fill = "x", padx = 15)
+
         self.secondRowStatusLabel.pack(side='left', pady = 10, expand = True, fill = "x")
 
         lowerLeftContent.pack(side = "top", expand = True, fill = "both", padx = 10, pady = 10, ipadx = 10, ipady = 10)
