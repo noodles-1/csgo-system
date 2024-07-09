@@ -35,7 +35,7 @@ class LoginPage(tk.Frame):
     #         'username': usernameEntry.get(),
     #         'firstName': 'John',
     #         'lastName': 'Doe',
-    #         'isAdmin': False,
+    #         'isAdmin': True,
     #         'canChangePrice': True,
     #         'canDownload': True,
     #         'canChangeDetect': True,
