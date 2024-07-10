@@ -17,6 +17,7 @@ from models.schemas import Camera
 from models.schemas import DetectedLicensePlate
 from models.schemas import CurrentSetting
 from models.schemas import FutureSetting
+from models.schemas import Congestion
 from sqlalchemy import select
 from sqlalchemy import update
 from sqlalchemy import or_
@@ -747,7 +748,7 @@ class DBController:
         return response
     
     @staticmethod
-    def registerCamera(ip_addr: str, name='', location='') -> Response:
+    def registerCamera(ip_addr: str, name: str, location: str, originCoords: str, destCoords: str) -> Response:
         '''
         Registers a new camera with its IP address, camera name, and location.
 
@@ -770,7 +771,9 @@ class DBController:
                     camera = Camera(
                         id=ip_addr,
                         name=name,
-                        location=location.lower()
+                        location=location.lower(),
+                        originCoords=originCoords,
+                        destCoords=destCoords
                     )
                     session.add(camera)
                     session.commit()
@@ -782,7 +785,7 @@ class DBController:
         return response
     
     @staticmethod
-    def editCamera(oldName: str, newName: str, newLocation: str) -> Response:
+    def editCamera(oldName: str, newName: str, newLocation: str, newOriginCoords: str, newDestCoords: str) -> Response:
         '''
         Edits an existing camera with a new camera name and location.
 
@@ -797,16 +800,17 @@ class DBController:
         response = DBController.Response()
 
         try:
-            if newName and DBController.cameraExists(name=newName):
+            if DBController.cameraExists(name=newName) and newName != DBController.getCamera(name=oldName).name:
                 response.ok = False
                 response.messages['error'] = 'Camera name already exists.'
             else:
                 with Session(Connection.engine) as session:
-                    stmt = update(Camera).where(Camera.name == oldName)
-                    if newName:
-                        stmt = stmt.values(name=newName)
-                    if newLocation:
-                        stmt = stmt.values(location=newLocation.lower())
+                    stmt = update(Camera).where(Camera.name == oldName).values(
+                        name=newName,
+                        location=newLocation.lower(),
+                        originCoords=newOriginCoords,
+                        destCoords=newDestCoords
+                    )
                     session.execute(stmt)
                     session.commit()
                     response.ok = True
@@ -1318,4 +1322,36 @@ class DBController:
             response.ok = False
             response.messages['error'] = repr(e)
 
+        return response
+    
+    @staticmethod
+    def addCongestion(location: str, congestion: float):
+        '''
+        Adds a congestion/traffic ratio on a location at the current date and time.
+
+        params:
+        - location: str => the location of the traffic
+        - congestion: float => the traffic ratio between 0 to 1, where values closer to 0 denotes lighter traffic,
+        and values closer 1 denotes heavier traffic
+
+        returns:
+        - response: Response => contains the response status
+        '''
+        response = DBController.Response()
+
+        try:
+            with Session(Connection.engine) as session:
+                congestion = Congestion(
+                    location=location,
+                    congestion=congestion,
+                    date=datetime.now().date(),
+                    time=datetime.now().time()
+                )
+                session.add(congestion)
+                session.commit()
+                response.ok = True
+        except Exception as e:
+            response.ok = False
+            response.messages['error'] = repr(e)
+        
         return response

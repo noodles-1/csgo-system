@@ -23,6 +23,7 @@ from controllers.dbController import DBController
 from controllers.s3controller import S3Controller
 from controllers.socketController import SocketController
 from controllers.pollController import PollController
+from controllers.googleController import GoogleController
 
 classnames = [
     "person", "bicycle", "car", "motorcycle", "aeroplane", "bus", "train", "truck", "boat",
@@ -237,6 +238,13 @@ class DashboardPage(tk.Frame):
         dest_coords = result.destCoords
         cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/IMG_9613_1.mp4' if cameraName == 'test_cam' else f'rtsp://{ip_addr}:554'
 
+        if self.timer is not None:
+            self.master.after_cancel(self.timer)
+            self.timer = None
+            self.master.after(5000, self.trafficPoll, result.location, origin_coords, dest_coords)
+        else:
+            self.trafficPoll(result.location, origin_coords, dest_coords)
+
         self.cap = cv2.VideoCapture(cameraUrl)
         DashboardPage.StartCamera(self.currUser).start(self.cap, self.placeholder_label, ip_addr, self.databaseTable, self.vehiclesDetectedCount)
         
@@ -255,20 +263,24 @@ class DashboardPage(tk.Frame):
     #     else:
     #         self.adminButton.configure(state='disabled' if not user.isAdmin else 'normal')
 
+    def trafficPoll(self, location, origin_coords, dest_coords):
+        data = GoogleController.getDistanceMatrix(origin_coords, dest_coords)
+        duration = data['rows'][0]['elements'][0]['duration']['value']
+        duration_in_traffic = data['rows'][0]['elements'][0]['duration_in_traffic']['value']
+        traffic_ratio = 1 - min(1, duration / duration_in_traffic)
+        response = DBController.addCongestion(location, traffic_ratio)
+        print(duration, duration_in_traffic, traffic_ratio)
+        if not response.ok:
+            print(response.messages)
+        self.congestionBar.updateBar(traffic_ratio)
+        self.update()
+        self.timer = self.after(60000, self.trafficPoll, location, origin_coords, dest_coords)
     
     def dipModuleRadio_callback(self):
         cont.dipModule = self.dipModuleVar.get()
-        
-        self.simulateCongestionBar()
-
-    def simulateCongestionBar(self):
-        # Simulate congestion state by updating the congestion state bar
-        for i in range(11):
-            self.congestionBar.updateBar(i / 10)
-            self.update()
-            self.after(500)
 
     def __init__(self, parent):
+        self.timer = None
         self.cap = None
         self.currUser = None
 

@@ -18,6 +18,7 @@ from PIL import Image
 from controllers.dbController import DBController
 from controllers.rtspController import RTSPController
 from controllers.s3controller import S3Controller
+from controllers.googleController import GoogleController
 from views.tooltip import ToolTip as tt
 
 class AdminPage(tk.Frame):
@@ -333,13 +334,27 @@ class AdminPage(tk.Frame):
         cameraIpAddr = self.discoveredCamerasDrop.get()
         cameraName = self.assignID.get()
         cameraLocation = self.assignLocation.get()
+        firstLat = self.firstCoordinateNEntry.get()
+        firstLng = self.firstCoordinateEEntry.get()
+        secondLat = self.secondCoordinateNEntry.get()
+        secondLng = self.secondCoordinateEEntry.get()
 
-        if not cameraIpAddr or not cameraName or not cameraLocation:
+        if not cameraIpAddr or not cameraName or not cameraLocation or not firstLat or not firstLng or not secondLat or not secondLng:
             self.addCameraStatusLabel.configure(text='Incomplete fields.', text_color="#d62828")
             self.after(2000, lambda: self.addCameraStatusLabel.configure(text_color="#1B2431"))
             return
+        
+        originCoords = f'{firstLat}, {firstLng}'
+        destCoords = f'{secondLat}, {secondLng}'
+        
+        googleResponse = GoogleController.getDistanceMatrix(originCoords, destCoords)
 
-        response = DBController.registerCamera(ip_addr=cameraIpAddr, name=cameraName, location=cameraLocation)
+        if 'error' in googleResponse:
+            self.addCameraStatusLabel.configure(text=googleResponse['error'], text_color="#d62828")
+            self.after(2000, lambda: self.addCameraStatusLabel.configure(text_color="#1B2431"))
+            return
+
+        response = DBController.registerCamera(ip_addr=cameraIpAddr, name=cameraName, location=cameraLocation, originCoords=originCoords, destCoords=destCoords)
 
         if response.ok:
             self.addCameraStatusLabel.configure(text='Camera successfully added.', text_color="#25be8e")
@@ -363,23 +378,53 @@ class AdminPage(tk.Frame):
 
         self.assignID.delete(0, 'end')
         self.assignLocation.delete(0, 'end')
+        self.assignLocation.delete(0, 'end')
+        self.firstCoordinateNEntry.delete(0, 'end')
+        self.firstCoordinateEEntry.delete(0, 'end')
+        self.secondCoordinateNEntry.delete(0, 'end')
+        self.secondCoordinateEEntry.delete(0, 'end')
+
+    def savedCamerasDropCallback(self, choice):
+        camera = DBController.getCamera(name=choice)
+        firstLat, firstLng = camera.originCoords.split(', ')
+        secondLat, secondLng = camera.destCoords.split(', ')
+        self.savedCameraNameVar.set(camera.name)
+        self.savedCameraLocationVar.set(camera.location)
+        self.firstLatEntryVar.set(firstLat)
+        self.firstLngEntryVar.set(firstLng)
+        self.secondLatEntryVar.set(secondLat)
+        self.secondLngEntryVar.set(secondLng)
     
     def updateSavedCamera_callback(self):
         cameraOldName = self.savedCamerasDrop.get()
         cameraNewName = self.savedCameraID.get()
         cameraNewLocation = self.savedCameraLocation.get()
+        firstLat = self.savedFirstCoordinateNEntry.get()
+        firstLng = self.savedFirstCoordinateEEntry.get()
+        secondLat = self.savedSecondCoordinateNEntry.get()
+        secondLng = self.savedSecondCoordinateEEntry.get()
 
         if not cameraOldName:
             self.secondRowStatusLabel.configure(text='No camera chosen.', text_color="#d62828")
             self.after(2000, lambda: self.secondRowStatusLabel.configure(text_color="#1B2431"))
             return
         
-        if not cameraNewName and not cameraNewLocation:
+        if not cameraNewName or not cameraNewLocation or not firstLat or not firstLng or not secondLat or not secondLng:
             self.secondRowStatusLabel.configure(text='Incomplete field(s).', text_color="#d62828")
             self.after(2000, lambda: self.secondRowStatusLabel.configure(text_color="#1B2431"))
             return
         
-        response = DBController.editCamera(oldName=cameraOldName, newName=cameraNewName, newLocation=cameraNewLocation)
+        originCoords = f'{firstLat}, {firstLng}'
+        destCoords = f'{secondLat}, {secondLng}'
+        
+        googleResponse = GoogleController.getDistanceMatrix(originCoords, destCoords)
+
+        if 'error' in googleResponse:
+            self.secondRowStatusLabel.configure(text=googleResponse['error'], text_color="#d62828")
+            self.after(2000, lambda: self.secondRowStatusLabel.configure(text_color="#1B2431"))
+            return
+        
+        response = DBController.editCamera(oldName=cameraOldName, newName=cameraNewName, newLocation=cameraNewLocation, newOriginCoords=originCoords, newDestCoords=destCoords)
 
         if response.ok:
             self.secondRowStatusLabel.configure(text='Camera successfully updated.', text_color='#25be8e')
@@ -398,8 +443,13 @@ class AdminPage(tk.Frame):
             self.secondRowStatusLabel.configure(text=response.messages['error'], text_color="#d62828")
             self.after(2000, lambda: self.secondRowStatusLabel.configure(text_color="#1B2431"))
 
+        self.savedCamerasDrop.set('')
         self.savedCameraID.delete(0, 'end')
         self.savedCameraLocation.delete(0, 'end')
+        self.firstLatEntryVar.set('')
+        self.firstLngEntryVar.set('')
+        self.secondLatEntryVar.set('')
+        self.secondLngEntryVar.set('')
 
     def deleteSavedCamera_callback(self):
         cameraToDelete = self.savedCamerasDrop.get()
@@ -428,7 +478,13 @@ class AdminPage(tk.Frame):
             self.secondRowStatusLabel.configure(text=response.messages['error'], text_color="#d62828")
             self.after(2000, lambda: self.secondRowStatusLabel.configure(text_color="#1B2431"))
 
+        self.savedCamerasDrop.set('')
         self.savedCameraID.delete(0, 'end')
+        self.savedCameraLocation.delete(0, 'end')
+        self.firstLatEntryVar.set('')
+        self.firstLngEntryVar.set('')
+        self.secondLatEntryVar.set('')
+        self.secondLngEntryVar.set('')
     
     def updateTable_callback(self):
         def isPositiveFloat(s: str) -> bool:
@@ -594,20 +650,26 @@ class AdminPage(tk.Frame):
 
         manageCamerasSecondRow = tk.Frame(upperLeftContent, bg = "#1B2431")
         
-        self.savedCamerasDrop = CTkComboBox(manageCamerasSecondRow, values=[camera[0].name for camera in cameras.data], font = ('Montserrat', 12), fg_color = "#FFFFFF", dropdown_fg_color = "#FFFFFF", dropdown_text_color = "#000000", border_color = "#FFFFFF", button_color = "#FFFFFF", text_color = "#000000", state='readonly')
+        self.savedCamerasDrop = CTkComboBox(manageCamerasSecondRow, values=[camera[0].name for camera in cameras.data], font = ('Montserrat', 12), fg_color = "#FFFFFF", dropdown_fg_color = "#FFFFFF", dropdown_text_color = "#000000", border_color = "#FFFFFF", button_color = "#FFFFFF", text_color = "#000000", state='readonly', command=self.savedCamerasDropCallback)
         # Used for Testing without connection to DB
         # self.savedCamerasDrop = CTkComboBox(manageCamerasSecondRow, values=['(NONE)'], font = ('Montserrat', 12), fg_color = "#FFFFFF", dropdown_fg_color = "#FFFFFF", dropdown_text_color = "#000000", border_color = "#FFFFFF", button_color = "#FFFFFF", text_color = "#000000", state='readonly')
-        self.savedCameraID = CTkEntry(manageCamerasSecondRow, placeholder_text = "Change Name", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
-        self.savedCameraLocation = CTkEntry(manageCamerasSecondRow, placeholder_text = "Change Location", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        self.savedCameraNameVar = StringVar(value='')
+        self.savedCameraLocationVar = StringVar(value='')
+        self.savedCameraID = CTkEntry(manageCamerasSecondRow, textvariable=self.savedCameraNameVar, placeholder_text = "Change Name", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        self.savedCameraLocation = CTkEntry(manageCamerasSecondRow, textvariable=self.savedCameraLocationVar, placeholder_text = "Change Location", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
         
         updateSavedCameraButton = CTkButton(manageCamerasSecondRow, text = "Update Camera", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5, command = self.updateSavedCamera_callback)
         deleteSavedCameraButton = CTkButton(manageCamerasSecondRow, text = "Delete Camera", font = ('Montserrat', 12, 'bold'), fg_color = "#D62828", text_color = "#FFFFFF", corner_radius = 5, command = self.deleteSavedCamera_callback)
         
         manageCamerasSecondRowCoordFrame = tk.Frame(upperLeftContent, bg="#1B2431")
-        self.savedFirstCoordinateNEntry = CTkEntry(manageCamerasSecondRowCoordFrame, placeholder_text = "First Coordinate N", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
-        self.savedFirstCoordinateEEntry = CTkEntry(manageCamerasSecondRowCoordFrame, placeholder_text = "First Coordinate E", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
-        self.savedSecondCoordinateNEntry = CTkEntry(manageCamerasSecondRowCoordFrame, placeholder_text = "Second Coordinate N", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
-        self.savedSecondCoordinateEEntry = CTkEntry(manageCamerasSecondRowCoordFrame, placeholder_text = "Second Coordinate E", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        self.firstLatEntryVar = StringVar(value='')
+        self.firstLngEntryVar = StringVar(value='')
+        self.secondLatEntryVar = StringVar(value='')
+        self.secondLngEntryVar = StringVar(value='')
+        self.savedFirstCoordinateNEntry = CTkEntry(manageCamerasSecondRowCoordFrame, textvariable=self.firstLatEntryVar, placeholder_text = "First Coordinate N", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        self.savedFirstCoordinateEEntry = CTkEntry(manageCamerasSecondRowCoordFrame, textvariable=self.firstLngEntryVar, placeholder_text = "First Coordinate E", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        self.savedSecondCoordinateNEntry = CTkEntry(manageCamerasSecondRowCoordFrame, textvariable=self.secondLatEntryVar, placeholder_text = "Second Coordinate N", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
+        self.savedSecondCoordinateEEntry = CTkEntry(manageCamerasSecondRowCoordFrame, textvariable=self.secondLngEntryVar, placeholder_text = "Second Coordinate E", font = ('Montserrat', 12, 'bold'), fg_color = "#FFFFFF", text_color = "#000000", corner_radius = 5)
 
         manageCamerasSecondRowStatus = tk.Frame(upperLeftContent, bg="#1B2431")
         self.secondRowStatusLabel = CTkLabel(manageCamerasSecondRowStatus, text='Camera successfully added.', font = ('Monteserrat', 13, 'italic'), anchor = "w", text_color = "#1B2431")
