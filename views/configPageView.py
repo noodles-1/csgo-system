@@ -16,6 +16,7 @@ from PIL import Image
 from tkcalendar import Calendar
 from controllers.dbController import DBController
 from controllers.s3controller import S3Controller
+from controllers.pollController import PollController
 from views.tooltip import ToolTip as tt
 
 class ConfigPage(tk.Frame):
@@ -408,7 +409,7 @@ class ConfigPage(tk.Frame):
         parent.show_frame(parent.loginFrame)
     
     def dynamicCongestionWindow(self):
-        dynamicWindowState = self.dynamicVar.get()
+        PollController.dynamicSetting = self.dynamicVar.get() == 1
         
     def __init__(self, parent):
         self.selected_date = ''

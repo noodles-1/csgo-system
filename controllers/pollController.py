@@ -8,9 +8,10 @@ sys.path.append(parent)
 from datetime import datetime
 from controllers.dbController import DBController
 
-
 class PollController:
     currSetting = None
+    dynamicSetting = False
+    isHeavyTraffic = False
     analyticsShown = False
     
     @staticmethod

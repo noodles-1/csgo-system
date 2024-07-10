@@ -55,9 +55,9 @@ class DetectedLicensePlate(Base):
     '''
     __tablename__ = 'detected_license_plate'
 
-    id: Mapped[int] = mapped_column(String(50), primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     userId: Mapped[int] = mapped_column(ForeignKey('user.id'))
-    settingId: Mapped[int] = mapped_column(ForeignKey('current_setting.id'))
+    settingId: Mapped[int]
     location: Mapped[str] = mapped_column(String(255))
     licenseNumber: Mapped[str] = mapped_column(String(14))
     vehicleType: Mapped[str] = mapped_column(String(20))

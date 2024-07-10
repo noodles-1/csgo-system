@@ -109,6 +109,8 @@ class DashboardPage(tk.Frame):
             def showFrame():
                 success, frame = cap.read()
                 currSetting = PollController.currSetting
+                dynamicSetting = PollController.dynamicSetting
+                isHeavyTraffic = PollController.isHeavyTraffic
                 AIController.setVehicleClasses(2, currSetting.detectCar if currSetting else True)
                 AIController.setVehicleClasses(3, currSetting.detectMotorcycle if currSetting else True)
                 AIController.setVehicleClasses(5, currSetting.detectBus if currSetting else True)
@@ -137,8 +139,7 @@ class DashboardPage(tk.Frame):
                             cropped_vehicle = frame[int(y1.item()):int(y2.item()), int(x1.item()):int(x2.item())]
                             extracted_lp = None
 
-                            
-                            if currSetting:
+                            if currSetting or (dynamicSetting and isHeavyTraffic):
                                 lp_result = AIController.detect_license_plate(frame=cropped_vehicle)
 
                                 if not lp_result[0].boxes:
@@ -192,15 +193,23 @@ class DashboardPage(tk.Frame):
                                 time = datetime.now().time()
                                 camera = DBController.getCamera(id=cameraId)
                                 if classnames[vehicle_id] == 'car':
-                                    price = currSetting.carPrice if currSetting else 0
+                                    price = 100 if dynamicSetting else 0
+                                    if currSetting:
+                                        price = currSetting.carPrice
                                 elif classnames[vehicle_id] == 'motorcycle':
-                                    price = currSetting.motorcyclePrice if currSetting else 0
+                                    price = 100 if dynamicSetting else 0
+                                    if currSetting:
+                                        price = currSetting.motorcyclePrice
                                 elif classnames[vehicle_id] == 'bus':
-                                    price = currSetting.busPrice if currSetting else 0
+                                    price = 100 if dynamicSetting else 0
+                                    if currSetting:
+                                        price = currSetting.busPrice
                                 elif classnames[vehicle_id] == 'truck':
-                                    price = currSetting.truckPrice if currSetting else 0
+                                    price = 100 if dynamicSetting else 0
+                                    if currSetting:
+                                        price = currSetting.truckPrice
                                 imageUrl = None
-                                if currSetting:
+                                if currSetting or (dynamicSetting and isHeavyTraffic):
                                     imageUrl = S3Controller().uploadImage(cropped_vehicle, f'[{date} - {time}] {classnames[vehicle_id]} - id: {id}')
                                 response = DBController.addLicensePlate(self.currUser.id, currSetting.id if currSetting else 0, camera.location, extracted_lp or 'none', classnames[vehicle_id], price, imageUrl or 'none')
 
@@ -255,26 +264,20 @@ class DashboardPage(tk.Frame):
         self.currUser = user
         self.adminButton.configure(state='disabled' if not user.isAdmin else 'normal')
 
-    # Used for Testing without connection to DB        
-    # def setCurrUser(self, user):
-    #     self.currUser = user
-    #     if isinstance(user, dict):
-    #         self.adminButton.configure(state='disabled' if not user.get('isAdmin', False) else 'normal')
-    #     else:
-    #         self.adminButton.configure(state='disabled' if not user.isAdmin else 'normal')
-
     def trafficPoll(self, location, origin_coords, dest_coords):
         data = GoogleController.getDistanceMatrix(origin_coords, dest_coords)
         duration = data['rows'][0]['elements'][0]['duration']['value']
         duration_in_traffic = data['rows'][0]['elements'][0]['duration_in_traffic']['value']
         traffic_ratio = 1 - min(1, duration / duration_in_traffic)
+        PollController.isHeavyTraffic = traffic_ratio >= 0.5
         response = DBController.addCongestion(location, traffic_ratio)
-        print(duration, duration_in_traffic, traffic_ratio)
         if not response.ok:
-            print(response.messages)
+            with open(os.path.join(parent_dir, 'logs.txt'), 'a') as file:
+                now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+                file.write(f'[{now}] Error at function invocation views/dashboardPageView.py trafficPoll() - {repr(response.messages["error"])}\n')
         self.congestionBar.updateBar(traffic_ratio)
         self.update()
-        self.timer = self.after(60000, self.trafficPoll, location, origin_coords, dest_coords)
+        self.timer = self.after(30000, self.trafficPoll, location, origin_coords, dest_coords)
     
     def dipModuleRadio_callback(self):
         cont.dipModule = self.dipModuleVar.get()
