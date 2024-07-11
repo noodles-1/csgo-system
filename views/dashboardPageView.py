@@ -245,7 +245,16 @@ class DashboardPage(tk.Frame):
         ip_addr = result.id
         origin_coords = result.originCoords
         dest_coords = result.destCoords
-        cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/IMG_9613_1.mp4' if cameraName == 'test_cam' else f'rtsp://{ip_addr}:554'
+        cameraUrl = f'rtsp://{ip_addr}:554'
+
+        if cameraName == 'test_cam':
+            cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/IMG_9613_1.mp4'
+        elif cameraName == 'test_cam2':
+            cameraUrl = 'videos/1m elevation mendoza.MOV'
+        elif cameraName == 'test_cam3':
+            cameraUrl = 'videos/1m elevation rayray.mov'
+        elif cameraName == 'test_cam4':
+            cameraUrl = 'videos/3m elevation (720).mp4'
 
         if self.timer is not None:
             self.master.after_cancel(self.timer)

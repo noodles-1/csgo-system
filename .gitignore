@@ -11,6 +11,7 @@ venv38
 userSession
 build
 dist
+videos
 
 logs.txt
 .venv
