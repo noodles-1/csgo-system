@@ -27,9 +27,10 @@ class GoogleController:
 
         if data['rows'][0]['elements'][0]['status'] != 'OK':
             data['error'] = 'Invalid coordinates.'
+            return data
 
         distance = data['rows'][0]['elements'][0]['distance']['value']
-        elif distance < 500 or 1500 < distance:
+        if distance < 500 or 1500 < distance:
             data['error'] = 'Distance must be between 500 to 1500 meters.'
 
         return data

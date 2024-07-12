@@ -96,8 +96,8 @@ class DashboardPage(tk.Frame):
 
         @staticmethod
         def isValidLicensePlate(licensePlate: str) -> bool:
-            regex1 = r'^[A-Z]{3}\d{3,4}$'
-            regex2 = r'^\d{3,4}[A-Z]{3}$'
+            regex1 = r'^[A-Z]{2,4}\d{2,4}$'
+            regex2 = r'^\d{2,4}[A-Z]{2,4}$'
             return re.fullmatch(regex1, licensePlate) is not None or re.fullmatch(regex2, licensePlate) is not None
         
         def start(self, cap, placeholder_label, cameraId, databaseTable, vehiclesDetectedCount):
