@@ -10,6 +10,7 @@ from datetime import datetime
 from customtkinter import *
 from tkinter import ttk
 from PIL import Image, ImageTk
+from skimage.filters import threshold_sauvola
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.dirname(current)
@@ -96,8 +97,8 @@ class DashboardPage(tk.Frame):
 
         @staticmethod
         def isValidLicensePlate(licensePlate: str) -> bool:
-            regex1 = r'^[A-Z]{2,4}\d{2,4}$'
-            regex2 = r'^\d{2,4}[A-Z]{2,4}$'
+            regex1 = r'^[A-Z]{3,4}\d{3,4}$'
+            regex2 = r'^\d{3,4}[A-Z]{3,4}$'
             return re.fullmatch(regex1, licensePlate) is not None or re.fullmatch(regex2, licensePlate) is not None
         
         def start(self, cap, placeholder_label, cameraId, databaseTable, vehiclesDetectedCount):
@@ -128,9 +129,8 @@ class DashboardPage(tk.Frame):
                             id = int(boxes.id.item())
                             vehicle_id = int(boxes.cls.item())
 
-                            self.vehicleCount = max(self.vehicleCount, id)
-                            vehiclesDetectedCount.configure(text=f'{self.vehicleCount}')
-                            
+                            #self.vehicleCount = max(self.vehicleCount, id)
+
                             if id in detected_ids:
                                 continue
 
@@ -168,21 +168,24 @@ class DashboardPage(tk.Frame):
                                 gray = cv2.cvtColor(processed_lp if cont.dipModule != 0 else cropped_lp, cv2.COLOR_BGR2GRAY)
 
                                 # Apply Gaussian Blur to reduce noise
-                                blur = cv2.GaussianBlur(gray, (5, 5), 0)
+                                # blur = cv2.GaussianBlur(gray, (5, 5), 0)
 
                                 # Apply thresholding
-                                _, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+                                # _, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+                                sauvola_thresh = threshold_sauvola(gray, window_size=43)
+                                binary_sauvola = gray > sauvola_thresh
+                                binary_sauvola = (binary_sauvola * 255).astype(np.uint8)
 
                                 # Apply dilation to connect text regions
-                                kernel = np.ones((2, 2), np.uint8)
-                                dilated = cv2.dilate(thresh, kernel, iterations=1)
+                                # kernel = np.ones((2, 2), np.uint8)
+                                # dilated = cv2.dilate(thresh, kernel, iterations=1)
 
                                 # Optionally apply erosion to reduce noise
-                                eroded = cv2.erode(dilated, kernel, iterations=1)
+                                # eroded = cv2.erode(dilated, kernel, iterations=1)
                 
-                                extracted_lp_results = AIController.get_license_number_cnocr(frame=eroded)
-                                temp = [extracted_lp_results[i]['text'] for i in range(len(extracted_lp_results))]
-                                extracted_lp = ''.join(temp).replace(' ', '')
+                                extracted_lp_results = AIController.get_license_number_tesseract(frame=binary_sauvola)
+                                # temp = [extracted_lp_results[i]['text'] for i in range(len(extracted_lp_results))]
+                                extracted_lp = extracted_lp_results.strip().replace(' ', '')
                                 
                                 if not DashboardPage.StartCamera.isValidLicensePlate(extracted_lp):
                                     detected_ids.remove(id)
@@ -215,6 +218,8 @@ class DashboardPage(tk.Frame):
 
                                 if response.ok:
                                     databaseTable.insert('', 0, values=(extracted_lp or 'none', classnames[vehicle_id], cameraId, time, date, price))
+                                    self.vehicleCount += 1
+                                    vehiclesDetectedCount.configure(text=f'{self.vehicleCount}')
                             except Exception as e:
                                 with open('logs.txt', 'a') as file:
                                     now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')

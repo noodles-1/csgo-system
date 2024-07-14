@@ -8,6 +8,7 @@ import pandas as pd
 import random
 import smtplib
 import torch
+import pytesseract as tess
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
@@ -15,7 +16,7 @@ sys.path.append(parent)
 
 from datetime import datetime as datetime_module
 from ultralytics import YOLO
-from cnocr import CnOcr
+#from cnocr import CnOcr
 
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -25,7 +26,7 @@ class AIController:
     vehicleClasses = set([2, 3, 5, 7])
     vehicle_detection_model = YOLO(os.path.join(parent, 'yolov8n.pt'))
     lp_detection_model = YOLO(os.path.join(parent, 'trained_models/lp_detection/trained_yolov8n_3.pt'))
-    cnocr = CnOcr(det_model_name='en_PP-OCRv3_det', rec_model_name='en_PP-OCRv3')
+    #cnocr = CnOcr(det_model_name='en_PP-OCRv3_det', rec_model_name='en_PP-OCRv3')
     device = '0' if torch.cuda.is_available() else 'cpu'
 
     @staticmethod
@@ -36,10 +37,16 @@ class AIController:
     def detect_license_plate(frame):
         return AIController.lp_detection_model.predict(source=frame, verbose=False, device=AIController.device)
     
+    '''
     @staticmethod
     def get_license_number_cnocr(frame):
         return AIController.cnocr.ocr(img_fp=frame)
+    '''
     
+    @staticmethod
+    def get_license_number_tesseract(frame):
+        return tess.image_to_string(frame, lang='eng', config='--psm 8 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890')
+
     @staticmethod
     def setVehicleClasses(id: int, isEnabled: bool):
         '''

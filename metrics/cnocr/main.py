@@ -1,8 +1,11 @@
 import cv2
-import cnocr
+#import cnocr
 import numpy as np
+import pytesseract
 
-ocr = cnocr.CnOcr(det_model_name='en_PP-OCRv3_det', rec_model_name='en_PP-OCRv3')
+from skimage.filters import threshold_sauvola
+
+# ocr = cnocr.CnOcr(det_model_name='en_PP-OCRv3_det', rec_model_name='en_PP-OCRv3')
 
 actual_plates = [
     'AAK9402', 'YAA7157', 'DAN5548',
@@ -55,18 +58,24 @@ total = 0
 for i, actual_plate in enumerate(actual_plates):
     image = cv2.imread(f'metrics/cnocr/images/{i + 1}.jpg')
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    blur = cv2.GaussianBlur(gray, (5, 5), 0)
-    _, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    kernel = np.ones((2, 2), np.uint8)
-    dilated = cv2.dilate(thresh, kernel, iterations=1)
-    eroded = cv2.erode(dilated, kernel, iterations=1)
+    sauvola_thresh = threshold_sauvola(gray, window_size=43)
+    binary_sauvola = gray > sauvola_thresh
+    binary_sauvola = (binary_sauvola * 255).astype(np.uint8)
+    #_, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    #thresh = cv2.resize(thresh, (0, 0), fx=2, fy=2)
+    #kernel = np.ones((2, 2), np.uint8)
+    #dilated = cv2.dilate(thresh, kernel, iterations=1)
+    #eroded = cv2.erode(dilated, kernel, iterations=1)
+    #eroded = cv2.resize(eroded, (0, 0), fx=0.1, fy=0.1)
 
-    predicted_plate = ocr.ocr(img_fp=eroded)
-    predicted_plate = [predicted_plate[i]['text'] for i in range(len(predicted_plate))]
-    predicted_plate = ''.join(predicted_plate).replace(' ', '')
+    #predicted_plate = ocr.ocr(img_fp=eroded)
+    #predicted_plate = [predicted_plate[i]['text'] for i in range(len(predicted_plate))]
+    #predicted_plate = ''.join(predicted_plate).replace(' ', '')
 
-    total_err += min_error(predicted_plate, actual_plate)
+    tesseract_predicted = pytesseract.image_to_string(binary_sauvola, lang='eng', config='--psm 8 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890')
+    tesseract_predicted = tesseract_predicted.strip().replace(' ', '')
+    total_err += min_error(tesseract_predicted, actual_plate)
     total += len(actual_plate)
 
 accuracy = (total - total_err) / total
-print('accuracy: ', accuracy * 100)
+print('thresh window 43, psm 8 accuracy: ', accuracy * 100)
