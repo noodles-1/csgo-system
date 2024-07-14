@@ -1291,7 +1291,7 @@ class DBController:
             with Session(Connection.engine) as session:
                 time_24_hours_ago = (datetime.now() - timedelta(hours=hours)).strftime('%Y-%m-%d %H:%M:%S')
                 stmt = select(DetectedLicensePlate).filter(
-                    text(f"datetime(date || ' ' || time) >= '{time_24_hours_ago}'"),
+                    text(f"STR_TO_DATE(CONCAT(date, ' ', time), '%Y-%m-%d %H:%i:%s') >= '{time_24_hours_ago}'"),
                 ).where(DetectedLicensePlate.location == location)
                 results = session.execute(stmt).all()
                 response.ok = True

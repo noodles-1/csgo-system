@@ -259,7 +259,9 @@ class DashboardPage(tk.Frame):
         elif cameraName == 'test_cam3':
             cameraUrl = 'videos/1m elevation rayray.mov'
         elif cameraName == 'test_cam4':
-            cameraUrl = 'videos/3m elevation (720).mp4'
+            cameraUrl = 'videos/new/rear congested.MOV'
+        elif cameraName == 'test_cam5':
+            cameraUrl = 'videos/new/front congested.MOV'
 
         if self.timer is not None:
             self.master.after_cancel(self.timer)
