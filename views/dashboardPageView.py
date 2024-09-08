@@ -97,8 +97,8 @@ class DashboardPage(tk.Frame):
 
         @staticmethod
         def isValidLicensePlate(licensePlate: str) -> bool:
-            regex1 = r'^[A-Z]{3,4}\d{3,4}$'
-            regex2 = r'^\d{3,4}[A-Z]{3,4}$'
+            regex1 = r'^[A-Z]{3}\d{3,4}$'
+            regex2 = r'^\d{3,4}[A-Z]{3}$'
             return re.fullmatch(regex1, licensePlate) is not None or re.fullmatch(regex2, licensePlate) is not None
         
         def start(self, cap, placeholder_label, cameraId, databaseTable, vehiclesDetectedCount):
@@ -172,7 +172,7 @@ class DashboardPage(tk.Frame):
 
                                 # Apply thresholding
                                 # _, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-                                sauvola_thresh = threshold_sauvola(gray, window_size=43)
+                                sauvola_thresh = threshold_sauvola(gray)
                                 binary_sauvola = gray > sauvola_thresh
                                 binary_sauvola = (binary_sauvola * 255).astype(np.uint8)
 
@@ -255,13 +255,21 @@ class DashboardPage(tk.Frame):
         if cameraName == 'test_cam':
             cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/IMG_9613_1.mp4'
         elif cameraName == 'test_cam2':
-            cameraUrl = 'videos/1m elevation mendoza.MOV'
+            cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/1m+elevation+mendoza.MOV'
         elif cameraName == 'test_cam3':
-            cameraUrl = 'videos/1m elevation rayray.mov'
+            cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/1m+elevation+rayray.mov'
         elif cameraName == 'test_cam4':
-            cameraUrl = 'videos/new/rear congested.MOV'
+            cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/new/rear+congested.MOV'
         elif cameraName == 'test_cam5':
-            cameraUrl = 'videos/new/front congested.MOV'
+            cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/new/front+congested.MOV'
+        elif cameraName == 'test_cam6':
+            cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/cut+videos/location+1/IMG_0793.mp4'
+        elif cameraName == 'test_cam7':
+            cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/cut+videos/location+1/IMG_8524.mp4'
+        elif cameraName == 'test_cam8':
+            cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/cut+videos/location+2/IMG_0794.mp4'
+        elif cameraName == 'test_cam9':
+            cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/cut+videos/location+2/IMG_8525.mp4'
 
         if self.timer is not None:
             self.master.after_cancel(self.timer)
