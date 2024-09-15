@@ -138,11 +138,6 @@ class DashboardPage(tk.Frame):
                             detected_ids.add(id)
                             x1, y1, x2, y2 = boxes.xyxy[0]
 
-                            # check if the localized vehicle's LP numbers are completely visible within the frame
-                            # if not, redo prediction
-                            if frame.shape[0] - offset < int(y2.item()) or int(x1.item()) < offset or frame.shape[1] - offset < int(x2.item()):
-                                detected_ids.remove(id)
-                                continue
 
                             cropped_vehicle = frame[int(y1.item()):int(y2.item()), int(x1.item()):int(x2.item())]
                             extracted_lp = None
@@ -155,6 +150,13 @@ class DashboardPage(tk.Frame):
                                     continue
 
                                 x1, y1, x2, y2 = lp_result[0].boxes[0].xyxy[0]
+
+                                # check if the localized vehicle's LP numbers are completely visible within the frame
+                                # if not, redo prediction
+                                if frame.shape[0] - offset < int(y2.item()) or int(x1.item()) < offset or frame.shape[1] - offset < int(x2.item()):
+                                    detected_ids.remove(id)
+                                    continue
+                                
                                 cropped_lp = cropped_vehicle[int(y1.item()):int(y2.item()), int(x1.item()):int(x2.item())]
 
                                 if cont.dipModule == 2:
