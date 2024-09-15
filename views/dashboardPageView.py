@@ -140,7 +140,7 @@ class DashboardPage(tk.Frame):
 
                             # check if the localized vehicle's LP numbers are completely visible within the frame
                             # if not, redo prediction
-                            if frame.shape[0] - offset < int(y2.item()):
+                            if frame.shape[0] - offset < int(y2.item()) or int(x1.item()) < offset or frame.shape[1] - offset < int(x2.item()):
                                 detected_ids.remove(id)
                                 continue
 
