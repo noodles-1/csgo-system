@@ -8,19 +8,25 @@ import pandas as pd
 import random
 import smtplib
 import torch
-import pytesseract as tess
+import base64
+#import pytesseract as tess
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
 from datetime import datetime as datetime_module
+from dotenv import load_dotenv
+from anthropic import Anthropic
 from ultralytics import YOLO
 #from cnocr import CnOcr
 
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from controllers.dbController import DBController
+
+load_dotenv(dotenv_path='.env')
+CLAUDE_KEY = os.getenv('CLAUDE_KEY')
 
 class AIController:
     vehicleClasses = set([2, 3, 5, 7])
@@ -43,9 +49,43 @@ class AIController:
         return AIController.cnocr.ocr(img_fp=frame)
     '''
     
+    '''
     @staticmethod
     def get_license_number_tesseract(frame):
         return tess.image_to_string(frame, lang='eng', config='--psm 8 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890')
+    '''
+
+    @staticmethod
+    def get_license_number_claude(frame):
+        anthropic = Anthropic(api_key=CLAUDE_KEY)
+        _, buffer = cv2.imencode('.jpg', frame)
+        encoded_image = base64.b64encode(buffer).decode('utf-8')
+        
+        response = anthropic.messages.create(
+            model='claude-3-5-sonnet-20240620',
+            max_tokens=1000,
+            messages=[
+                {
+                    'role': 'user',
+                    'content': [
+                        {
+                            'type': 'image',
+                            'source': {
+                                'type': 'base64',
+                                'media_type': 'image/jpeg',
+                                'data': encoded_image
+                            }
+                        },
+                        {
+                            'type': 'text',
+                            'text': 'This image contains a license plate. Extract the license plate number to string. Do not include any other text.'
+                        }
+                    ]
+                }
+            ]
+        )
+
+        return response.content[0].text.strip().replace(' ', '')
 
     @staticmethod
     def setVehicleClasses(id: int, isEnabled: bool):

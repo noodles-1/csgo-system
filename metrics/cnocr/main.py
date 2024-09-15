@@ -1,9 +1,15 @@
 import cv2
-#import cnocr
+import os
+import base64
 import numpy as np
 import pytesseract
 
+from dotenv import load_dotenv
 from skimage.filters import threshold_sauvola
+from anthropic import Anthropic
+
+load_dotenv(dotenv_path='.env')
+CLAUDE_KEY = os.getenv('CLAUDE_KEY')
 
 # ocr = cnocr.CnOcr(det_model_name='en_PP-OCRv3_det', rec_model_name='en_PP-OCRv3')
 
@@ -32,6 +38,37 @@ actual_plates = [
     'IAC3187'
 ]
 
+def extract(image):
+    anthropic = Anthropic(api_key=CLAUDE_KEY)
+    _, buffer = cv2.imencode('.jpg', image)
+    encoded_image = base64.b64encode(buffer).decode('utf-8')
+    
+    response = anthropic.messages.create(
+        model='claude-3-5-sonnet-20240620',
+        max_tokens=1000,
+        messages=[
+            {
+                'role': 'user',
+                'content': [
+                    {
+                        'type': 'image',
+                        'source': {
+                            'type': 'base64',
+                            'media_type': 'image/jpeg',
+                            'data': encoded_image
+                        }
+                    },
+                    {
+                        'type': 'text',
+                        'text': 'This image contains a license plate. Extract the license plate number to string. Do not include any other text.'
+                    }
+                ]
+            }
+        ]
+    )
+
+    return response.content[0].text
+
 def min_error(str1, str2):
     m = len(str1)
     n = len(str2)
@@ -55,8 +92,8 @@ def min_error(str1, str2):
 models = ['eng', 'LP']
 psms = [7, 8]
 
-for model in models:
-    tessdata = '' if model == 'eng' else '--tessdata-dir tessdata'
+for model in ['claude']:
+    # tessdata = '' if model == 'eng' else '--tessdata-dir tessdata'
 
     for psm in psms:
         total_err = 0
@@ -64,25 +101,32 @@ for model in models:
 
         for i, actual_plate in enumerate(actual_plates):
             image = cv2.imread(f'metrics/cnocr/images/{i + 1}.jpg')
+
+            '''
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             sauvola_thresh = threshold_sauvola(gray, window_size=43)
             binary_sauvola = gray > sauvola_thresh
             binary_sauvola = (binary_sauvola * 255).astype(np.uint8)
-            #_, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-            #thresh = cv2.resize(thresh, (0, 0), fx=2, fy=2)
-            #kernel = np.ones((2, 2), np.uint8)
-            #dilated = cv2.dilate(thresh, kernel, iterations=1)
-            #eroded = cv2.erode(dilated, kernel, iterations=1)
-            #eroded = cv2.resize(eroded, (0, 0), fx=0.1, fy=0.1)
-
-            #predicted_plate = ocr.ocr(img_fp=eroded)
-            #predicted_plate = [predicted_plate[i]['text'] for i in range(len(predicted_plate))]
-            #predicted_plate = ''.join(predicted_plate).replace(' ', '')
+            _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+            thresh = cv2.resize(thresh, (0, 0), fx=2, fy=2)
+            kernel = np.ones((2, 2), np.uint8)
+            dilated = cv2.dilate(thresh, kernel, iterations=1)
+            eroded = cv2.erode(dilated, kernel, iterations=1)
+            eroded = cv2.resize(eroded, (0, 0), fx=0.1, fy=0.1)
+            predicted_plate = ocr.ocr(img_fp=eroded)
+            predicted_plate = [predicted_plate[i]['text'] for i in range(len(predicted_plate))]
+            predicted_plate = ''.join(predicted_plate).replace(' ', '')
 
             tesseract_predicted = pytesseract.image_to_string(image, lang=model, config=f'{tessdata} --psm {psm} -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890')
             tesseract_predicted = tesseract_predicted.strip().replace(' ', '')
-            total_err += min_error(tesseract_predicted, actual_plate)
+            '''
+            extracted_lp = extract(image)
+            extracted_lp = extracted_lp.strip().replace(' ', '')
+
+            total_err += min_error(extracted_lp, actual_plate)
             total += len(actual_plate)
 
         accuracy = (total - total_err) / total
-        print(f'{model} thresh, psm {psm} accuracy: ', accuracy * 100)
+        print(f'{model} accuracy: ', accuracy * 100)
+
+# claude accuracy:  97.08520179372198

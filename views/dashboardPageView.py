@@ -106,6 +106,7 @@ class DashboardPage(tk.Frame):
                 AIController.vehicle_detection_model.predictor.trackers[0].reset()
 
             detected_ids = set()
+            offset = 20
 
             def showFrame():
                 success, frame = cap.read()
@@ -136,6 +137,13 @@ class DashboardPage(tk.Frame):
 
                             detected_ids.add(id)
                             x1, y1, x2, y2 = boxes.xyxy[0]
+
+                            # check if the localized vehicle's LP numbers are completely visible within the frame
+                            # if not, redo prediction
+                            if frame.shape[0] - offset < int(y2.item()):
+                                detected_ids.remove(id)
+                                continue
+
                             cropped_vehicle = frame[int(y1.item()):int(y2.item()), int(x1.item()):int(x2.item())]
                             extracted_lp = None
 
@@ -163,7 +171,8 @@ class DashboardPage(tk.Frame):
                                     if processed_lp is None:
                                         detected_ids.remove(id)
                                         continue
-
+                                    
+                                '''
                                 # Convert to grayscale
                                 gray = cv2.cvtColor(processed_lp if cont.dipModule != 0 else cropped_lp, cv2.COLOR_BGR2GRAY)
 
@@ -182,10 +191,11 @@ class DashboardPage(tk.Frame):
 
                                 # Optionally apply erosion to reduce noise
                                 # eroded = cv2.erode(dilated, kernel, iterations=1)
+                                '''
                 
-                                extracted_lp_results = AIController.get_license_number_tesseract(frame=binary_sauvola)
+                                extracted_lp = AIController.get_license_number_claude(frame=(processed_lp if cont.dipModule != 0 else cropped_lp))
                                 # temp = [extracted_lp_results[i]['text'] for i in range(len(extracted_lp_results))]
-                                extracted_lp = extracted_lp_results.strip().replace(' ', '')
+                                # extracted_lp = extracted_lp_results.strip().replace(' ', '')
                                 
                                 if not DashboardPage.StartCamera.isValidLicensePlate(extracted_lp):
                                     detected_ids.remove(id)
