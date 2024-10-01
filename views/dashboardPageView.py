@@ -106,7 +106,14 @@ class DashboardPage(tk.Frame):
                 AIController.vehicle_detection_model.predictor.trackers[0].reset()
 
             detected_ids = set()
-            offset = 12
+            offset = 6
+
+            draw_boxes = True
+            x_offset = 400
+            y_offset = 60
+            vehicle_offset = 0.65
+            motorbike_offset = 0.875
+            alpha = 0.2
 
             def showFrame():
                 success, frame = cap.read()
@@ -119,8 +126,35 @@ class DashboardPage(tk.Frame):
                 AIController.setVehicleClasses(7, currSetting.detectTruck if currSetting else True)
 
                 if cont.loggedIn and success:
+                    frame_height, frame_width = frame.shape[0], frame.shape[1]
                     results = AIController.detect_vehicle(frame)
                     annotated_frame = results[0].plot()
+
+                    # draw boxes to show detection boundary
+                    if draw_boxes:
+                        overlay = annotated_frame.copy()
+
+                        top_left_1 = (0, 0)
+                        bottom_right_1 = (frame_width, int(frame_height * vehicle_offset))
+
+                        top_left_2 = (0, int(frame_height * vehicle_offset))
+                        bottom_right_2 = (x_offset, frame_height)
+
+                        top_left_3 = (frame_width - x_offset, int(frame_height * vehicle_offset))
+                        bottom_right_3 = (frame_width, frame_height)
+
+                        top_left_4 = (x_offset, int(frame_height * vehicle_offset))
+                        bottom_right_4 = (frame_width - x_offset, int(frame_height * motorbike_offset))
+                        
+                        top_left_5 = (x_offset, frame_height - y_offset)
+                        bottom_right_5 = (frame_width - x_offset, frame_height)
+
+                        cv2.rectangle(overlay, top_left_1, bottom_right_1, (0, 240, 100), -1)
+                        cv2.rectangle(overlay, top_left_2, bottom_right_2, (0, 240, 100), -1)
+                        cv2.rectangle(overlay, top_left_3, bottom_right_3, (0, 240, 100), -1)
+                        cv2.rectangle(overlay, top_left_4, bottom_right_4, (220, 0, 60), -1)
+                        cv2.rectangle(overlay, top_left_5, bottom_right_5, (0, 240, 100), -1)
+                        cv2.addWeighted(overlay, alpha, annotated_frame, 1 - alpha, 0, annotated_frame)
 
                     for result in results:
                         for boxes in result.boxes:
@@ -137,13 +171,17 @@ class DashboardPage(tk.Frame):
 
                             detected_ids.add(id)
                             x1, y1, x2, y2 = boxes.xyxy[0]
-                            # check if the localized vehicle's LP numbers are completely visible within the frame
-                            # if not, redo prediction
-                            if frame.shape[0] - offset < int(y2.item()) or int(x1.item()) < offset or frame.shape[1] - offset < int(x2.item()):
-                                detected_ids.remove(id)
+                            vehicle_x1, vehicle_y1, vehicle_x2, vehicle_y2 = int(x1.item()), int(y1.item()), int(x2.item()), int(y2.item())
+
+                            mul = motorbike_offset if vehicle_id == 3 else vehicle_offset
+                            frame_height_min = frame_height * mul
+
+                            # check if vehicle is beyond the detection boundary
+                            if vehicle_y2 < frame_height_min:
                                 continue
 
-                            cropped_vehicle = frame[int(y1.item()):int(y2.item()), int(x1.item()):int(x2.item())]
+                            cropped_vehicle = frame[vehicle_y1:vehicle_y2, vehicle_x1:vehicle_x2]
+
                             extracted_lp = None
 
                             if currSetting or (dynamicSetting and isHeavyTraffic):
@@ -154,14 +192,24 @@ class DashboardPage(tk.Frame):
                                     continue
 
                                 x1, y1, x2, y2 = lp_result[0].boxes[0].xyxy[0]
-                                cropped_lp = cropped_vehicle[int(y1.item()):int(y2.item()), int(x1.item()):int(x2.item())]
+                                lp_x1, lp_y1, lp_x2, lp_y2 = int(x1.item()) + vehicle_x1, int(y1.item()) + vehicle_y1, int(x2.item()) + vehicle_x1, int(y2.item()) + vehicle_y1
+                                
+                                # check if the actual localized lp is within the lower half of the video
+                                # if not, redo prediction
+                                if lp_y1 < frame_height_min:
+                                    continue
+                                if frame_height - y_offset < lp_y2 or lp_x1 < x_offset or frame_width - x_offset < lp_x2:
+                                    detected_ids.remove(id)
+                                    continue
+
+                                cropped_lp = frame[lp_y1:lp_y2, lp_x1:lp_x2]
 
                                 if cont.dipModule == 2:
                                     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                                    client_socket.connect(('54.151.155.120', 8001))
+                                    client_socket.connect(('127.0.0.1', 8001))
                                 elif cont.dipModule == 1:
                                     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                                    client_socket.connect(('54.151.155.120', 8000))
+                                    client_socket.connect(('127.0.0.1', 8000))
                                 if cont.dipModule != 0:
                                     SocketController.sendImage(client_socket, cropped_lp)
                                     processed_lp = SocketController.receiveImage(client_socket)
@@ -226,7 +274,7 @@ class DashboardPage(tk.Frame):
                                 response = DBController.addLicensePlate(self.currUser.id, currSetting.id if currSetting else 0, camera.location, extracted_lp or 'none', classnames[vehicle_id], price, imageUrl or 'none')
 
                                 if response.ok:
-                                    databaseTable.insert('', 0, values=(extracted_lp or 'none', classnames[vehicle_id], cameraId, time, date, price))
+                                    databaseTable.insert('', 0, values=(id, extracted_lp or 'none', classnames[vehicle_id], cameraId, time, date, price))
                                     self.vehicleCount += 1
                                     vehiclesDetectedCount.configure(text=f'{self.vehicleCount}')
                             except Exception as e:
@@ -268,17 +316,19 @@ class DashboardPage(tk.Frame):
         elif cameraName == 'test_cam3':
             cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/1m+elevation+rayray.mov'
         elif cameraName == 'test_cam4':
-            cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/new/rear+congested.MOV'
+            cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/new/test_cam4.mp4'
         elif cameraName == 'test_cam5':
             cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/new/front+congested.MOV'
         elif cameraName == 'test_cam6':
             cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/cut+videos/location+1/IMG_0793.mp4'
         elif cameraName == 'test_cam7':
-            cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/cut+videos/location+1/IMG_8524.mp4'
+            cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/cut+videos/location+1/test_cam7.mp4'
         elif cameraName == 'test_cam8':
-            cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/cut+videos/location+2/IMG_0794.mp4'
+            cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/cut+videos/location+2/test_cam8.mp4'
         elif cameraName == 'test_cam9':
             cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/cut+videos/location+2/IMG_8525.mp4'
+        elif cameraName == 'test_cam10':
+            cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/cut+videos/location+1/test_cam10.mp4'
 
         if self.timer is not None:
             self.master.after_cancel(self.timer)
@@ -449,7 +499,7 @@ class DashboardPage(tk.Frame):
                   background=[('active', '#48BFE3')])
 
         # ADD or REMOVE headers as needed @Database Integration
-        self.databaseTable = ttk.Treeview(databaseTableFrame, columns = ('licensePlate', 'vehicleType', 'cameraID', 'time', 'date', 'price'), show = "headings", style = 'Custom.Treeview')
+        self.databaseTable = ttk.Treeview(databaseTableFrame, columns = ('id', 'licensePlate', 'vehicleType', 'cameraID', 'time', 'date', 'price'), show = "headings", style = 'Custom.Treeview')
 
         # Inserts Blank Entries to the Treeview so that it doesnt look bad when the Treeview is Empty.
         #for _ in range(100):
@@ -458,6 +508,7 @@ class DashboardPage(tk.Frame):
         self.databaseTable.tag_configure('even', background='#2A2D2E', foreground='#FFFFFF')
         self.databaseTable.tag_configure('odd', background='#343638', foreground='#FFFFFF')
         
+        self.databaseTable.heading('id', text="ID", anchor='center')
         self.databaseTable.heading('licensePlate', text="License Plate", anchor='center')
         self.databaseTable.heading('vehicleType', text="Vehicle Type", anchor='center')
         self.databaseTable.heading('cameraID', text="Camera ID", anchor='center')
@@ -465,6 +516,7 @@ class DashboardPage(tk.Frame):
         self.databaseTable.heading('date', text="Date", anchor='center')
         self.databaseTable.heading('price', text="Price", anchor='center')
 
+        self.databaseTable.column('id', width=60, anchor='center')
         self.databaseTable.column('licensePlate', width=150, anchor='center')
         self.databaseTable.column('vehicleType', width=150, anchor='center')
         self.databaseTable.column('cameraID', width=120, anchor='center')
