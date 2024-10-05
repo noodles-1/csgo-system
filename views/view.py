@@ -7,6 +7,8 @@ import tk_async_execute as tk_async
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.dirname(current)
+if getattr(sys, 'frozen', False):
+    parent_dir = os.path.join(parent_dir, '_internal')
 sys.path.append(parent_dir)
 
 from customtkinter import *
