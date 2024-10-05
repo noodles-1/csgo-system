@@ -1,5 +1,5 @@
 # Computer Science Global Offensive ALPR System
-This branch is currently in Version 2.0.0
+This branch is currently in version 2.0.0.
 
 Members of the thesis group are:
   - **Pagtalunan, John Gabriel T.**
