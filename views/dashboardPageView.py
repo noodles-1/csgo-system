@@ -110,53 +110,51 @@ class DashboardPage(tk.Frame):
                 if id in DashboardPage.StartCamera.extracted_lps:
                     return
 
-            extracted_lp = AIController.get_license_number_claude(frame)
+                extracted_lp = AIController.get_license_number_claude(frame)
 
-            with threading.Lock():
                 if not DashboardPage.StartCamera.isValidLicensePlate(extracted_lp):
                     DashboardPage.StartCamera.detected_ids.remove(id)
                     return
-            
-            with threading.Lock():
+                
                 DashboardPage.StartCamera.extracted_lps.add(id)
 
-            try:
-                date = datetime.now().date()
-                time = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
-                camera = DBController.getCamera(id=cameraId)
-                if classnames[vehicle_id] == 'car':
-                    price = 100 if dynamicSetting else 0
-                    if currSetting:
-                        price = currSetting.carPrice
-                elif classnames[vehicle_id] == 'motorcycle':
-                    price = 100 if dynamicSetting else 0
-                    if currSetting:
-                        price = currSetting.motorcyclePrice
-                elif classnames[vehicle_id] == 'bus':
-                    price = 100 if dynamicSetting else 0
-                    if currSetting:
-                        price = currSetting.busPrice
-                elif classnames[vehicle_id] == 'truck':
-                    price = 100 if dynamicSetting else 0
-                    if currSetting:
-                        price = currSetting.truckPrice
-                imageUrl = None
-                if currSetting or (dynamicSetting and isHeavyTraffic):
-                    imageUrl = S3Controller().uploadImage(cropped_vehicle, f'[{date} - {time}] {classnames[vehicle_id]} - id: {id}')
-                response = DBController.addLicensePlate(self.currUser.id, currSetting.id if currSetting else 0, camera.location, extracted_lp or 'none', classnames[vehicle_id], price, imageUrl or 'none')
+                try:
+                    date = datetime.now().date()
+                    time = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+                    camera = DBController.getCamera(id=cameraId)
+                    if classnames[vehicle_id] == 'car':
+                        price = 100 if dynamicSetting else 0
+                        if currSetting:
+                            price = currSetting.carPrice
+                    elif classnames[vehicle_id] == 'motorcycle':
+                        price = 100 if dynamicSetting else 0
+                        if currSetting:
+                            price = currSetting.motorcyclePrice
+                    elif classnames[vehicle_id] == 'bus':
+                        price = 100 if dynamicSetting else 0
+                        if currSetting:
+                            price = currSetting.busPrice
+                    elif classnames[vehicle_id] == 'truck':
+                        price = 100 if dynamicSetting else 0
+                        if currSetting:
+                            price = currSetting.truckPrice
+                    imageUrl = None
+                    if currSetting or (dynamicSetting and isHeavyTraffic):
+                        imageUrl = S3Controller().uploadImage(cropped_vehicle, f'[{date} - {time}] {classnames[vehicle_id]} - id: {id}')
+                    response = DBController.addLicensePlate(self.currUser.id, currSetting.id if currSetting else 0, camera.location, extracted_lp or 'none', classnames[vehicle_id], price, imageUrl or 'none')
 
-                if response.ok:
-                    tk_async.tk_execute(databaseTable.insert, '', 0, values=(id, extracted_lp or 'none', classnames[vehicle_id], cameraId, datetime.now().strftime('%H:%M:%S'), date, price))
-                    DashboardPage.StartCamera.vehicleCount += 1
-                    tk_async.tk_execute(vehiclesDetectedCount.configure, text=f'{DashboardPage.StartCamera.vehicleCount}')
-            except Exception as e:
-                with open('logs.txt', 'a') as file:
-                    now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
-                    file.write(f'[{now}] Error at function views/dashboardPageView.py/dbController.py StartCamera/start()/showFrame() - {repr(e)}\n')
-                    print(repr(e))
-                    return
-                
-            return extracted_lp
+                    if response.ok:
+                        tk_async.tk_execute(databaseTable.insert, '', 0, values=(id, extracted_lp or 'none', classnames[vehicle_id], cameraId, datetime.now().strftime('%H:%M:%S'), date, price))
+                        DashboardPage.StartCamera.vehicleCount += 1
+                        tk_async.tk_execute(vehiclesDetectedCount.configure, text=f'{DashboardPage.StartCamera.vehicleCount}')
+                except Exception as e:
+                    with open('logs.txt', 'a') as file:
+                        now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+                        file.write(f'[{now}] Error at function views/dashboardPageView.py/dbController.py StartCamera/start()/showFrame() - {repr(e)}\n')
+                        print(repr(e))
+                        return
+                    
+                return extracted_lp
         
         def start(self, cap, placeholder_label, cameraId, databaseTable, vehiclesDetectedCount):
             if AIController.vehicle_detection_model.predictor:
@@ -211,76 +209,77 @@ class DashboardPage(tk.Frame):
 
                     for result in results:
                         for boxes in result.boxes:
-                            if not boxes.id:
-                                continue
-
-                            id = int(boxes.id.item())
-                            vehicle_id = int(boxes.cls.item())
-
-                            if id in DashboardPage.StartCamera.detected_ids:
-                                continue
-
-                            DashboardPage.StartCamera.detected_ids.add(id)
-                            
-                            x1, y1, x2, y2 = boxes.xyxy[0]
-                            vehicle_x1, vehicle_y1, vehicle_x2, vehicle_y2 = int(x1.item()), int(y1.item()), int(x2.item()), int(y2.item())
-
-                            mul = motorbike_offset if vehicle_id == 3 else vehicle_offset
-                            frame_height_min = frame_height * mul
-
-                            # check if vehicle is beyond the detection boundary
-                            if vehicle_y2 < frame_height_min:
-                                continue
-
-                            cropped_vehicle = frame[vehicle_y1:vehicle_y2, vehicle_x1:vehicle_x2]
-
-                            if currSetting or (dynamicSetting and isHeavyTraffic):
-                                lp_result = AIController.detect_license_plate(frame=cropped_vehicle)
-
-                                if not lp_result[0].boxes:
-                                    DashboardPage.StartCamera.detected_ids.remove(id)
+                            with threading.Lock():
+                                if not boxes.id:
                                     continue
 
-                                x1, y1, x2, y2 = lp_result[0].boxes[0].xyxy[0]
-                                lp_x1, lp_y1, lp_x2, lp_y2 = int(x1.item()) + vehicle_x1, int(y1.item()) + vehicle_y1, int(x2.item()) + vehicle_x1, int(y2.item()) + vehicle_y1
+                                id = int(boxes.id.item())
+                                vehicle_id = int(boxes.cls.item())
+
+                                if id in DashboardPage.StartCamera.detected_ids:
+                                    continue
+
+                                DashboardPage.StartCamera.detected_ids.add(id)
                                 
-                                # check if the actual localized lp is within the lower half of the video
-                                # if not, redo prediction
-                                if lp_y1 < frame_height_min:
+                                x1, y1, x2, y2 = boxes.xyxy[0]
+                                vehicle_x1, vehicle_y1, vehicle_x2, vehicle_y2 = int(x1.item()), int(y1.item()), int(x2.item()), int(y2.item())
+
+                                mul = motorbike_offset if vehicle_id == 3 else vehicle_offset
+                                frame_height_min = frame_height * mul
+
+                                # check if vehicle is beyond the detection boundary
+                                if vehicle_y2 < frame_height_min:
                                     continue
-                                if frame_height - y_offset < lp_y2 or lp_x1 < x_offset or frame_width - x_offset < lp_x2:
-                                    DashboardPage.StartCamera.detected_ids.remove(id)
-                                    continue
 
-                                cropped_lp = frame[lp_y1:lp_y2, lp_x1:lp_x2]
+                                cropped_vehicle = frame[vehicle_y1:vehicle_y2, vehicle_x1:vehicle_x2]
 
-                                if cont.dipModule == 2:
-                                    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                                    client_socket.connect(('127.0.0.1', 8001))
-                                elif cont.dipModule == 1:
-                                    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                                    client_socket.connect(('127.0.0.1', 8000))
-                                if cont.dipModule != 0:
-                                    SocketController.sendImage(client_socket, cropped_lp)
-                                    processed_lp = SocketController.receiveImage(client_socket)
-                                    client_socket.close()
+                                if currSetting or (dynamicSetting and isHeavyTraffic):
+                                    lp_result = AIController.detect_license_plate(frame=cropped_vehicle)
 
-                                    if processed_lp is None:
+                                    if not lp_result[0].boxes:
                                         DashboardPage.StartCamera.detected_ids.remove(id)
                                         continue
+
+                                    x1, y1, x2, y2 = lp_result[0].boxes[0].xyxy[0]
+                                    lp_x1, lp_y1, lp_x2, lp_y2 = int(x1.item()) + vehicle_x1, int(y1.item()) + vehicle_y1, int(x2.item()) + vehicle_x1, int(y2.item()) + vehicle_y1
                                     
-                                tk_async.async_execute(self.extract(
-                                    (processed_lp if cont.dipModule != 0 else cropped_lp),
-                                    id,
-                                    cameraId,
-                                    vehicle_id,
-                                    currSetting,
-                                    dynamicSetting,
-                                    isHeavyTraffic,
-                                    cropped_vehicle,
-                                    databaseTable,
-                                    vehiclesDetectedCount,
-                                ), wait=False, visible=False)
+                                    # check if the actual localized lp is within the lower half of the video
+                                    # if not, redo prediction
+                                    if lp_y1 < frame_height_min:
+                                        continue
+                                    if frame_height - y_offset < lp_y2 or lp_x1 < x_offset or frame_width - x_offset < lp_x2:
+                                        DashboardPage.StartCamera.detected_ids.remove(id)
+                                        continue
+
+                                    cropped_lp = frame[lp_y1:lp_y2, lp_x1:lp_x2]
+
+                                    if cont.dipModule == 2:
+                                        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                                        client_socket.connect(('127.0.0.1', 8001))
+                                    elif cont.dipModule == 1:
+                                        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                                        client_socket.connect(('127.0.0.1', 8000))
+                                    if cont.dipModule != 0:
+                                        SocketController.sendImage(client_socket, cropped_lp)
+                                        processed_lp = SocketController.receiveImage(client_socket)
+                                        client_socket.close()
+
+                                        if processed_lp is None:
+                                            DashboardPage.StartCamera.detected_ids.remove(id)
+                                            continue
+                                        
+                                    tk_async.async_execute(self.extract(
+                                        (processed_lp if cont.dipModule != 0 else cropped_lp),
+                                        id,
+                                        cameraId,
+                                        vehicle_id,
+                                        currSetting,
+                                        dynamicSetting,
+                                        isHeavyTraffic,
+                                        cropped_vehicle,
+                                        databaseTable,
+                                        vehiclesDetectedCount,
+                                    ), wait=False, visible=False)
 
                     resized_frame = cv2.resize(annotated_frame, (640, 360))
                     frame_rgb = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2RGB)
