@@ -136,7 +136,7 @@ class ConfigPage(tk.Frame):
             
         for price in [carPrice, motorPrice, busPrice, truckPrice]:
             if not isPositiveFloat(price):
-                self.statusLabel.configure(text='Invalid price.', text_color="#d62828")
+                self.statusLabel.configure(text='Invalid charge.', text_color="#d62828")
                 self.after(3500, lambda: self.statusLabel.configure(text_color="#1B2431"))
                 return
             
@@ -668,7 +668,7 @@ class ConfigPage(tk.Frame):
         priceLabelFrame = tk.Frame(pricePerVehicleFrame, bg = '#1B2431')
         priceLabelFrame.pack(expand = False, fill = 'x', side = 'top', padx = 5, pady = 5)
         
-        priceLabel = CTkLabel(priceLabelFrame, text = 'Price Per Vehicles Type', anchor = 'w', font = ('Montserrat', 12), text_color = '#FFFFFF')
+        priceLabel = CTkLabel(priceLabelFrame, text = 'Charge Per Vehicles Type', anchor = 'w', font = ('Montserrat', 12), text_color = '#FFFFFF')
         priceLabel.pack(expand = False, fill = 'x', side = 'left', padx = 10, pady = 5)
         
         priceContentFrame = tk.Frame(pricePerVehicleFrame, bg = '#1B2431')

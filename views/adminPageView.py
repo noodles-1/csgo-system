@@ -741,7 +741,7 @@ class AdminPage(tk.Frame):
         self.databaseTable.heading('location', text="Location", anchor='center')
         self.databaseTable.heading('time', text="Time", anchor='center')
         self.databaseTable.heading('date', text="Date", anchor='center')
-        self.databaseTable.heading('price', text="Price", anchor='center')
+        self.databaseTable.heading('price', text="Charge", anchor='center')
         
         self.databaseTable.column('licensePlate', width=150, anchor='center')
         self.databaseTable.column('vehicleType', width=150, anchor='center')
@@ -768,7 +768,7 @@ class AdminPage(tk.Frame):
         self.vehicleTypeEntry = CTkEntry(vehicleTypeHandlerFrame, text_color = "#000000", fg_color = "#FFFFFF", corner_radius = 5, font = ('Montserrat', 12))
         
         priceHandlerFrame = tk.Frame(databaseHandlerRow, bg = "#1B2431")
-        self.priceLabel = CTkLabel(priceHandlerFrame, text = "Price", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = 'w')
+        self.priceLabel = CTkLabel(priceHandlerFrame, text = "Charge", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = 'w')
         self.priceEntry = CTkEntry(priceHandlerFrame, text_color = "#000000", fg_color = "#FFFFFF", corner_radius = 5, font = ('Montserrat', 12))
         
         self.updateTableButton = CTkButton(databaseHandlerRow, fg_color = "#FFFFFF", text = "Update", font = ('Montserrat', 12, 'bold'), corner_radius = 5, text_color = "#000000", command = self.updateTable_callback)
@@ -875,7 +875,7 @@ class AdminPage(tk.Frame):
         
         congestionPriceFrameOuter = tk.Frame(lowerMiddleRight, bg = "#1B2431")
         leftCongestionPriceFrameInner = tk.Frame(congestionPriceFrameOuter, bg = "#1B2431")
-        congestionPriceLabel = CTkLabel(leftCongestionPriceFrameInner, text = "Change Congestion Price", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
+        congestionPriceLabel = CTkLabel(leftCongestionPriceFrameInner, text = "Change Congestion Charge", font = ('Montserrat', 12), text_color = "#FFFFFF", anchor = "w")
         rightCongestionPriceFrameInner = tk.Frame(congestionPriceFrameOuter, bg = "#1B2431")
         self.changePriceVar = IntVar(value = 0)
         changePriceRadio_yes = CTkRadioButton(rightCongestionPriceFrameInner, text = "Yes", variable = self.changePriceVar, value = 1, command = self.changePriceRadioButton_callback)

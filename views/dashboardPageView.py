@@ -4,13 +4,14 @@ import cv2
 import tkinter as tk
 import re
 import socket
-import numpy as np
+import asyncio
+import threading
+import tk_async_execute as tk_async
 
 from datetime import datetime
 from customtkinter import *
 from tkinter import ttk
 from PIL import Image, ImageTk
-from skimage.filters import threshold_sauvola
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.dirname(current)
@@ -91,9 +92,12 @@ class DashboardPage(tk.Frame):
         self.after(1000, self.update_uptime)
     
     class StartCamera:
+        vehicleCount = 0
+        detected_ids = set()
+        extracted_lps = set()
+
         def __init__(self, currUser):
             self.currUser = currUser
-            self.vehicleCount = 0
 
         @staticmethod
         def isValidLicensePlate(licensePlate: str) -> bool:
@@ -101,19 +105,69 @@ class DashboardPage(tk.Frame):
             regex2 = r'^\d{3,4}[A-Z]{3}$'
             return re.fullmatch(regex1, licensePlate) is not None or re.fullmatch(regex2, licensePlate) is not None
         
+        async def extract(self, frame, id, cameraId, vehicle_id, currSetting, dynamicSetting, isHeavyTraffic, cropped_vehicle, databaseTable, vehiclesDetectedCount):
+            with threading.Lock():
+                if id in DashboardPage.StartCamera.extracted_lps:
+                    return
+
+            extracted_lp = AIController.get_license_number_claude(frame)
+
+            with threading.Lock():
+                if not DashboardPage.StartCamera.isValidLicensePlate(extracted_lp):
+                    DashboardPage.StartCamera.detected_ids.remove(id)
+                    return
+            
+            with threading.Lock():
+                DashboardPage.StartCamera.extracted_lps.add(id)
+
+            try:
+                date = datetime.now().date()
+                time = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+                camera = DBController.getCamera(id=cameraId)
+                if classnames[vehicle_id] == 'car':
+                    price = 100 if dynamicSetting else 0
+                    if currSetting:
+                        price = currSetting.carPrice
+                elif classnames[vehicle_id] == 'motorcycle':
+                    price = 100 if dynamicSetting else 0
+                    if currSetting:
+                        price = currSetting.motorcyclePrice
+                elif classnames[vehicle_id] == 'bus':
+                    price = 100 if dynamicSetting else 0
+                    if currSetting:
+                        price = currSetting.busPrice
+                elif classnames[vehicle_id] == 'truck':
+                    price = 100 if dynamicSetting else 0
+                    if currSetting:
+                        price = currSetting.truckPrice
+                imageUrl = None
+                if currSetting or (dynamicSetting and isHeavyTraffic):
+                    imageUrl = S3Controller().uploadImage(cropped_vehicle, f'[{date} - {time}] {classnames[vehicle_id]} - id: {id}')
+                response = DBController.addLicensePlate(self.currUser.id, currSetting.id if currSetting else 0, camera.location, extracted_lp or 'none', classnames[vehicle_id], price, imageUrl or 'none')
+
+                if response.ok:
+                    tk_async.tk_execute(databaseTable.insert, '', 0, values=(id, extracted_lp or 'none', classnames[vehicle_id], cameraId, datetime.now().strftime('%H:%M:%S'), date, price))
+                    DashboardPage.StartCamera.vehicleCount += 1
+                    tk_async.tk_execute(vehiclesDetectedCount.configure, text=f'{DashboardPage.StartCamera.vehicleCount}')
+            except Exception as e:
+                with open('logs.txt', 'a') as file:
+                    now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+                    file.write(f'[{now}] Error at function views/dashboardPageView.py/dbController.py StartCamera/start()/showFrame() - {repr(e)}\n')
+                    print(repr(e))
+                    return
+                
+            return extracted_lp
+        
         def start(self, cap, placeholder_label, cameraId, databaseTable, vehiclesDetectedCount):
             if AIController.vehicle_detection_model.predictor:
                 AIController.vehicle_detection_model.predictor.trackers[0].reset()
-
-            detected_ids = set()
-            offset = 6
 
             draw_boxes = True
             x_offset = 400
             y_offset = 60
             vehicle_offset = 0.65
             motorbike_offset = 0.875
-            alpha = 0.2
+            alpha = 0.4
 
             def showFrame():
                 success, frame = cap.read()
@@ -149,11 +203,10 @@ class DashboardPage(tk.Frame):
                         top_left_5 = (x_offset, frame_height - y_offset)
                         bottom_right_5 = (frame_width - x_offset, frame_height)
 
-                        cv2.rectangle(overlay, top_left_1, bottom_right_1, (0, 240, 100), -1)
-                        cv2.rectangle(overlay, top_left_2, bottom_right_2, (0, 240, 100), -1)
-                        cv2.rectangle(overlay, top_left_3, bottom_right_3, (0, 240, 100), -1)
-                        cv2.rectangle(overlay, top_left_4, bottom_right_4, (220, 0, 60), -1)
-                        cv2.rectangle(overlay, top_left_5, bottom_right_5, (0, 240, 100), -1)
+                        cv2.rectangle(overlay, top_left_1, bottom_right_1, (220, 0, 60), -1)
+                        cv2.rectangle(overlay, top_left_2, bottom_right_2, (220, 0, 60), -1)
+                        cv2.rectangle(overlay, top_left_3, bottom_right_3, (220, 0, 60), -1)
+                        cv2.rectangle(overlay, top_left_5, bottom_right_5, (220, 0, 60), -1)
                         cv2.addWeighted(overlay, alpha, annotated_frame, 1 - alpha, 0, annotated_frame)
 
                     for result in results:
@@ -164,12 +217,11 @@ class DashboardPage(tk.Frame):
                             id = int(boxes.id.item())
                             vehicle_id = int(boxes.cls.item())
 
-                            #self.vehicleCount = max(self.vehicleCount, id)
-
-                            if id in detected_ids:
+                            if id in DashboardPage.StartCamera.detected_ids:
                                 continue
 
-                            detected_ids.add(id)
+                            DashboardPage.StartCamera.detected_ids.add(id)
+                            
                             x1, y1, x2, y2 = boxes.xyxy[0]
                             vehicle_x1, vehicle_y1, vehicle_x2, vehicle_y2 = int(x1.item()), int(y1.item()), int(x2.item()), int(y2.item())
 
@@ -182,13 +234,11 @@ class DashboardPage(tk.Frame):
 
                             cropped_vehicle = frame[vehicle_y1:vehicle_y2, vehicle_x1:vehicle_x2]
 
-                            extracted_lp = None
-
                             if currSetting or (dynamicSetting and isHeavyTraffic):
                                 lp_result = AIController.detect_license_plate(frame=cropped_vehicle)
 
                                 if not lp_result[0].boxes:
-                                    detected_ids.remove(id)
+                                    DashboardPage.StartCamera.detected_ids.remove(id)
                                     continue
 
                                 x1, y1, x2, y2 = lp_result[0].boxes[0].xyxy[0]
@@ -199,7 +249,7 @@ class DashboardPage(tk.Frame):
                                 if lp_y1 < frame_height_min:
                                     continue
                                 if frame_height - y_offset < lp_y2 or lp_x1 < x_offset or frame_width - x_offset < lp_x2:
-                                    detected_ids.remove(id)
+                                    DashboardPage.StartCamera.detected_ids.remove(id)
                                     continue
 
                                 cropped_lp = frame[lp_y1:lp_y2, lp_x1:lp_x2]
@@ -216,73 +266,21 @@ class DashboardPage(tk.Frame):
                                     client_socket.close()
 
                                     if processed_lp is None:
-                                        detected_ids.remove(id)
+                                        DashboardPage.StartCamera.detected_ids.remove(id)
                                         continue
                                     
-                                '''
-                                # Convert to grayscale
-                                gray = cv2.cvtColor(processed_lp if cont.dipModule != 0 else cropped_lp, cv2.COLOR_BGR2GRAY)
-
-                                # Apply Gaussian Blur to reduce noise
-                                # blur = cv2.GaussianBlur(gray, (5, 5), 0)
-
-                                # Apply thresholding
-                                # _, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-                                sauvola_thresh = threshold_sauvola(gray)
-                                binary_sauvola = gray > sauvola_thresh
-                                binary_sauvola = (binary_sauvola * 255).astype(np.uint8)
-
-                                # Apply dilation to connect text regions
-                                # kernel = np.ones((2, 2), np.uint8)
-                                # dilated = cv2.dilate(thresh, kernel, iterations=1)
-
-                                # Optionally apply erosion to reduce noise
-                                # eroded = cv2.erode(dilated, kernel, iterations=1)
-                                '''
-                
-                                extracted_lp = AIController.get_license_number_claude(frame=(processed_lp if cont.dipModule != 0 else cropped_lp))
-                                # temp = [extracted_lp_results[i]['text'] for i in range(len(extracted_lp_results))]
-                                # extracted_lp = extracted_lp_results.strip().replace(' ', '')
-                                
-                                if not DashboardPage.StartCamera.isValidLicensePlate(extracted_lp):
-                                    detected_ids.remove(id)
-                                    continue
-                                
-                            try:
-                                date = datetime.now().date()
-                                time = datetime.now().time()
-                                camera = DBController.getCamera(id=cameraId)
-                                if classnames[vehicle_id] == 'car':
-                                    price = 100 if dynamicSetting else 0
-                                    if currSetting:
-                                        price = currSetting.carPrice
-                                elif classnames[vehicle_id] == 'motorcycle':
-                                    price = 100 if dynamicSetting else 0
-                                    if currSetting:
-                                        price = currSetting.motorcyclePrice
-                                elif classnames[vehicle_id] == 'bus':
-                                    price = 100 if dynamicSetting else 0
-                                    if currSetting:
-                                        price = currSetting.busPrice
-                                elif classnames[vehicle_id] == 'truck':
-                                    price = 100 if dynamicSetting else 0
-                                    if currSetting:
-                                        price = currSetting.truckPrice
-                                imageUrl = None
-                                if currSetting or (dynamicSetting and isHeavyTraffic):
-                                    imageUrl = S3Controller().uploadImage(cropped_vehicle, f'[{date} - {time}] {classnames[vehicle_id]} - id: {id}')
-                                response = DBController.addLicensePlate(self.currUser.id, currSetting.id if currSetting else 0, camera.location, extracted_lp or 'none', classnames[vehicle_id], price, imageUrl or 'none')
-
-                                if response.ok:
-                                    databaseTable.insert('', 0, values=(id, extracted_lp or 'none', classnames[vehicle_id], cameraId, time, date, price))
-                                    self.vehicleCount += 1
-                                    vehiclesDetectedCount.configure(text=f'{self.vehicleCount}')
-                            except Exception as e:
-                                with open('logs.txt', 'a') as file:
-                                    now = datetime.now().strftime('%m/%d/%Y %H:%M:%S')
-                                    file.write(f'[{now}] Error at function views/dashboardPageView.py/dbController.py StartCamera/start()/showFrame() - {repr(e)}\n')
-                                    print(repr(e))
-                                    return
+                                tk_async.async_execute(self.extract(
+                                    (processed_lp if cont.dipModule != 0 else cropped_lp),
+                                    id,
+                                    cameraId,
+                                    vehicle_id,
+                                    currSetting,
+                                    dynamicSetting,
+                                    isHeavyTraffic,
+                                    cropped_vehicle,
+                                    databaseTable,
+                                    vehiclesDetectedCount,
+                                ), wait=False, visible=False)
 
                     resized_frame = cv2.resize(annotated_frame, (640, 360))
                     frame_rgb = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2RGB)
@@ -309,25 +307,11 @@ class DashboardPage(tk.Frame):
         dest_coords = result.destCoords
         cameraUrl = f'rtsp://{ip_addr}:554'
 
-        if cameraName == 'test_cam':
-            cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/IMG_9613_1.mp4'
-        elif cameraName == 'test_cam2':
-            cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/1m+elevation+mendoza.MOV'
-        elif cameraName == 'test_cam3':
-            cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/1m+elevation+rayray.mov'
-        elif cameraName == 'test_cam4':
+        if cameraName == 'test_cam1':
             cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/new/test_cam4.mp4'
-        elif cameraName == 'test_cam5':
-            cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/new/front+congested.MOV'
-        elif cameraName == 'test_cam6':
-            cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/cut+videos/location+1/IMG_0793.mp4'
-        elif cameraName == 'test_cam7':
-            cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/cut+videos/location+1/test_cam7.mp4'
-        elif cameraName == 'test_cam8':
+        elif cameraName == 'test_cam2':
             cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/cut+videos/location+2/test_cam8.mp4'
-        elif cameraName == 'test_cam9':
-            cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/cut+videos/location+2/IMG_8525.mp4'
-        elif cameraName == 'test_cam10':
+        elif cameraName == 'test_cam3':
             cameraUrl = 'https://noodelzcsgoaibucket.s3.ap-southeast-1.amazonaws.com/videos/videos/cut+videos/location+1/test_cam10.mp4'
 
         if self.timer is not None:
@@ -514,7 +498,7 @@ class DashboardPage(tk.Frame):
         self.databaseTable.heading('cameraID', text="Camera ID", anchor='center')
         self.databaseTable.heading('time', text="Time", anchor='center')
         self.databaseTable.heading('date', text="Date", anchor='center')
-        self.databaseTable.heading('price', text="Price", anchor='center')
+        self.databaseTable.heading('price', text="Charge", anchor='center')
 
         self.databaseTable.column('id', width=60, anchor='center')
         self.databaseTable.column('licensePlate', width=150, anchor='center')

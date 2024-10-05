@@ -34,7 +34,7 @@ class Connection:
         '''
         try:
             url = f'mysql+pymysql://{RDS_USER}:{RDS_PASSWORD}@{RDS_ENDPOINT}/{RDS_DB}'
-            Connection.engine = create_engine(url, echo=True)
+            Connection.engine = create_engine(url, echo=False)
             return True
         except Exception as e:
             print(e)
