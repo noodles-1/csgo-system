@@ -1,11 +1,11 @@
-# This is the repository of the system for the Thesis of the Group Computer Science Global Offensive
-## This Branch is currently in Version 1.47.0
+# Computer Science Global Offensive ALPR System
+This branch is currently in Version 2.0.0
 
 Members of the thesis group are:
   - **Pagtalunan, John Gabriel T.**
   - **Roa, Adriane Gil**
   - **Rayray, Kassandra Beatriz**
-  - **Mendoza, Mendoza**
+  - **Mendoza, Alexander**
 
 Students major in **Software Engineering** in **Far Eastern University Institute of Technology**
 
