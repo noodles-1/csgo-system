@@ -4,7 +4,6 @@ import cv2
 import tkinter as tk
 import re
 import socket
-import asyncio
 import threading
 import tk_async_execute as tk_async
 
@@ -103,7 +102,7 @@ class DashboardPage(tk.Frame):
             regex2 = r'^\d{3,4}[A-Z]{3}$'
             return re.fullmatch(regex1, licensePlate) is not None or re.fullmatch(regex2, licensePlate) is not None
         
-        async def extract(self, frame, id, cameraId, vehicle_id, currSetting, dynamicSetting, isHeavyTraffic, cropped_vehicle, databaseTable, vehiclesDetectedCount, detected_ids, extracted_lps):
+        async def extract(self, frame, id, cameraId, vehicle_id, currSetting, dynamicSetting, cropped_vehicle, databaseTable, vehiclesDetectedCount, detected_ids, extracted_lps):
             with threading.Lock():
                 if id in extracted_lps:
                     return
@@ -180,7 +179,7 @@ class DashboardPage(tk.Frame):
                 if cont.loggedIn and success:
                     frame_height, frame_width = frame.shape[0], frame.shape[1]
                     results = AIController.detect_vehicle(frame)
-                    annotated_frame = results[0].plot()
+                    annotated_frame = results[0].plot(conf=False)
 
                     # draw boxes to show detection boundary
                     if draw_boxes:
@@ -275,7 +274,6 @@ class DashboardPage(tk.Frame):
                                         vehicle_id,
                                         currSetting,
                                         dynamicSetting,
-                                        isHeavyTraffic,
                                         cropped_vehicle,
                                         databaseTable,
                                         vehiclesDetectedCount,

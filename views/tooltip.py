@@ -7,8 +7,6 @@ parent_dir = os.path.dirname(current)
 sys.path.append(parent_dir)
 
 from customtkinter import *
-from tkinter import ttk
-from PIL import Image
 
 class ToolTip:
     def __init__(self, widget, text, bg="white", fg="black"):

@@ -3,7 +3,7 @@ import sys
 import unittest
 from unittest.mock import patch, MagicMock
 from tkinter import Tk
-from customtkinter import CTkEntry, CTkButton, CTkLabel
+from customtkinter import CTkEntry
 
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)

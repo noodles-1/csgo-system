@@ -1,17 +1,12 @@
 import cv2
 import os
 import base64
-import numpy as np
-import pytesseract
 
 from dotenv import load_dotenv
-from skimage.filters import threshold_sauvola
 from anthropic import Anthropic
 
 load_dotenv(dotenv_path='.env')
 CLAUDE_KEY = os.getenv('CLAUDE_KEY')
-
-# ocr = cnocr.CnOcr(det_model_name='en_PP-OCRv3_det', rec_model_name='en_PP-OCRv3')
 
 actual_plates = [
     'AAK9402', 'YAA7157', 'DAN5548',
@@ -89,44 +84,38 @@ def min_error(str1, str2):
     
     return dp[0][0]
 
-models = ['eng', 'LP']
-psms = [7, 8]
-
 for model in ['claude']:
-    # tessdata = '' if model == 'eng' else '--tessdata-dir tessdata'
+    total_err = 0
+    total = 0
 
-    for psm in psms:
-        total_err = 0
-        total = 0
+    for i, actual_plate in enumerate(actual_plates):
+        image = cv2.imread(f'metrics/cnocr/images/{i + 1}.jpg')
 
-        for i, actual_plate in enumerate(actual_plates):
-            image = cv2.imread(f'metrics/cnocr/images/{i + 1}.jpg')
+        '''
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        sauvola_thresh = threshold_sauvola(gray, window_size=43)
+        binary_sauvola = gray > sauvola_thresh
+        binary_sauvola = (binary_sauvola * 255).astype(np.uint8)
+        _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        thresh = cv2.resize(thresh, (0, 0), fx=2, fy=2)
+        kernel = np.ones((2, 2), np.uint8)
+        dilated = cv2.dilate(thresh, kernel, iterations=1)
+        eroded = cv2.erode(dilated, kernel, iterations=1)
+        eroded = cv2.resize(eroded, (0, 0), fx=0.1, fy=0.1)
+        predicted_plate = ocr.ocr(img_fp=eroded)
+        predicted_plate = [predicted_plate[i]['text'] for i in range(len(predicted_plate))]
+        predicted_plate = ''.join(predicted_plate).replace(' ', '')
 
-            '''
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            sauvola_thresh = threshold_sauvola(gray, window_size=43)
-            binary_sauvola = gray > sauvola_thresh
-            binary_sauvola = (binary_sauvola * 255).astype(np.uint8)
-            _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-            thresh = cv2.resize(thresh, (0, 0), fx=2, fy=2)
-            kernel = np.ones((2, 2), np.uint8)
-            dilated = cv2.dilate(thresh, kernel, iterations=1)
-            eroded = cv2.erode(dilated, kernel, iterations=1)
-            eroded = cv2.resize(eroded, (0, 0), fx=0.1, fy=0.1)
-            predicted_plate = ocr.ocr(img_fp=eroded)
-            predicted_plate = [predicted_plate[i]['text'] for i in range(len(predicted_plate))]
-            predicted_plate = ''.join(predicted_plate).replace(' ', '')
+        tesseract_predicted = pytesseract.image_to_string(image, lang=model, config=f'{tessdata} --psm {psm} -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890')
+        tesseract_predicted = tesseract_predicted.strip().replace(' ', '')
+        '''
+        extracted_lp = extract(image)
+        extracted_lp = extracted_lp.strip().replace(' ', '')
 
-            tesseract_predicted = pytesseract.image_to_string(image, lang=model, config=f'{tessdata} --psm {psm} -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890')
-            tesseract_predicted = tesseract_predicted.strip().replace(' ', '')
-            '''
-            extracted_lp = extract(image)
-            extracted_lp = extracted_lp.strip().replace(' ', '')
+        total_err += min_error(extracted_lp, actual_plate)
+        total += len(actual_plate)
 
-            total_err += min_error(extracted_lp, actual_plate)
-            total += len(actual_plate)
-
-        accuracy = (total - total_err) / total
-        print(f'{model} accuracy: ', accuracy * 100)
+    accuracy = (total - total_err) / total
+    print(f'{model} accuracy: ', accuracy * 100)
 
 # claude accuracy:  97.08520179372198

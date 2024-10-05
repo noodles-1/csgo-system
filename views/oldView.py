@@ -3,7 +3,6 @@ This Python File holds the old version of the dashboard view for the thesis 2 de
 Do not delete this file nor edit this file. The functions here may be replicated/reused in some other time.
 '''
 
-import math
 import os
 import sys
 import cv2
@@ -13,7 +12,6 @@ current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
 
-from tkinter import font
 from CTkTable import *
 from customtkinter import *
 from PIL import Image, ImageTk

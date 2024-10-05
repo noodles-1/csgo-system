@@ -8,9 +8,7 @@ parent = os.path.dirname(current)
 root = os.path.dirname(parent)
 sys.path.append(root)
 
-from ultralytics import YOLO
 from controllers import controller
-from controllers import s3controller
 
 ai = controller.AIController()
 """
