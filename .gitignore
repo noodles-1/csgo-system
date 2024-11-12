@@ -19,7 +19,6 @@ logs.txt
 .venv
 *.pt
 *.exe
-*.spec
 *.jpg
 **/.env
 **/test_script.py

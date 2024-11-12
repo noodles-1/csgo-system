@@ -164,7 +164,7 @@ class DashboardPage(tk.Frame):
             y_offset = 60
             vehicle_offset = 0.65
             motorbike_offset = 0.875
-            alpha = 0.4
+            alpha = 0.5
 
             def showFrame():
                 success, frame = cap.read()
@@ -200,10 +200,10 @@ class DashboardPage(tk.Frame):
                         top_left_5 = (x_offset, frame_height - y_offset)
                         bottom_right_5 = (frame_width - x_offset, frame_height)
 
-                        cv2.rectangle(overlay, top_left_1, bottom_right_1, (220, 0, 60), -1)
-                        cv2.rectangle(overlay, top_left_2, bottom_right_2, (220, 0, 60), -1)
-                        cv2.rectangle(overlay, top_left_3, bottom_right_3, (220, 0, 60), -1)
-                        cv2.rectangle(overlay, top_left_5, bottom_right_5, (220, 0, 60), -1)
+                        cv2.rectangle(overlay, top_left_1, bottom_right_1, (0, 0, 0), -1)
+                        cv2.rectangle(overlay, top_left_2, bottom_right_2, (0, 0, 0), -1)
+                        cv2.rectangle(overlay, top_left_3, bottom_right_3, (0, 0, 0), -1)
+                        cv2.rectangle(overlay, top_left_5, bottom_right_5, (0, 0, 0), -1)
                         cv2.addWeighted(overlay, alpha, annotated_frame, 1 - alpha, 0, annotated_frame)
 
                     for result in results:
